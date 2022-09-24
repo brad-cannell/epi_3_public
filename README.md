@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# Epidemiology III Public
+# Epidemiology III Public Repository
 
 <!-- badges: start -->
 
@@ -29,3 +29,7 @@ You can install the development version of project from
 # install.packages("devtools")
 devtools::install_github("brad-cannell/epi_3_public")
 ```
+
+Currently, there isn’t a reason to install this package. In the future,
+we imagine that we will use this package to share R code (including
+functions) and example data sets.

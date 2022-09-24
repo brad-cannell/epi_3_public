@@ -13,7 +13,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-# Epidemiology III Public
+# Epidemiology III Public Repository
 
 <!-- badges: start -->
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
@@ -36,4 +36,6 @@ You can install the development version of project from [GitHub](https://github.
 # install.packages("devtools")
 devtools::install_github("brad-cannell/epi_3_public")
 ```
+
+Currently, there isn't a reason to install this package. In the future, we imagine that we will use this package to share R code (including functions) and example data sets.
 

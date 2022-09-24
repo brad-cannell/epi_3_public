@@ -44,3 +44,6 @@ project*.tgz
 
 # Mac .DS_store
 .DS_store
+
+# Other files
+NOTES
