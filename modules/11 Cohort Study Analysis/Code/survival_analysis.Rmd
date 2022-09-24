@@ -1,0 +1,510 @@
+---
+title: "Survival Analysis for Cohort Studies II Module"
+date: "2020-10-30"
+---
+
+```{r}
+library(dplyr)
+library(haven)
+library(ggplot2)
+library(forcats)
+library(tidyr)
+library(purrr)
+library(survival)
+library(survminer)
+library(broom)
+library(meantables)
+```
+
+# Load data
+
+```{r}
+bewick <- read_dta("/Users/bradcannell/Dropbox/Datasets/Bewick data/Bewick 2004 Table 1.dta")
+```
+
+# Example from Szklo and Nieto page 58 and 59
+
+```{r}
+sn_chap_2 <- tibble(
+  person_no = 1:10,
+  months = c(1, 17, 20, 9, 24, 16, 2, 13, 10, 3),
+  outcome = c(1, 1, 1, 1, 2, 2, 2, 1, 2, 1),
+  event = c(1, 1, 1, 1, 0, 0, 0, 1, 0, 1),
+  censor = c(0, 0, 0, 0, 1, 1, 1, 0, 1, 0),
+  person_no_f = factor(person_no),
+  outcome_f = factor(outcome, 1:2, c("Death", "Censored")),
+  event_f = factor(event, 0:1, c("No", "Yes")),
+  censor_f = factor(censor, 0:1, c("No", "Yes"))
+) %>% 
+  print()
+```
+
+Figure 2-2 - page 55
+
+```{r}
+ggplot(sn_chap_2, aes(fct_rev(person_no_f), months)) + 
+  geom_bar(stat = "identity", width = 0.5) + 
+  geom_point(
+    aes(person_no_f, months, color = outcome_f, shape = outcome_f), 
+    size = 6
+  ) +
+  coord_flip() +
+  labs(
+    x = "Person Number",
+    y = "Time (Months)"
+  ) +
+  theme_minimal() + 
+  theme(
+    legend.title = element_blank(),
+    legend.position = "bottom"
+  )
+```
+
+Figure 2-3 - page 58
+
+```{r}
+ggplot(sn_chap_2, aes(fct_reorder(person_no_f, months, .desc = TRUE), months)) + 
+  geom_bar(stat = "identity", width = 0.5) + 
+  geom_point(
+    aes(person_no_f, months, color = outcome_f, shape = outcome_f), 
+    size = 6
+  ) +
+  coord_flip() +
+  labs(
+    x = "Person Number",
+    y = "Time (Months)"
+  ) +
+  theme_minimal() + 
+  theme(
+    legend.title = element_blank(),
+    legend.position = "bottom"
+  )
+```
+
+Table 2-3. Calculation of Kaplan-Meier survival estimates for the example in Figure 2-3. Page 59.
+
+```{r}
+tab_2_3 <- sn_chap_2 %>% 
+  group_by(months) %>% 
+  summarise(
+    n = n(),
+    events = sum(event),
+    censored = sum(censor),
+    .groups = "drop"
+  ) %>% 
+  ungroup() %>% 
+  complete(
+    months = seq(1, max(sn_chap_2$months)),
+    fill = list(n = 0, events = 0, censored = 0)
+  ) %>% 
+  mutate(
+    # This is clunky. I think I can do better.
+    n_at_risk_start = max(cumsum(n)),
+    cum_events = cumsum(events),
+    cum_censored = cumsum(censored),
+    n_at_risk = n_at_risk_start - lag(cum_events) - lag(cum_censored),
+    n_at_risk = if_else(is.na(n_at_risk), n_at_risk_start, n_at_risk)
+  ) %>% 
+  select(
+    months, n_at_risk, n_events = events, n_censored = censored
+  ) %>% 
+  mutate(
+    cond_prob_event = round(n_events / n_at_risk, 3),
+    cond_prob_survival = 1 - cond_prob_event
+  ) %>% 
+  print()
+```
+
+```{r}
+out <- vector(mode = "numeric", 24)
+for (i in seq_along(tab_2_3$cond_prob_survival)) {
+  if (i == 1) {
+    out[i] <- tab_2_3$cond_prob_survival[i]
+  } else {
+    out[i] <- out[i - 1] * tab_2_3$cond_prob_survival[i]
+  }
+}
+
+tab_2_3$cum_prob_survival <- out
+tab_2_3
+```
+
+```{r}
+# Only show rows with event to match book
+tab_2_3 %>% 
+  filter(!n_events == 0)
+```
+
+# For SO: 
+
+Calculate cumulative probability (Kaplan-Meier survival function) in a `dplyr` pipeline. 
+
+I'm trying to create Kaplan-Meier life tables using a `dplyr` pipeline. I'm having trouble calculating the cumulative probability of survival without using a for loop. Here is some example data. 
+
+```{r}
+df <- tibble(
+  person_no = 1:10,
+  months = c(1, 17, 20, 9, 24, 16, 2, 13, 10, 3),
+  outcome = c(1, 1, 1, 1, 2, 2, 2, 1, 2, 1),
+  event = c(1, 1, 1, 1, 0, 0, 0, 1, 0, 1),
+  censor = c(0, 0, 0, 0, 1, 1, 1, 0, 1, 0),
+  person_no_f = factor(person_no),
+  outcome_f = factor(outcome, 1:2, c("Death", "Censored")),
+  event_f = factor(event, 0:1, c("No", "Yes")),
+  censor_f = factor(censor, 0:1, c("No", "Yes"))
+) %>% 
+  print()
+```
+
+```{r}
+# Don't actually submit this. It's just for getting the code. 
+df %>% 
+  group_by(months) %>% 
+  summarise(
+    n = n(),
+    events = sum(event),
+    censored = sum(censor),
+    .groups = "drop"
+  ) %>% 
+  ungroup() %>% 
+  # complete(
+  #   months = seq(1, max(sn_chap_2$months)),
+  #   fill = list(n = 0, events = 0, censored = 0)
+  # ) %>% 
+  mutate(
+    n_at_risk_start = max(cumsum(n)),
+    cum_events = cumsum(events),
+    cum_censored = cumsum(censored),
+    n_at_risk = n_at_risk_start - lag(cum_events) - lag(cum_censored),
+    n_at_risk = if_else(is.na(n_at_risk), n_at_risk_start, as.integer(n_at_risk))
+  ) %>% 
+  select(
+    months, n_at_risk, n_events = events, n_censored = censored
+  ) %>% 
+  mutate(
+    cond_prob_event = round(n_events / n_at_risk, 3),
+    cond_prob_survival = 1 - cond_prob_event
+  ) %>% 
+  filter(!n_events == 0)
+```
+
+```{r}
+df <- tibble(
+  months = c(1, 3, 9, 13, 17, 20),
+  n_at_risk = c(10, 8, 7, 5, 3, 2),
+  cond_prob_event = c(0.100, 0.125, 0.143, 0.200, 0.333, 0.500),
+  cond_prob_surv = c(0.900, 0.875, 0.857, 0.800, 0.667, 0.50)
+)
+
+df
+```
+
+In this case the cumulative probability of survival is calculated as the product of the previous (lagged) cumulative probability of survival and the current conditional probability of survival. I can get the answer I'm looking for using a for loop:
+
+
+```{r}
+out <- vector(mode = "numeric", 6)
+
+for (i in seq_along(df$cond_prob_surv)) {
+  if (i == 1) {
+    out[i] <- df$cond_prob_surv[i]
+  } else {
+    out[i] <- out[i - 1] * df$cond_prob_surv[i]
+  }
+}
+
+df$cum_prob_survival <- out
+df
+```
+
+However, I'd really like to find a `dplyr` only solution. Any help is greatly appreciated!
+
+```{r}
+df %>% 
+  mutate(
+    cum_prob_survival = 0.9,
+    cum_prob_survival = map2_dbl(
+      cond_prob_surv, 
+      lag(cum_prob_survival),
+      ~ .x * .y
+    )
+  )
+```
+
+```{r}
+df %>% 
+  mutate(
+    cum_prob_survival = 0.9,
+    cum_prob_survival = accumulate(cond_prob_surv, `*`)
+  )
+```
+
+
+
+
+# Data management
+
+```{r}
+bewick <- bewick %>% 
+  mutate(
+    patientid_f = factor(patientid),
+    treatment_f = factor(treatment),
+    event_f = factor(event, 0:1, c("No", "Yes")),
+    censor_f = factor(censor, 0:1, c("No", "Yes"))
+  )
+```
+
+
+# plot with shapes to indicate censoring or event
+
+```{r}
+ggplot(bewick, aes(patientid_f, time_days)) + 
+  geom_bar(stat = "identity", width = 0.5) + 
+  geom_point(
+    aes(patientid_f, time_days, color = censor_f, shape = censor_f), 
+    size = 6
+  ) +
+  coord_flip() +
+  labs(
+    x = "Patient ID",
+    y = "Time (Days)"
+  ) +
+  theme_minimal() + 
+  theme(
+    legend.title = element_blank(),
+    legend.position = "bottom"
+  )
+```
+
+# Create a Kaplan-Meier life table
+
+Based on Szklo Table 2-3
+
+```{r}
+bewick %>% 
+  group_by(time_days) %>% 
+  summarise(
+    n       = n(),
+    events  = sum(event),
+    .groups = "drop"
+  ) %>% 
+  mutate(
+    n_at_risk   = sort(cumsum(n) - events, decreasing = TRUE),
+    cond_prob_e = events/n_at_risk,
+    cond_prob_s = (n_at_risk - events) / n_at_risk,
+    cum_prob_s  = cumprod(cond_prob_s) 
+  ) %>% 
+  # Improve appearance
+  mutate(
+    across(
+      cond_prob_e:cum_prob_s,
+      round, 3
+    )
+  ) %>% 
+  select(time_days, n_at_risk, events, cond_prob_e:cum_prob_s)
+```
+
+```{r}
+(f1 <- survfit(Surv(time_days, event) ~ 1, bewick))
+```
+
+```{r}
+ggsurvplot(f1, data = bewick)
+```
+
+```{r}
+broom::tidy(f1) %>% summary()
+```
+
+```{r}
+(f2 <- survfit(Surv(time_days, event) ~ treatment, bewick))
+```
+
+```{r}
+ggsurvplot(f2)
+```
+
+```{r}
+survdiff(Surv(time_days, event) ~ treatment, bewick)
+```
+
+# Recreate the analyses I used in the lab-warmup slides. 
+
+I originally took them from the Regression Methods in Biostatistics Textbook.
+
+## Acute lymphoblastic leukemia (ALL) data
+
+```{r}
+leuk <- read_dta("/Users/bradcannell/Dropbox/Datasets/Regression Methods in Biostatistics Textbook/data/leuk.dta")
+```
+
+## Data management
+
+Cens is really event. Look at placebo group, they are all 1's.
+
+Time is in weeks.
+
+```{r}
+leuk <- leuk %>% 
+  mutate(
+    # Cens is really event. Look at placebo group, they are all 1's
+    event     = cens,
+    censored  = if_else(event == 1, 0, 1),
+    group_f   = if_else(group == 1, "6-MP", "Placebo")
+  ) %>% 
+  select(-cens, - group)
+```
+
+## View data
+
+Time is in weeks.
+
+```{r}
+leuk
+```
+
+## Naive comparison of mean survival times
+
+```{r}
+leuk %>% 
+  group_by(group_f) %>% 
+  mean_table(time)
+```
+
+## Life table - placebo
+
+```{r}
+bewick %>% 
+  group_by(time_days) %>% 
+  summarise(
+    n       = n(),
+    events  = sum(event),
+    .groups = "drop"
+  ) %>% 
+  mutate(
+    n_at_risk   = sort(cumsum(n) - events, decreasing = TRUE),
+    cond_prob_e = events/n_at_risk,
+    cond_prob_s = (n_at_risk - events) / n_at_risk,
+    cum_prob_s  = cumprod(cond_prob_s) 
+  ) %>% 
+  # Improve appearance
+  mutate(
+    across(
+      cond_prob_e:cum_prob_s,
+      round, 3
+    )
+  ) %>% 
+  select(time_days, n_at_risk, events, cond_prob_e:cum_prob_s)
+```
+
+This is really clunky. I think I can do better. Maybe write my own function.
+
+This stuff isn't correct yet
+
+```{r}
+# leuk %>% 
+#   filter(group_f == "Placebo") %>% 
+#   group_by(time) %>% 
+#   summarise(
+#     n        = n(),
+#     events   = sum(event),
+#     censored = sum(censored),
+#     .groups = "drop"
+#   ) %>% 
+#   tidyr::complete(
+#     time = seq(1, max(leuk$time)), 
+#     fill = list(n = 0, events = 0, censored = 0)
+#   ) %>%
+#   mutate(
+#     # This is clunky. I think I can do better.
+#     n_at_risk_start = max(cumsum(n)),
+#     cum_events = cumsum(events),
+#     n_at_risk = n_at_risk_start - lag(cum_events),
+#     n_at_risk = if_else(is.na(n_at_risk), n_at_risk_start, n_at_risk)
+#   ) %>% 
+#   select(
+#     week = time, n_followed = n_at_risk, n_relapsed = events, n_censored = censored
+#   ) %>% 
+#   mutate(
+#     n_remission = n_followed - n_relapsed,
+#     cond_prob_remission = n_remission / n_followed,
+#     survival_function = lag(cond_prob_remission) * cond_prob_remission
+#   )
+```
+
+```{r}
+# leuk %>% 
+#   filter(group_f == "6-MP") %>% 
+#   group_by(time) %>% 
+#   summarise(
+#     n        = n(),
+#     events   = sum(event),
+#     censored = sum(censored),
+#     .groups = "drop"
+#   ) %>% 
+#   tidyr::complete(
+#     time = seq(1, max(leuk$time)), 
+#     fill = list(n = 0, events = 0, censored = 0)
+#   ) %>%
+#   mutate(
+#     # This is clunky. I think I can do better.
+#     n_at_risk_start = max(cumsum(n)),
+#     cum_events = cumsum(events),
+#     n_at_risk = n_at_risk_start - lag(cum_events),
+#     n_at_risk = if_else(is.na(n_at_risk), n_at_risk_start, n_at_risk)
+#   ) %>% 
+#   select(
+#     week = time, n_followed = n_at_risk, n_relapsed = events, n_censored = censored
+#   ) %>% 
+#   mutate(
+#     n_remission = n_followed - n_relapsed,
+#     cond_prob_remission = n_remission / n_followed,
+#     survival_function = lag(cond_prob_remission)
+#   )
+```
+
+```{r}
+leuk %>%
+  filter(group_f == "6-MP") %>% 
+  filter(time <= 10) %>% 
+  arrange(time)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

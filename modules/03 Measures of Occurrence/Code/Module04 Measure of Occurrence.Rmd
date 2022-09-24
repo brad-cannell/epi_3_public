@@ -1,0 +1,134 @@
+---
+title: "Measure of Disease Occurrence in RStudio"
+output:
+  html_document:
+    df_print: paged
+---
+
+# Overview: Data Summary
+
+Consider the following example regarding the management of Hodgkin lymphoma, a cancer of the lymphatic system.
+
+Years ago when a patient was diagnosed with Hodgkin Disease, they would frequently undergo a surgical procedure called a “staging laparotomy.” The purpose of the staging laparotomy was to determine the extent to which the cancer had spread, because this was important information for determining the patient’s prognosis and optimizing treatment. At times, the surgeons performing this procedure would also remove the patient’s appendix, not because it was inflamed; it was done “incidentally” in order to ensure that the patient never had to worry about getting appendicitis. However, performing an appendectomy requires transecting it, and this has the potential to contaminate the abdomen and the wound edges with bacteria normally contained inside the appendix. Some surgeons felt that doing this “incidental appendectomy” did the patient a favor by ensuring that they would never get appendicitis, but others felt that it meant unnecessarily increasing the patient’s risk of getting a post-operative wound infection by spreading around the bacteria that was once inside the appendix.
+
+To address this, the surgeons at a large hospital performed a retrospective cohort study. They began by going through the hospital’s medical records to identify all subjects who had had a “staging laparotomy performed for Hodgkin.” They then reviewed the medical record and looked at the operative report to determine whether the patient had an incidental appendectomy or not. They then reviewed the progress notes, the laboratory reports, the nurses notes, and the discharge summary to determine whether the patient had developed a wound infection during the week after surgery.
+
+The investigators reviewed the records of 210 patients who had undergone the staging procedure and found that 131 had also had an incidental appendectomy, while the other 79 had not. The data from that study are summarized in the table below. The numbers in the second and third columns indicate the number of subjects who did or did not develop a post-operative wound infection among those who had the incidental appendectomy (in the “Yes” row) and those who did not have the incidental appendectomy (in the “No” row). For example, the upper left cell indicates that seven of the subjects who had an incidental appendectomy (the exposure of interest) subsequently developed a wound infection. The upper right cell indicates that the other 124 subjects who had an incidental appendectomy did NOT develop a wound infection.
+
+Had incidental appendectomy?|	Wound infection	| No wound infection | Total
+----------------------------|-----------------|--------------------|----------
+Yes	                        |  7              | 124	               |  131
+No	                        |  1	            |  78	               |  79
+Total                       |  8	            | 202	               |  210
+
+
+```{r}
+library(dplyr, warn.conflicts = FALSE)
+library(stats)
+```
+
+# Task 1
+
+Create a contingency table for the above data
+
+```{r}
+df <- data.frame(
+  Infection = c(7, 1),
+  No_infection = c(124, 78),
+  row.names = c("Appendectomy", "No_Appendectomy")
+)
+df
+```
+
+```{r}
+df1 <- cbind(
+  df,
+  rowsum = rowSums(df)
+)
+df1
+```
+
+```{r}
+df2 <- rbind(
+  df1,
+  colsum = colSums(df1)
+)
+df2
+```
+
+# Task 2
+
+Calculate incidence for exposed group
+
+```{r}
+inc_exposed <- df2[1, 1] / df2[1, 3]
+inc_exposed
+```
+
+Calculate incidence for unexposed group
+
+```{r}
+inc_unexposed <- df2[2, 1] / df2[2, 3]
+inc_unexposed
+```
+
+# Task 3
+
+Calculate prevalence of infection disease
+
+```{r}
+pr <- df2[3, 1] / df2[3, 3]
+pr
+```
+
+# Task 4
+
+Calculate odds of disease for exposed group odd1
+
+```{r}
+odd1 <- df2[1, 1] / df2[1, 2]
+odd1
+```
+
+Calculate odds of disease for unexposed group odd2
+
+```{r}
+odd2 <- df2[2, 1] / df2[2, 2]
+odd2
+```
+
+Calculate odds of exposure for disease group odd3
+
+```{r}
+odd3 <- df2[1, 1] / df2[2, 1]
+odd3
+```
+
+Calculate odds of exposure for no disease group odd4
+
+```{r}
+odd4 <- df2[1, 2] / df2[2, 2]
+odd4
+```
+
+# Task 5
+
+Calculate the p-value for Fisher exact test of independence
+
+**As there is cell expected count less than 5 in the contingency table df, we can not use Pearson's chi-square test here, we must use Fisher's exact test here.**    
+
+Fisher’s exact test assumptions:  
+The two variables are categorical (nominal) and data is randomly sampled  
+The levels of variables are mutually exclusive  
+Observations should be independent of each other  
+Observation data should be frequency counts and not percentages, proportions or transformed data    
+
+Fisher’s exact test of independence  
+Null hypothesis: The two categorical variables are independent (no association between the two variables)  
+Alternative hypothesis: The two categorical variables are dependent (there is an association between the two variables)  
+
+```{r}
+fisher.test(df)
+```
+
+**Interpretation of the test result: as the p-value=0.2632 > 0.05, we fail to reject the null hypothesis and conclude that infection disease and Appendectomy exposure are independent.**      

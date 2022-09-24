@@ -1,0 +1,109 @@
+---
+title: "table3-3"
+output: html_notebook
+---
+
+```{r}
+library(epitools)
+```
+
+```{r}
+RRtable<-matrix(c(9970,9820,30,180),nrow = 2, ncol = 2)
+```
+
+```{r}
+riskratio.wald(RRtable)
+```
+
+# Brad's notes
+
+I think it would make more sense to flip the numbers in "Disease1" and "Disease2" (I really dislike the naming conventions this package is using!). 
+
+It might also be helpful to name the rows and columns of our 2x2 table (matrix).
+
+For example:
+
+```{r}
+table_3_3 <- matrix(
+  c(180, 9820, 30, 9970),
+  nrow = 2,
+  byrow = TRUE
+)
+
+table_3_3
+```
+
+```{r}
+colnames(table_3_3) <- c("MI+", "MI-")
+rownames(table_3_3) <- c("severe hypertension", "normal")
+
+table_3_3
+```
+
+Now, we can pass the matrix to `riskratio.wald(RRtable)`
+
+```{r}
+riskratio.wald(table_3_3)
+```
+
+Why is it using the exposed group as the reference?
+
+Let's try writing our own function:
+
+First, convert our matrix to a table object and add marginal totals.
+
+```{r}
+table_3_3 <- table_3_3 %>%
+  as.table() %>% 
+  addmargins()
+
+table_3_3
+```
+
+Add the row and column names again.
+
+```{r}
+colnames(table_3_3) <- c("MI+", "MI-", "total")
+rownames(table_3_3) <- c("severe hypertension", "normal", "total")
+
+table_3_3
+```
+
+Figure out the calculations we want to use.
+
+```{r}
+# First number is the row, second number is the column
+incidence_expoosed <- table_3_3[1, 1] / table_3_3[1, 3]
+incidence_unexposed <- table_3_3[2, 1] / table_3_3[2, 3]
+rr <- incidence_expoosed / incidence_unexposed
+rr
+```
+
+Then add to function.
+
+```{r}
+risk_ratio <- function(.table) {
+  incidence_expoosed  <- .table[1, 1] / .table[1, 3]
+  incidence_unexposed <- .table[2, 1] / .table[2, 3]
+  rr <- incidence_expoosed / incidence_unexposed
+  rr
+}
+```
+
+Test it out.
+
+```{r}
+risk_ratio(table_3_3)
+```
+
+Possible further improvements:
+
+* Make a wrapper function that simplifies the creation of the 2x2 table, or possibly move that functionality inside of `risk_ratio()`?
+* Make new function to calculate confidence intervals and conduct hypothesis test, or or possibly move that functionality inside of `risk_ratio()`?
+* Make it more general so that it can accept tables of any size -- not just 2x2.
+* Others?
+
+
+
+
+

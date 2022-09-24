@@ -1,0 +1,78 @@
+---
+title: "Regression Lecture"
+date: "2020-12-08"
+---
+
+```{r}
+library(dplyr)
+library(haven)
+library(broom)
+```
+
+# Load data
+
+```{r}
+lowbt <- read_dta("/Users/bradcannell/Dropbox/02 Teaching/Courses/Epi 3/modules/12 Cross-sectional II/lowbwt.dta")
+```
+
+# Linear regression
+
+## Regress mother's weight on mother's age (continuous predictor)
+
+```{r}
+lm1 <- lm(lwt ~ age, data = lowbt)
+tidy(lm1, conf.int = TRUE)
+```
+
+## Regress mother's race on mother's race (categorical predictor)
+
+```{r}
+lm2 <- lm(lwt ~ factor(race), data = lowbt)
+tidy(lm2, conf.int = TRUE)
+```
+
+## Regress mother's weight on mother's age and mother's race (multiple predictors)
+
+```{r}
+lm3 <- lm(lwt ~ age + factor(race), data = lowbt)
+tidy(lm3, conf.int = TRUE)
+```
+
+
+# Logistic regression
+
+## Regress low birth weight on mother's age (continuous predictor)
+
+```{r}
+logistic1 <- glm(low ~ age, family = "binomial", data = lowbt)
+tidy(logistic1, conf.int = TRUE)
+```
+
+```{r}
+# For odds ratios
+tidy(logistic1, conf.int = TRUE, exponentiate = TRUE)
+```
+
+## Regress low birth weight on mother's race (categorical predictor)
+
+```{r}
+logistic2 <- glm(low ~ factor(race), family = "binomial", data = lowbt)
+tidy(logistic2, conf.int = TRUE)
+```
+
+```{r}
+# For odds ratios
+tidy(logistic2, conf.int = TRUE, exponentiate = TRUE)
+```
+
+## Regress low birth weight on mother's age and mother's race (multiple predictors)
+
+```{r}
+logistic3 <- glm(low ~ age + factor(race), family = "binomial", data = lowbt)
+tidy(logistic3, conf.int = TRUE)
+```
+
+```{r}
+# For odds ratios
+tidy(logistic3, conf.int = TRUE, exponentiate = TRUE)
+```

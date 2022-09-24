@@ -1,0 +1,283 @@
+---
+title: "Lab Warm-up: Measures of Occurrence"
+output: html_notebook
+---
+
+# Load packages
+
+```{r}
+library(dplyr, warn.conflicts = FALSE)
+library(freqtables)
+```
+
+
+# Prevalence
+
+$$\frac{Count\, of\, condition}{Living\, members\, of\, the\, population}$$
+
+One way (of many) to calculate our prevalence proportion from the information given in the lab warm-up slides is to create objects matching the elements of our equation above and then assign the relevant values to those objects. An advantage of this method is that the objects are reusable later if we need them. 
+
+```{r}
+n_condition <- 2
+n_population <- 10
+prevalence_prop <- n_condition / n_population
+prevalence_prop
+```
+
+We can also simply use R like a fancy calculator. An advantage of this method is that it is quick and easy to understand.
+
+```{r}
+2 / 10
+```
+
+We simply multiply proportions by 100 to convert them to percentages.
+
+```{r}
+(2 / 10) * 100
+```
+
+The converting the value stored in the `prevalence_prop` object works exactly the same way.
+
+```{r}
+prevalence_percent <- prevalence_prop * 100
+prevalence_percent
+```
+
+Sometimes, it can be useful **simulate** and analyze a little data frame with the characteristics of interest.
+
+```{r}
+df <- tibble(
+  id    = 1:10,
+  event = c(rep(1, 2), rep(0, 8))
+)
+
+df
+```
+
+```{r}
+df %>% 
+  freq_table(event)
+```
+
+And as before, we can save our results as an object that we can reuse later. 
+
+```{r}
+results <- df %>% 
+  freq_table(event)
+
+results
+```
+
+We can even grab specific values from the our results that we can reuse later. For example, let's grab the prevalence percent from our results and store them as an object in our global environment.
+
+```{r}
+prevalence_percent <- results %>% 
+  filter(cat == 1) %>%  # Keep only the row with cat == 1
+  pull(percent) # Keep only the value of percent from that row
+
+prevalence_percent
+```
+
+We can also use base R's bracket notation (https://www.r4epi.com/creating-and-modifying-columns.html#bracket-notation-1) if you prefer.
+
+```{r}
+prevalence_percent <- results$percent[2]
+prevalence_percent
+```
+
+## Interpretation
+
+1. Among the members of our population, the prevalence of disease in month two was 0.2.
+
+2. Among the members of our population, 20% had disease in month two. 
+
+3. Twenty percent of the members of our population had disease in month two.
+
+4. The prevalence of disease at month two in our population was 20% (or 0.20).
+
+
+# Prevalence odds
+
+$$\frac{Prevalence\, proportion}{1 - Prevalence\, proportion}$$
+
+We can calculate the prevalence odds similarly to the way we calculated prevalence proportion above. Notice that we were able to reuse the prevalence_prop object we created above. 
+
+* Don't forget parentheses.
+* Don't use prevalence_percent instead of prevalence_prop for this calculation.
+
+```{r}
+prevalence_odds <- prevalence_prop / (1 - prevalence_prop) # Don't forget parentheses
+prevalence_odds
+```
+
+Of course, we could still use R as a calculator as we did above for prevalence proportion.
+
+```{r}
+0.2 / (1 - 0.2)
+```
+
+And we can also calculate this estimate directly from our simulated data.
+
+```{r}
+df %>% 
+  freq_table(event) %>% 
+  # Convert percent back to a proportion by dividing by 100
+  # Use mutate to do this: https://www.r4epi.com/creating-and-modifying-columns.html
+  mutate(prop = percent / 100) %>% 
+  filter(cat == 1) %>% 
+  # Distill our results into a summary table (with one row and column)
+  # Use summarise to do this: https://www.r4epi.com/numerical-descriptions-of-categorical-variables.html#the-tidyverse-way
+  summarise(prevalence_odds = prop / (1 - prop)) 
+```
+
+## Interpretation 
+
+1. Among the members of our population, the odds of disease in month two were 0.25.
+
+2. Among the members of our population, the odds of disease in month two were 0.25:1.
+
+```{r}
+# Make it more intuitive
+1 / 0.25
+```
+
+3. Among the members of our population, the odds of disease in month two were 1:4. 
+
+4. Among the members of our population, for every person who had disease at month two there were four people who did not.
+
+
+# Incidence proportion
+
+$$\frac{Count\, of\, new\, occurences}{Population\, at\, risk}$$
+
+```{r}
+n_occurrences <- 5
+n_population_at_risk <- 9
+incidence_prop <- n_occurrences / n_population_at_risk
+incidence_prop
+```
+
+Let's round to the hundredths place (2 decimal places).
+
+```{r}
+incidence_prop <- round(incidence_prop, 2)
+incidence_prop
+```
+
+## Interpretation
+
+1. Among the members of our population, the incidence of disease over 12 months of follow-up was 0.56.
+
+2. Fifty six percent of the members of our population developed disease over 12 months of follow-up .
+
+
+# Incidence odds
+
+$$\frac{Incidence\, proportion}{1 - Incidence\, proportion}$$
+
+```{r}
+incidence_odds <- incidence_prop / (1 - incidence_prop) # Don't forget parentheses
+incidence_odds
+```
+
+Again, we can round
+
+```{r}
+round(incidence_odds, 2)
+```
+
+## Interpretation
+
+1. Among the members of our population, the odds of incident disease over 12 months of follow-up were 1.27.
+
+2. Among the members of our population, the odds of incident disease over 12 months of follow-up were 1.27:1.
+
+3. Among the members of our population, the odds of incident disease over 12 months of follow-up were 127:100. 
+
+4. Among the members of our population, for every 127 people develop incident disease over 12 months of follow-up there were 100 people who did not.
+
+
+# Person-time
+
+$$\sum_{people} Time\, spent\, at\, risk$$
+
+```{r}
+0 + 2 + 4 + 5 + 7 + 8 + 9 + 5 + 12 + 12
+```
+
+```{r}
+df <- tibble(
+  id           = 1:10,
+  time_at_risk = c(0, 2, 4, 5, 7, 8, 9, 5, 12, 12),
+  event        = c(rep(1, 2), rep(0, 8))
+)
+
+df
+```
+
+```{r}
+df %>% 
+  summarise(
+    pt_at_risk = sum(time_at_risk)
+  )
+```
+
+## Interpretation
+
+1. The members of our population accumulated 64 person-months at risk during 12 months of follow-up.
+
+```{r}
+# Or we can convert to years
+64 / 12
+```
+
+2. The members of our population accumulated 5.33 person-years at risk during 12 months of follow-up.
+
+
+# Incidence rate
+
+$$\frac{Count\, of\, new\, occurences}{Person-time\, at\, risk}$$
+
+```{r}
+n_occurrences <- 5
+person_time_at_risk <- 64
+incidence_rate <- n_occurrences / person_time_at_risk
+incidence_rate
+```
+
+```{r}
+round(incidence_rate, 2)
+```
+
+## Interpretation
+
+1. The incidence rate of disease among the members of our population was 5 cases per 64 person-months during 12 months of follow-up.
+
+```{r}
+(5 / 64)
+```
+
+2. The incidence rate of disease among the members of our population was 0.078 cases per person-month during 12 months of follow-up.
+
+```{r}
+(5 / 64) * 100
+```
+
+3. The incidence rate of disease among the members of our population was 7.8 cases per 100 person-months during 12 months of follow-up.
+
+```{r}
+# Or we can convert to years
+5 / 12
+```
+
+4. The incidence rate of disease among the members of our population was 0.42 cases per person-year during 12 months of follow-up.
+
+<!--
+Clean up and add session info
+-->
+
+```{r echo=FALSE}
+rm(list = ls())
+```
+
+

@@ -1,0 +1,316 @@
+---
+title: "Module Quiz: Data Transfer"
+output: html_notebook
+---
+
+```{r}
+library(dplyr, warn.conflicts = FALSE)
+library(readr)
+library(readxl)
+library(haven)
+```
+
+# Overview
+
+The NTRHD is doing an analysis of data acquired from a diabetes medical device study. The study took place across multiple clinics. Physicians collected data at each clinic, compiled the data, recorded the data electronically, and then emailed the data to us. We need you to import the raw data set into R and save it locally as an .Rds file that we will analyze later. Additionally, we want to compare this diabetes data to national diabetes data from the National Health and Nutrition Examination Survey (NHANES). So, I would like you to import, alter, and export that data as well.
+
+# Task 1
+
+Click the link below to download the raw data file to your computer:    
+
+* [diabetes.xlsx](https://www.dropbox.com\/s/0cizsa3ejiy3jy9/diabetes.xlsx?dl=1)    
+
+* Notice that this excel workbook contains two sheets. One sheet contains demographic information about the study participants. The other sheet contains study outcomes data.
+
+# Task 2
+
+Import the diabetes study demographics data into R as a data frame named `diab_demo`.
+
+## Question:
+
+1. Which of the following code chunks will correctly import the diabetes study demographics data into R as a data frame named `diab_demo`?
+
+```{r eval=FALSE}
+# Incorrect: This code names the data frame diab instead of diab_demo.
+diab <- read_excel(
+  "diabetes.xlsx",
+  sheet = "demo",
+  col_names = c("pid", "sex", "dob"),
+  col_types = c("text", "text", "date"),
+  skip = 2
+)
+```
+
+```{r eval=FALSE}
+# Incorrect: readxl is a package, not a function.
+diab_demo <- readxl(
+  "diabetes.xlsx",
+  sheet = "demo",
+  col_names = c("pid", "sex", "dob"),
+  col_types = c("text", "text", "date"),
+  skip = 2
+)
+```
+
+```{r eval=FALSE}
+# Incorrect: The read_csv() function can't be used to import Excel files.
+diab_demo <- read_csv(
+  "diabetes.xlsx",
+  sheet = "demo",
+  col_names = c("pid", "sex", "dob"),
+  col_types = c("text", "text", "date"),
+  skip = 2
+)
+```
+
+```{r eval=FALSE}
+# Correct
+diab_demo <- read_excel(
+  "diabetes.xlsx",
+  sheet = "demo",
+  col_names = c("pid", "sex", "dob"),
+  col_types = c("text", "text", "date"),
+  skip = 2
+)
+```
+
+```{r}
+# For Dr. Cannell's computer.
+diab_demo <- read_excel(
+  "/Users/bradcannell/Dropbox/Datasets/Diabetes/diabetes.xlsx",
+  sheet = "demo",
+  col_names = c("pid", "sex", "dob"),
+  col_types = c("text", "text", "date"),
+  skip = 2
+)
+```
+
+# Task 3
+
+Coerce the `sex` variable to a factor. Name the factor version of `sex`, `sex_f`. Possible values of `sex_f` should include `female`, `male`, and `other` — in that order.
+
+## Question:
+
+2. Fill in the following blanks to complete the code chunk that will coerce the `sex` variable to a factor with possible values of `female`, `male`, and `other` — in that order.
+
+```{r}
+diab_demo <- diab_demo %>% 
+  mutate(sex_f = factor(sex, levels = c("female", "male", "other")))
+```
+
+# Task 4
+
+Use the `str()` function to view the structure of `diab_demo`.
+
+```{r}
+str(diab_demo)
+```
+
+## Question:
+
+3. The `diab_demo` data frame contains ____ rows and ____ columns.
+
+* The `diab_demo` data frame contains 29 rows and 4 columns.
+
+# Task 5 
+
+Write code that instructs R to count the number of participants who fall into each category of `sex_f`.
+
+```{r}
+table(diab_demo$sex_f)
+```
+
+## Question:
+
+4. According to the analysis you completed in Task 5, ____ people reported that their `sex` was `other`.
+
+* According to the analysis you completed in Task 5, 0 people reported that their `sex` was `other`.
+
+# Task 6
+
+Export `diab_demo` as an .Rds file with the same name (i.e., `diab_demo`).
+
+## Question:
+
+5. Which of the following code chunks will correctly export the `diab_demo` data frame as an .Rds file with the same name (i.e., `diab_demo`)?
+
+```{r eval=FALSE}
+# Incorrect: This code uses the .csv file extension instead of the .rds file extension. 
+write_rds(diab_demo, "diab_demo.csv")
+```
+
+```{r eval=FALSE}
+# Incorrect: The values being passed to the write_rds() function are in the incorrect order. 
+write_rds("diab_demo.rds", diab_demo)
+```
+
+```{r eval=FALSE}
+# Incorrect: There is no function called write.rds().
+write.rds(diab_demo, "diab_demo.rds")
+```
+
+```{r eval=FALSE}
+# Correct.
+write_rds(diab_demo, "diab_demo.rds")
+```
+
+```{r eval=FALSE}
+# For Dr. Cannell's computer.
+write_rds(diab_demo, "/Users/bradcannell/Desktop/diab_demo.rds")
+```
+
+# Task 7
+
+Import the diabetes study outcomes data into R as a data frame named `diab_out`. Make sure to tell R how to correctly identify missing values in the raw data.
+
+## Question:
+
+6. Which of the following code chunks will correctly import the diabetes study outcomes data into R as a data frame named `diab_out`?
+
+```{r eval=FALSE}
+# Incorrect: This code does not supply enough values to the col_types argument.
+diab_out <- read_excel(
+  "diabetes.xlsx",
+  sheet = "outcomes",
+  col_names = c("pid", "diabetes", "device", "bt1", "bt2", "cost"),
+  col_types = c("text", rep("guess", 4)),
+  na = c("", "NA", "Missing"),
+  skip = 2
+)
+```
+
+```{r eval=FALSE}
+# Incorrect: This code does not tell R how to correctly identify missing values in the raw data.
+diab_out <- read_excel(
+  "diabetes.xlsx",
+  sheet = "outcomes",
+  col_names = c("pid", "diabetes", "device", "bt1", "bt2", "cost"),
+  col_types = c("text", rep("guess", 5)),
+  na = c(""),
+  skip = 2
+)
+```
+
+```{r eval=FALSE}
+# Incorrect: This code does not tell R how to correctly identify missing values in the raw data.
+diab_out <- read_excel(
+  "diabetes.xlsx",
+  sheet = "outcomes",
+  col_names = c("pid", "diabetes", "device", "bt1", "bt2", "cost"),
+  col_types = c("text", rep("guess", 5)),
+  skip = 2
+)
+```
+
+```{r eval=FALSE}
+# Correct
+diab_out <- read_excel(
+  "diabetes.xlsx",
+  sheet = "outcomes",
+  col_names = c("pid", "diabetes", "device", "bt1", "bt2", "cost"),
+  col_types = c("text", rep("guess", 5)),
+  na = c("", "NA", "Missing"),
+  skip = 2
+)
+```
+
+```{r}
+# For Dr. Cannell's computer.
+diab_out <- read_excel(
+  "/Users/bradcannell/Dropbox/Datasets/Diabetes/diabetes.xlsx",
+  sheet = "outcomes",
+  col_names = c("pid", "diabetes", "device", "bt1", "bt2", "cost"),
+  col_types = c("text", rep("guess", 5)),
+  na = c("", "NA", "Missing"), # Make sure they add "Missing" here
+  skip = 2
+)
+```
+
+```{r}
+str(diab_out)
+```
+
+# Task 8
+
+Coerce the `diabetes` variable to a factor variable. Name the factor version of `diabetes` diabetes_f. Possible values that the diabetes_f should include “No” and  “Yes” — in that order.
+
+## Question:
+
+7. Fill in the following blanks to complete the code chunk that will coerce the `diabetes` variable to a factor with zeros labeled as "`no`" and ones labeled as "`yes`" -- in that order.
+
+```{r}
+diab_out <- diab_out %>% 
+  mutate(diabetes_f = factor(diabetes, c(0, 1), c("no", "yes")))
+```
+
+# Task 9
+
+Use the `str()` function to view the structure of `diab_out`. 
+
+```{r}
+str(diab_out)
+```
+
+# Task 10
+
+Export `diab_out` to an .Rds file on your computer’s desktop.
+
+## Question:
+
+8. Fill in the following blanks to complete the code chunk that will export `diab_out` to an .Rds file with the same name on the computer’s desktop.
+
+```{r eval=FALSE}
+# Example for Canvas
+write_rds(diab_out, "/Users/user/Desktop/diab_out.rds")
+# For Dr. Cannell's
+write_rds(diab_out, "/Users/bradcannell/Desktop/diab_out.rds")
+```
+
+# Task 11
+
+Import the 2015-2016 NHANES diabetes questionnaire data into R as a data frame named `diq_i.`
+
+```{r}
+diq_i <- read_xpt("https://wwwn.cdc.gov/Nchs/Nhanes/2015-2016/DIQ_I.XPT")
+```
+
+# Task 12
+
+Use the `glimpse()` function to view the structure of `diq_i`.
+
+```{r}
+glimpse(diq_i)
+```
+
+## Question:
+
+9. The `diq_i` data frame contains ____ rows and ____ columns.
+
+* The `diq_i` data frame contains 9,575 rows and 54 columns.
+
+# Task 13
+
+Coerce all of the variable names in `diq_i` to lowercase.
+
+## Question:
+
+10. Fill in the following blanks to complete the code chunk that will coerce all of the variable names in `diq_i` to lowercase.
+
+```{r}
+names(diq_i) <- names(diq_i) %>% tolower()
+```
+
+# Task 14
+
+Print only the first 6 rows of  `diq_i` to your screen.
+
+## Question:
+
+11. Fill in the following blanks to complete the code chunk that will print only the first 6 rows of  `diq_i` to the screen.
+
+```{r}
+head(diq_i)
+```
+
+
+
