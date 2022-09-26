@@ -1,11 +1,15 @@
 ---
-title: "Chocolate Study"
+title: "Lab: Data Transfer"
 output: html_notebook
 ---
 
 # Overview
 
 The NTRHD is part of a study about the association between chocolate eating habits and academic ability. The study took place at multiple schools, chosen at random, from around the region. Graduate students administered the surveys to students at each school, recorded survey responses electronically, and then emailed them to us. Now, we need your help importing the data into R, doing a little bit of data cleaning, and saving the data again once it’s ready for analysis. 
+
+# Load packages
+
+Remember, it's considered a best practice to load all the packages that your file will use up at the top of the file. If you have not yet installed a package, you will need to do so by running `install.packages("package name")` in the R console. For example, to install the freqtables package, you would run `install.packages("freqtables")`. However, you typically **do not** want to type the code to install the package here in your Rmd file. That is because you only need to install the package once on a given computer. Not every time you run your R code.
 
 ```{r message=FALSE}
 library(dplyr, warn.conflicts = FALSE)

@@ -5,7 +5,7 @@ output: html_notebook
 
 # Load packages
 
-Remember, it's considered a best practice to load all the packages that your file will use up at the top of the file.
+Remember, it's considered a best practice to load all the packages that your file will use up at the top of the file. If you have not yet installed a package, you will need to do so by running `install.packages("package name")` in the R console. For example, to install the freqtables package, you would run `install.packages("freqtables")`. However, you typically **do not** want to type the code to install the package here in your Rmd file. That is because you only need to install the package once on a given computer. Not every time you run your R code.
 
 ```{r message=FALSE}
 library(dplyr, warn.conflicts = FALSE)
