@@ -11,7 +11,7 @@
 
 
 
-<title>Module Quiz: Data Transfer</title>
+<title>Chocolate Study</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -1499,6 +1499,8 @@ window.initializeCodeFolding = function(show) {
   // select all R code blocks
   var rCodeBlocks = $('pre.r, pre.python, pre.bash, pre.sql, pre.cpp, pre.stan, pre.julia, pre.foldable');
   rCodeBlocks.each(function() {
+    // skip if the block has fold-none class
+    if ($(this).hasClass('fold-none')) return;
 
     // create a collapsable div to wrap the code in
     var div = $('<div class="collapse r-code-collapse"></div>');
@@ -1514,7 +1516,9 @@ window.initializeCodeFolding = function(show) {
     showCodeButton.append(showCodeText);
     showCodeButton
         .attr('data-toggle', 'collapse')
+        .attr('data-bs-toggle', 'collapse') // BS5
         .attr('data-target', '#' + id)
+        .attr('data-bs-target', '#' + id)   // BS5
         .attr('aria-expanded', showThis)
         .attr('aria-controls', id);
 
@@ -1604,6 +1608,7 @@ if (window.hljs) {
 
 
 
+
 <style type="text/css">
 #rmd-source-code {
   display: none;
@@ -1634,6 +1639,9 @@ button.code-folding-btn:focus {
 }
 summary {
   display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
 }
 pre code {
   padding: 0;
@@ -1743,7 +1751,7 @@ pre code {
 <div id="header">
 
 <div class="btn-group pull-right float-right">
-<button type="button" class="btn btn-default btn-xs btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<button type="button" class="btn btn-default btn-xs btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
 <ul class="dropdown-menu dropdown-menu-right" style="min-width: 50px;">
 <li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
 <li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
@@ -1754,123 +1762,94 @@ pre code {
 
 
 
-<h1 class="title toc-ignore">Module Quiz: Data Transfer</h1>
+<h1 class="title toc-ignore">Chocolate Study</h1>
 
 </div>
 
 
 <!-- rnb-text-begin -->
+<div id="overview" class="section level1">
+<h1>Overview</h1>
+<p>The NTRHD is part of a study about the association between chocolate
+eating habits and academic ability. The study took place at multiple
+schools, chosen at random, from around the region. Graduate students
+administered the surveys to students at each school, recorded survey
+responses electronically, and then emailed them to us. Now, we need your
+help importing the data into R, doing a little bit of data cleaning, and
+saving the data again once it’s ready for analysis.</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeShkcGx5ciwgd2Fybi5jb25mbGljdHMgPSBGQUxTRSlcbmxpYnJhcnkocmVhZHIpXG5saWJyYXJ5KHJlYWR4bClcbmxpYnJhcnkoaGF2ZW4pXG5gYGAifQ== -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeShkcGx5ciwgd2Fybi5jb25mbGljdHMgPSBGQUxTRSlcbmxpYnJhcnkocmVhZHhsKVxubGlicmFyeShyZWFkcilcbmxpYnJhcnkoaGF2ZW4pXG5gYGAifQ== -->
 <pre class="r"><code>library(dplyr, warn.conflicts = FALSE)
-library(readr)
 library(readxl)
+library(readr)
 library(haven)</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
-<div id="overview" class="section level1">
-<h1>Overview</h1>
-<p>The NTRHD is doing an analysis of data acquired from a diabetes
-medical device study. The study took place across multiple clinics.
-Physicians collected data at each clinic, compiled the data, recorded
-the data electronically, and then emailed the data to us. We need you to
-import the raw data set into R and save it locally as an .Rds file that
-we will analyze later. Additionally, we want to compare this diabetes
-data to national diabetes data from the National Health and Nutrition
-Examination Survey (NHANES). So, I would like you to import, alter, and
-export that data as well.</p>
 </div>
 <div id="task-1" class="section level1">
 <h1>Task 1</h1>
-<p>Click the link below to download the raw data file to your
+<p>Click the links below to download the raw data files to your
 computer:</p>
 <ul>
-<li><p><a href="https://www.dropbox.com/s/0cizsa3ejiy3jy9/diabetes.xlsx?dl=1">diabetes.xlsx</a></p></li>
-<li><p>Notice that this excel workbook contains two sheets. One sheet
-contains demographic information about the study participants. The other
-sheet contains study outcomes data.</p></li>
+<li><a href="https://www.dropbox.com/s/9riqfhtf582o2az/Chocolate%20Study%201.xls?dl=1">chocolate
+study 1.xls</a><br />
+</li>
+<li><a href="https://www.dropbox.com/s/ggln051redw1g98/Chocolate%20Study%202.csv?dl=1">chocolate
+study 2.csv</a></li>
+<li><a href="https://www.dropbox.com/s/90ndmdc463ui88j/Chocolate%20Study%203.txt?dl=1">chocolate
+study 3.txt</a></li>
 </ul>
 </div>
 <div id="task-2" class="section level1">
 <h1>Task 2</h1>
-<p>Import the diabetes study demographics data into R as a data frame
-named <code>diab_demo</code>.</p>
+<p>Import <code>Chocolate Study 1.xls</code> into your R global
+environment as <code>choco_1</code>.</p>
 <div id="question" class="section level2">
 <h2>Question:</h2>
 <ol style="list-style-type: decimal">
 <li>Which of the following code chunks will correctly import the
-diabetes study demographics data into R as a data frame named
-<code>diab_demo</code>?</li>
+<code>Chocolate Study 1.xls</code> data into your R global environment
+as <code>choco_1</code>?</li>
 </ol>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjpbIiMgSW5jb3JyZWN0OiBUaGlzIGNvZGUgbmFtZXMgdGhlIGRhdGEgZnJhbWUgZGlhYiBpbnN0ZWFkIG9mIGRpYWJfZGVtby4iLCJkaWFiIDwtIHJlYWRfZXhjZWwoIiwiICBcImRpYWJldGVzLnhsc3hcIiwiLCIgIHNoZWV0ID0gXCJkZW1vXCIsIiwiICBjb2xfbmFtZXMgPSBjKFwicGlkXCIsIFwic2V4XCIsIFwiZG9iXCIpLCIsIiAgY29sX3R5cGVzID0gYyhcInRleHRcIiwgXCJ0ZXh0XCIsIFwiZGF0ZVwiKSwiLCIgIHNraXAgPSAyIiwiKSJdfQ== -->
-<pre class="r"><code># Incorrect: This code names the data frame diab instead of diab_demo.
-diab &lt;- read_excel(
-  &quot;diabetes.xlsx&quot;,
-  sheet = &quot;demo&quot;,
-  col_names = c(&quot;pid&quot;, &quot;sex&quot;, &quot;dob&quot;),
-  col_types = c(&quot;text&quot;, &quot;text&quot;, &quot;date&quot;),
-  skip = 2
-)</code></pre>
+<!-- rnb-source-begin eyJkYXRhIjpbIiMgSW5jb3JyZWN0OiBjaG9jb2xhdGVfc3R1ZHlfMS54bHMgaXMgbm90IGEgY3N2IGZpbGUuIiwiY2hvY29fMSA8LSByZWFkX2NzdihcIkNob2NvbGF0ZSBTdHVkeSAxLnhsc1wiKSJdfQ== -->
+<pre class="r"><code># Incorrect: chocolate_study_1.xls is not a csv file.
+choco_1 &lt;- read_csv(&quot;Chocolate Study 1.xls&quot;)</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjpbIiMgSW5jb3JyZWN0OiByZWFkeGwgaXMgYSBwYWNrYWdlLCBub3QgYSBmdW5jdGlvbi4iLCJkaWFiX2RlbW8gPC0gcmVhZHhsKCIsIiAgXCJkaWFiZXRlcy54bHN4XCIsIiwiICBzaGVldCA9IFwiZGVtb1wiLCIsIiAgY29sX25hbWVzID0gYyhcInBpZFwiLCBcInNleFwiLCBcImRvYlwiKSwiLCIgIGNvbF90eXBlcyA9IGMoXCJ0ZXh0XCIsIFwidGV4dFwiLCBcImRhdGVcIiksIiwiICBza2lwID0gMiIsIikiXX0= -->
-<pre class="r"><code># Incorrect: readxl is a package, not a function.
-diab_demo &lt;- readxl(
-  &quot;diabetes.xlsx&quot;,
-  sheet = &quot;demo&quot;,
-  col_names = c(&quot;pid&quot;, &quot;sex&quot;, &quot;dob&quot;),
-  col_types = c(&quot;text&quot;, &quot;text&quot;, &quot;date&quot;),
-  skip = 2
-)</code></pre>
+<!-- rnb-source-begin eyJkYXRhIjpbIiMgSW5jb3JyZWN0OiByZWFkeGwgaXMgdGhlIG5hbWUgb2YgYW4gUiBwYWNrYWdlLCBub3QgYSBmdW5jdGlvbi4iLCJjaG9jb18xIDwtIHJlYWR4bChcIkNob2NvbGF0ZSBTdHVkeSAxLnhsc1wiKSJdfQ== -->
+<pre class="r"><code># Incorrect: readxl is the name of an R package, not a function.
+choco_1 &lt;- readxl(&quot;Chocolate Study 1.xls&quot;)</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjpbIiMgSW5jb3JyZWN0OiBUaGUgcmVhZF9jc3YoKSBmdW5jdGlvbiBjYW4ndCBiZSB1c2VkIHRvIGltcG9ydCBFeGNlbCBmaWxlcy4iLCJkaWFiX2RlbW8gPC0gcmVhZF9jc3YoIiwiICBcImRpYWJldGVzLnhsc3hcIiwiLCIgIHNoZWV0ID0gXCJkZW1vXCIsIiwiICBjb2xfbmFtZXMgPSBjKFwicGlkXCIsIFwic2V4XCIsIFwiZG9iXCIpLCIsIiAgY29sX3R5cGVzID0gYyhcInRleHRcIiwgXCJ0ZXh0XCIsIFwiZGF0ZVwiKSwiLCIgIHNraXAgPSAyIiwiKSJdfQ== -->
-<pre class="r"><code># Incorrect: The read_csv() function can&#39;t be used to import Excel files.
-diab_demo &lt;- read_csv(
-  &quot;diabetes.xlsx&quot;,
-  sheet = &quot;demo&quot;,
-  col_names = c(&quot;pid&quot;, &quot;sex&quot;, &quot;dob&quot;),
-  col_types = c(&quot;text&quot;, &quot;text&quot;, &quot;date&quot;),
-  skip = 2
-)</code></pre>
+<!-- rnb-source-begin eyJkYXRhIjpbIiMgSW5jb3JyZWN0OiByZWFkciBpcyB0aGUgbmFtZSBvZiBhbiBSIHBhY2thZ2UsIG5vdCBhIGZ1bmN0aW9uLiIsImNob2NvXzEgPC0gcmVhZHIoXCJDaG9jb2xhdGUgU3R1ZHkgMS54bHNcIikiXX0= -->
+<pre class="r"><code># Incorrect: readr is the name of an R package, not a function.
+choco_1 &lt;- readr(&quot;Chocolate Study 1.xls&quot;)</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjpbIiMgQ29ycmVjdCIsImRpYWJfZGVtbyA8LSByZWFkX2V4Y2VsKCIsIiAgXCJkaWFiZXRlcy54bHN4XCIsIiwiICBzaGVldCA9IFwiZGVtb1wiLCIsIiAgY29sX25hbWVzID0gYyhcInBpZFwiLCBcInNleFwiLCBcImRvYlwiKSwiLCIgIGNvbF90eXBlcyA9IGMoXCJ0ZXh0XCIsIFwidGV4dFwiLCBcImRhdGVcIiksIiwiICBza2lwID0gMiIsIikiXX0= -->
-<pre class="r"><code># Correct
-diab_demo &lt;- read_excel(
-  &quot;diabetes.xlsx&quot;,
-  sheet = &quot;demo&quot;,
-  col_names = c(&quot;pid&quot;, &quot;sex&quot;, &quot;dob&quot;),
-  col_types = c(&quot;text&quot;, &quot;text&quot;, &quot;date&quot;),
-  skip = 2
-)</code></pre>
+<!-- rnb-source-begin eyJkYXRhIjpbIiMgQ29ycmVjdC4iLCJjaG9jb18xIDwtIHJlYWRfZXhjZWwoXCJDaG9jb2xhdGUgU3R1ZHkgMS54bHNcIikiXX0= -->
+<pre class="r"><code># Correct.
+choco_1 &lt;- read_excel(&quot;Chocolate Study 1.xls&quot;)</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBGb3IgRHIuIENhbm5lbGwncyBjb21wdXRlci5cbmRpYWJfZGVtbyA8LSByZWFkX2V4Y2VsKFxuICBcIi9Vc2Vycy9icmFkY2FubmVsbC9Ecm9wYm94L0RhdGFzZXRzL0RpYWJldGVzL2RpYWJldGVzLnhsc3hcIixcbiAgc2hlZXQgPSBcImRlbW9cIixcbiAgY29sX25hbWVzID0gYyhcInBpZFwiLCBcInNleFwiLCBcImRvYlwiKSxcbiAgY29sX3R5cGVzID0gYyhcInRleHRcIiwgXCJ0ZXh0XCIsIFwiZGF0ZVwiKSxcbiAgc2tpcCA9IDJcbilcbmBgYCJ9 -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBGb3IgRHIuIENhbm5lbGwncyBjb21wdXRlci5cbmNob2NvXzEgPC0gcmVhZF9leGNlbChcIi9Vc2Vycy9icmFkY2FubmVsbC9Ecm9wYm94L0RhdGFzZXRzL0Nob2NvbGF0ZS9DaG9jb2xhdGUgU3R1ZHkgMS54bHNcIilcbmBgYCJ9 -->
 <pre class="r"><code># For Dr. Cannell&#39;s computer.
-diab_demo &lt;- read_excel(
-  &quot;/Users/bradcannell/Dropbox/Datasets/Diabetes/diabetes.xlsx&quot;,
-  sheet = &quot;demo&quot;,
-  col_names = c(&quot;pid&quot;, &quot;sex&quot;, &quot;dob&quot;),
-  col_types = c(&quot;text&quot;, &quot;text&quot;, &quot;date&quot;),
-  skip = 2
-)</code></pre>
+choco_1 &lt;- read_excel(&quot;/Users/bradcannell/Dropbox/Datasets/Chocolate/Chocolate Study 1.xls&quot;)</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
@@ -1878,480 +1857,458 @@ diab_demo &lt;- read_excel(
 </div>
 <div id="task-3" class="section level1">
 <h1>Task 3</h1>
-<p>Coerce the <code>sex</code> variable to a factor. Name the factor
-version of <code>sex</code>, <code>sex_f</code>. Possible values of
-<code>sex_f</code> should include <code>female</code>,
-<code>male</code>, and <code>other</code> — in that order.</p>
-<div id="question-1" class="section level2">
-<h2>Question:</h2>
-<ol start="2" style="list-style-type: decimal">
-<li>Fill in the following blanks to complete the code chunk that will
-coerce the <code>sex</code> variable to a factor with possible values of
-<code>female</code>, <code>male</code>, and <code>other</code> — in that
-order.</li>
-</ol>
+<p>View the structure of <code>choco_1</code> using the
+<code>str()</code> function.</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGlhYl9kZW1vIDwtIGRpYWJfZGVtbyAlPiUgXG4gIG11dGF0ZShzZXhfZiA9IGZhY3RvcihzZXgsIGxldmVscyA9IGMoXCJmZW1hbGVcIiwgXCJtYWxlXCIsIFwib3RoZXJcIikpKVxuYGBgIn0= -->
-<pre class="r"><code>diab_demo &lt;- diab_demo %&gt;% 
-  mutate(sex_f = factor(sex, levels = c(&quot;female&quot;, &quot;male&quot;, &quot;other&quot;)))</code></pre>
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuc3RyKGNob2NvXzEpXG5gYGAifQ== -->
+<pre class="r"><code>str(choco_1)</code></pre>
 <!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-</div>
-</div>
-<div id="task-4" class="section level1">
-<h1>Task 4</h1>
-<p>Use the <code>str()</code> function to view the structure of
-<code>diab_demo</code>.</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuc3RyKGRpYWJfZGVtbylcbmBgYCJ9 -->
-<pre class="r"><code>str(diab_demo)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoidGliYmxlIFsyOSDDlyA0XSAoUzM6IHRibF9kZi90YmwvZGF0YS5mcmFtZSlcbiAkIHBpZCAgOiBjaHIgWzE6MjldIFwiMTAwMVwiIFwiMTAwNFwiIFwiMTAwNVwiIFwiMTAwOVwiIC4uLlxuICQgc2V4ICA6IGNociBbMToyOV0gXCJtYWxlXCIgXCJmZW1hbGVcIiBcIm1hbGVcIiBcIm1hbGVcIiAuLi5cbiAkIGRvYiAgOiBQT1NJWGN0WzE6MjldLCBmb3JtYXQ6IFwiMTk0OC0wMy0wNFwiIC4uLlxuICQgc2V4X2Y6IEZhY3RvciB3LyAzIGxldmVscyBcImZlbWFsZVwiLFwibWFsZVwiLC4uOiAyIDEgMiAyIDIgMiAxIDIgMiAxIC4uLlxuIn0= -->
-<pre><code>tibble [29 × 4] (S3: tbl_df/tbl/data.frame)
- $ pid  : chr [1:29] &quot;1001&quot; &quot;1004&quot; &quot;1005&quot; &quot;1009&quot; ...
- $ sex  : chr [1:29] &quot;male&quot; &quot;female&quot; &quot;male&quot; &quot;male&quot; ...
- $ dob  : POSIXct[1:29], format: &quot;1948-03-04&quot; ...
- $ sex_f: Factor w/ 3 levels &quot;female&quot;,&quot;male&quot;,..: 2 1 2 2 2 2 1 2 2 1 ...</code></pre>
+<!-- rnb-output-begin eyJkYXRhIjoidGliYmxlIFs1MCDDlyAyMV0gKFMzOiB0YmxfZGYvdGJsL2RhdGEuZnJhbWUpXG4gJCBVSU4gICAgOiBudW0gWzE6NTBdIDE1MzAgMTUzNCAxNTM4IDE1NDIgMTU0NiAuLi5cbiAkIGxhc3QgICA6IGNociBbMTo1MF0gXCJTbWl0aFwiIFwiV2lsbGlhbXNcIiBcIkJyb3duXCIgXCJKb25lc1wiIC4uLlxuICQgZmlyc3QgIDogY2hyIFsxOjUwXSBcIkphbWVzXCIgXCJNYXJ5XCIgXCJSb2JlcnRcIiBcIkxpbmRhXCIgLi4uXG4gJCBhZ2UgICAgOiBudW0gWzE6NTBdIDExIDEyIDEzIDEwIDEzIDEyIDEyIDEyIDEzIDEyIC4uLlxuICQgZ3JhZGUgIDogbnVtIFsxOjUwXSA3IDggOCA1IDggNiA2IDcgNiA2IC4uLlxuICQgc2Nob29sIDogY2hyIFsxOjUwXSBcIkZsb3dlciBHcm92ZVwiIFwiQ2VudHJhbFwiIFwiV2VzdCBNaWxsZXJcIiBcIldpbGxpYW1zb25cIiAuLi5cbiAkIHBhcmVudCA6IGNociBbMTo1MF0gXCJGYXRoZXJcIiBcIk1vdGhlclwiIFwiRmF0aGVyXCIgXCJNb3RoZXJcIiAuLi5cbiAkIG1hcnJ5ICA6IGNociBbMTo1MF0gXCJNYXJyaWVkXCIgXCJTaW5nbGVcIiBcIk1hcnJpZWRcIiBcIkRpdm9yY2VkXCIgLi4uXG4gJCBtYXRoMSAgOiBudW0gWzE6NTBdIDQuMyAxIDIgNSAyIDMgNSAzIDQgNSAuLi5cbiAkIG1hdGgyICA6IG51bSBbMTo1MF0gNSAzIDIgMiA0IDUgNCAyIDUgMSAuLi5cbiAkIG1hdGgzICA6IG51bSBbMTo1MF0gNCAzIDEgMyAzIDUgNCA1IDQgMiAuLi5cbiAkIHJlYWQxICA6IG51bSBbMTo1MF0gMy41IDIgNSA1IDMgMiAzIDQgMyA1IC4uLlxuICQgcmVhZDIgIDogbnVtIFsxOjUwXSA0IDEuNSA1IDIgNSA1IDQgNCA1IDEgLi4uXG4gJCByZWFkMyAgOiBudW0gWzE6NTBdIDQgMy44IDIgMyAyIDMgNSA1IDEgMyAuLi5cbiAkIG92ZXJhbGw6IG51bSBbMTo1MF0gMjQuOCAxNC4zIDE3IDIwIDE5IDIzIDI1IDIzIDIyIDE3IC4uLlxuICQgY2hvY28xIDogbnVtIFsxOjUwXSAxIDAgMiAxIDAgMSAxIDEgMiAwIC4uLlxuICQgY2hvY28yIDogbnVtIFsxOjUwXSAwIDAgMSAwIDAgMCAwIDAgMSAwIC4uLlxuICQgY2hvY28zIDogbnVtIFsxOjUwXSAzIE5BIDIgTkEgTkEgMSAxIDAgTkEgTkEgLi4uXG4gJCBleHRyYTEgOiBudW0gWzE6NTBdIDEgMCAwIDAgMSAxIDEgMSAwIDAgLi4uXG4gJCBleHRyYTIgOiBjaHIgWzE6NTBdIFwiZm9vdGJhbGxcIiBOQSBOQSBOQSAuLi5cbiAkIHZlZ2dpZSA6IG51bSBbMTo1MF0gMSAwIDAgMCAxIDEgMCAwIDAgMCAuLi5cbiJ9 -->
+<pre><code>tibble [50 × 21] (S3: tbl_df/tbl/data.frame)
+ $ UIN    : num [1:50] 1530 1534 1538 1542 1546 ...
+ $ last   : chr [1:50] &quot;Smith&quot; &quot;Williams&quot; &quot;Brown&quot; &quot;Jones&quot; ...
+ $ first  : chr [1:50] &quot;James&quot; &quot;Mary&quot; &quot;Robert&quot; &quot;Linda&quot; ...
+ $ age    : num [1:50] 11 12 13 10 13 12 12 12 13 12 ...
+ $ grade  : num [1:50] 7 8 8 5 8 6 6 7 6 6 ...
+ $ school : chr [1:50] &quot;Flower Grove&quot; &quot;Central&quot; &quot;West Miller&quot; &quot;Williamson&quot; ...
+ $ parent : chr [1:50] &quot;Father&quot; &quot;Mother&quot; &quot;Father&quot; &quot;Mother&quot; ...
+ $ marry  : chr [1:50] &quot;Married&quot; &quot;Single&quot; &quot;Married&quot; &quot;Divorced&quot; ...
+ $ math1  : num [1:50] 4.3 1 2 5 2 3 5 3 4 5 ...
+ $ math2  : num [1:50] 5 3 2 2 4 5 4 2 5 1 ...
+ $ math3  : num [1:50] 4 3 1 3 3 5 4 5 4 2 ...
+ $ read1  : num [1:50] 3.5 2 5 5 3 2 3 4 3 5 ...
+ $ read2  : num [1:50] 4 1.5 5 2 5 5 4 4 5 1 ...
+ $ read3  : num [1:50] 4 3.8 2 3 2 3 5 5 1 3 ...
+ $ overall: num [1:50] 24.8 14.3 17 20 19 23 25 23 22 17 ...
+ $ choco1 : num [1:50] 1 0 2 1 0 1 1 1 2 0 ...
+ $ choco2 : num [1:50] 0 0 1 0 0 0 0 0 1 0 ...
+ $ choco3 : num [1:50] 3 NA 2 NA NA 1 1 0 NA NA ...
+ $ extra1 : num [1:50] 1 0 0 0 1 1 1 1 0 0 ...
+ $ extra2 : chr [1:50] &quot;football&quot; NA NA NA ...
+ $ veggie : num [1:50] 1 0 0 0 1 1 0 0 0 0 ...</code></pre>
 <!-- rnb-output-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
-<div id="question-2" class="section level2">
+<div id="question-1" class="section level2">
 <h2>Question:</h2>
-<ol start="3" style="list-style-type: decimal">
-<li>The <code>diab_demo</code> data frame contains ____ rows and ____
+<ol start="2" style="list-style-type: decimal">
+<li>The <code>choco_1</code> data frame contains ____ rows and ____
 columns.</li>
 </ol>
 <ul>
-<li>The <code>diab_demo</code> data frame contains 29 rows and 4
+<li>The <code>choco_1</code> data frame contains 50 rows and 21
 columns.</li>
 </ul>
 </div>
 </div>
-<div id="task-5" class="section level1">
-<h1>Task 5</h1>
-<p>Write code that instructs R to count the number of participants who
-fall into each category of <code>sex_f</code>.</p>
+<div id="task-4" class="section level1">
+<h1>Task 4</h1>
+<p>Import <code>Chocolate Study 2.csv</code> into your R global
+environment as <code>choco_2</code>.</p>
+<div id="question-2" class="section level2">
+<h2>Question:</h2>
+<ol start="3" style="list-style-type: decimal">
+<li>Which of the following code chunks will correctly import the
+<code>Chocolate Study 2.csv</code> data into your R global
+environment?</li>
+</ol>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxudGFibGUoZGlhYl9kZW1vJHNleF9mKVxuYGBgIn0= -->
-<pre class="r"><code>table(diab_demo$sex_f)</code></pre>
+<!-- rnb-source-begin eyJkYXRhIjpbIiMgSW5jb3JyZWN0OiBBbHRob3VnaCB5b3UgY2FuIG9wZW4gY2hvY29sYXRlX3N0dWR5XzEuY3N2IGluIEV4Y2VsLCBpdCBkb2Vzbid0IGhhdmUgYSAueGxzIG9yIC54bHN4IGZpbGUgZXh0ZW5zaW9uLCB3aGljaCBpcyB3aGF0IHJlYWRfZXhjZWwgZXhwZWN0cy4iLCJjaG9jb18yIDwtIHJlYWRfZXhjZWwoXCJDaG9jb2xhdGUgU3R1ZHkgMi5jc3ZcIikiXX0= -->
+<pre class="r"><code># Incorrect: Although you can open chocolate_study_1.csv in Excel, it doesn&#39;t have a .xls or .xlsx file extension, which is what read_excel expects.
+choco_2 &lt;- read_excel(&quot;Chocolate Study 2.csv&quot;)</code></pre>
 <!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiXG5mZW1hbGUgICBtYWxlICBvdGhlciBcbiAgICAxMCAgICAgMTcgICAgICAwIFxuIn0= -->
-<pre><code>
-female   male  other 
-    10     17      0 </code></pre>
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjpbIiMgSW5jb3JyZWN0OiBUaGVyZSBpcyBhIHJlYWQuY3N2KCkgZnVuY3Rpb24gdGhhdCB3aWxsIGltcG9ydCB0aGlzIGRhdGEuIEhvd2V2ZXIsIGl0IGlzbid0IGluIHRoZSByZWFkciBwYWNrYWdlLiBUaGUgZG91YmxlIGNvbG9uIHN5bnRheCB1c2VkIGluIHRoZSBjb2RlIHJlYWRyOjpyZWFkLmNzdigpIHRlbGxzIFIgdG8gbG9vayBmb3IgdGhlIHJlYWQuY3N2KCkgZnVuY3Rpb24gaW4gdGhlIHJlYWRyIHBhY2thZ2UsIHdoaWNoIGRvZXNuJ3QgZXhpc3QuIFRoZSByZWFkX2NzdigpIGZ1bmN0aW9uIGlzIGEgYmFzZSBSIGZ1bmN0aW9uLiAiLCJjaG9jb18yIDwtIHJlYWRyOjpyZWFkLmNzdihcIkNob2NvbGF0ZSBTdHVkeSAyLmNzdlwiKSJdfQ== -->
+<pre class="r"><code># Incorrect: There is a read.csv() function that will import this data. However, it isn&#39;t in the readr package. The double colon syntax used in the code readr::read.csv() tells R to look for the read.csv() function in the readr package, which doesn&#39;t exist. The read_csv() function is a base R function. 
+choco_2 &lt;- readr::read.csv(&quot;Chocolate Study 2.csv&quot;)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjpbIiMgQ29ycmVjdC4gSG93ZXZlciwgSSBwcmVmZXIgcmVhZF9jc3YoKSBvdmVyIHJlYWQuY3N2KCkuIiwiY2hvY29fMiA8LSByZWFkLmNzdihcIkNob2NvbGF0ZSBTdHVkeSAyLmNzdlwiKSJdfQ== -->
+<pre class="r"><code># Correct. However, I prefer read_csv() over read.csv().
+choco_2 &lt;- read.csv(&quot;Chocolate Study 2.csv&quot;)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjpbIiMgQ29ycmVjdC4iLCJjaG9jb18yIDwtIHJlYWRfY3N2KFwiQ2hvY29sYXRlIFN0dWR5IDIuY3N2XCIpIl19 -->
+<pre class="r"><code># Correct.
+choco_2 &lt;- read_csv(&quot;Chocolate Study 2.csv&quot;)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBGb3IgRHIuIENhbm5lbGwncyBjb21wdXRlci5cbmNob2NvXzIgPC0gcmVhZF9jc3YoXCIvVXNlcnMvYnJhZGNhbm5lbGwvRHJvcGJveC9EYXRhc2V0cy9DaG9jb2xhdGUvQ2hvY29sYXRlIFN0dWR5IDIuY3N2XCIpXG5gYGAifQ== -->
+<pre class="r"><code># For Dr. Cannell&#39;s computer.
+choco_2 &lt;- read_csv(&quot;/Users/bradcannell/Dropbox/Datasets/Chocolate/Chocolate Study 2.csv&quot;)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiUm93czogMjAgQ29sdW1uczogMjHilIDilIAgQ29sdW1uIHNwZWNpZmljYXRpb24g4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSAXG5EZWxpbWl0ZXI6IFwiLFwiXG5jaHIgICg2KTogbGFzdCwgZmlyc3QsIHNjaG9vbCwgcGFyZW50LCBtYXJyeSwgZXh0cmEyXG5kYmwgKDE1KTogVUlOLCBhZ2UsIGdyYWRlLCBtYXRoMSwgbWF0aDIsIG1hdGgzLCByZWFkMSwgcmVhZDIsIHJlYWQzLCBvdmVyYWxsLCBjaG9jbzEsIGNob2NvMiwgY2hvY28zLCBleHRyYTEsIHZlLi4uXG7ihLkgVXNlIGBzcGVjKClgIHRvIHJldHJpZXZlIHRoZSBmdWxsIGNvbHVtbiBzcGVjaWZpY2F0aW9uIGZvciB0aGlzIGRhdGEuXG7ihLkgU3BlY2lmeSB0aGUgY29sdW1uIHR5cGVzIG9yIHNldCBgc2hvd19jb2xfdHlwZXMgPSBGQUxTRWAgdG8gcXVpZXQgdGhpcyBtZXNzYWdlLlxuIn0= -->
+<pre><code>Rows: 20 Columns: 21── Column specification ────────────────────────────────────────────────────────────────────────────────────────────
+Delimiter: &quot;,&quot;
+chr  (6): last, first, school, parent, marry, extra2
+dbl (15): UIN, age, grade, math1, math2, math3, read1, read2, read3, overall, choco1, choco2, choco3, extra1, ve...
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+</div>
+</div>
+<div id="task-5" class="section level1">
+<h1>Task 5</h1>
+<p>View the structure of <code>choco_2</code> using the
+<code>str()</code> function.</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuc3RyKGNob2NvXzIpXG5gYGAifQ== -->
+<pre class="r"><code>str(choco_2)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoic3BlY190YmxfZGYgWzIwIMOXIDIxXSAoUzM6IHNwZWNfdGJsX2RmL3RibF9kZi90YmwvZGF0YS5mcmFtZSlcbiAkIFVJTiAgICA6IG51bSBbMToyMF0gMTEwMSAxMTA0IDExMDggMTExMCAxMTE0IC4uLlxuICQgbGFzdCAgIDogY2hyIFsxOjIwXSBcIk1hcmluXCIgXCJEb3Rzb25cIiBcIk1lcnJpbGxcIiBcIkxpbmRzYXlcIiAuLi5cbiAkIGZpcnN0ICA6IGNociBbMToyMF0gXCJBdXN0aW5cIiBcIlN0dWFydFwiIFwiQXJ0dXJvXCIgXCJKb2V5XCIgLi4uXG4gJCBhZ2UgICAgOiBudW0gWzE6MjBdIDExIDEyIDEwIDEyIDEyIDEyIDEyIDEzIDExIDExIC4uLlxuICQgZ3JhZGUgIDogbnVtIFsxOjIwXSA2IDcgNSA2IDYgNyA3IDggNiA2IC4uLlxuICQgc2Nob29sIDogY2hyIFsxOjIwXSBcIkNlbnRyYWxcIiBcIldlc3QgTWlsbGVyXCIgXCJGbG93ZXIgR3JvdmVcIiBcIldpbGxpYW1zb25cIiAuLi5cbiAkIHBhcmVudCA6IGNociBbMToyMF0gXCJNb3RoZXJcIiBcIk1vdGhlclwiIFwiTW90aGVyXCIgXCJNb3RoZXJcIiAuLi5cbiAkIG1hcnJ5ICA6IGNociBbMToyMF0gXCJEaXZvcmNlZFwiIFwiRGl2b3JjZWRcIiBcIkRpdm9yY2VkXCIgXCJEaXZvcmNlZFwiIC4uLlxuICQgbWF0aDEgIDogbnVtIFsxOjIwXSAxIDUgMyAyIDQgNCA0IDQgNSA1IC4uLlxuICQgbWF0aDIgIDogbnVtIFsxOjIwXSA0IDQgNSAzIDMgMSAyIDUgMiAyIC4uLlxuICQgbWF0aDMgIDogbnVtIFsxOjIwXSAxLjIgNSAyIDMgMyA1IDQgNCAyIDQgLi4uXG4gJCByZWFkMSAgOiBudW0gWzE6MjBdIDMuNCAxIDEgMyA0IDIgMSA0IDQgMSAuLi5cbiAkIHJlYWQyICA6IG51bSBbMToyMF0gMyA1IDUgNSAxIDQgNSA0IDEgMyAuLi5cbiAkIHJlYWQzICA6IG51bSBbMToyMF0gMiAxIDEgMyAyIDQgMyA0IDQgMSAuLi5cbiAkIG92ZXJhbGw6IG51bSBbMToyMF0gMTQuNiAyMSAxNyAxOSAxNyAyMCAxOSAyNSAxOCAxNiAuLi5cbiAkIGNob2NvMSA6IG51bSBbMToyMF0gMiAxIDAgMSAwIDEgMCAxIDEgMCAuLi5cbiAkIGNob2NvMiA6IG51bSBbMToyMF0gMSAwIDAgMCAwIDAgMCAwIDAgMCAuLi5cbiAkIGNob2NvMyA6IG51bSBbMToyMF0gTkEgMSBOQSAxIE5BIDEgTkEgMSAxIE5BIC4uLlxuICQgZXh0cmExIDogbnVtIFsxOjIwXSAwIDAgMCAwIDAgMSAxIDAgMCAwIC4uLlxuICQgZXh0cmEyIDogY2hyIFsxOjIwXSBOQSBOQSBOQSBOQSAuLi5cbiAkIHZlZ2dpZSA6IG51bSBbMToyMF0gMCAxIDAgMCAwIDAgMSAwIDAgMCAuLi5cbiAtIGF0dHIoKiwgXCJzcGVjXCIpPVxuICAuLiBjb2xzKFxuICAuLiAgIFVJTiA9IGNvbF9kb3VibGUoKSxcbiAgLi4gICBsYXN0ID0gY29sX2NoYXJhY3RlcigpLFxuICAuLiAgIGZpcnN0ID0gY29sX2NoYXJhY3RlcigpLFxuICAuLiAgIGFnZSA9IGNvbF9kb3VibGUoKSxcbiAgLi4gICBncmFkZSA9IGNvbF9kb3VibGUoKSxcbiAgLi4gICBzY2hvb2wgPSBjb2xfY2hhcmFjdGVyKCksXG4gIC4uICAgcGFyZW50ID0gY29sX2NoYXJhY3RlcigpLFxuICAuLiAgIG1hcnJ5ID0gY29sX2NoYXJhY3RlcigpLFxuICAuLiAgIG1hdGgxID0gY29sX2RvdWJsZSgpLFxuICAuLiAgIG1hdGgyID0gY29sX2RvdWJsZSgpLFxuICAuLiAgIG1hdGgzID0gY29sX2RvdWJsZSgpLFxuICAuLiAgIHJlYWQxID0gY29sX2RvdWJsZSgpLFxuICAuLiAgIHJlYWQyID0gY29sX2RvdWJsZSgpLFxuICAuLiAgIHJlYWQzID0gY29sX2RvdWJsZSgpLFxuICAuLiAgIG92ZXJhbGwgPSBjb2xfZG91YmxlKCksXG4gIC4uICAgY2hvY28xID0gY29sX2RvdWJsZSgpLFxuICAuLiAgIGNob2NvMiA9IGNvbF9kb3VibGUoKSxcbiAgLi4gICBjaG9jbzMgPSBjb2xfZG91YmxlKCksXG4gIC4uICAgZXh0cmExID0gY29sX2RvdWJsZSgpLFxuICAuLiAgIGV4dHJhMiA9IGNvbF9jaGFyYWN0ZXIoKSxcbiAgLi4gICB2ZWdnaWUgPSBjb2xfZG91YmxlKClcbiAgLi4gKVxuIC0gYXR0cigqLCBcInByb2JsZW1zXCIpPTxleHRlcm5hbHB0cj4gXG4ifQ== -->
+<pre><code>spec_tbl_df [20 × 21] (S3: spec_tbl_df/tbl_df/tbl/data.frame)
+ $ UIN    : num [1:20] 1101 1104 1108 1110 1114 ...
+ $ last   : chr [1:20] &quot;Marin&quot; &quot;Dotson&quot; &quot;Merrill&quot; &quot;Lindsay&quot; ...
+ $ first  : chr [1:20] &quot;Austin&quot; &quot;Stuart&quot; &quot;Arturo&quot; &quot;Joey&quot; ...
+ $ age    : num [1:20] 11 12 10 12 12 12 12 13 11 11 ...
+ $ grade  : num [1:20] 6 7 5 6 6 7 7 8 6 6 ...
+ $ school : chr [1:20] &quot;Central&quot; &quot;West Miller&quot; &quot;Flower Grove&quot; &quot;Williamson&quot; ...
+ $ parent : chr [1:20] &quot;Mother&quot; &quot;Mother&quot; &quot;Mother&quot; &quot;Mother&quot; ...
+ $ marry  : chr [1:20] &quot;Divorced&quot; &quot;Divorced&quot; &quot;Divorced&quot; &quot;Divorced&quot; ...
+ $ math1  : num [1:20] 1 5 3 2 4 4 4 4 5 5 ...
+ $ math2  : num [1:20] 4 4 5 3 3 1 2 5 2 2 ...
+ $ math3  : num [1:20] 1.2 5 2 3 3 5 4 4 2 4 ...
+ $ read1  : num [1:20] 3.4 1 1 3 4 2 1 4 4 1 ...
+ $ read2  : num [1:20] 3 5 5 5 1 4 5 4 1 3 ...
+ $ read3  : num [1:20] 2 1 1 3 2 4 3 4 4 1 ...
+ $ overall: num [1:20] 14.6 21 17 19 17 20 19 25 18 16 ...
+ $ choco1 : num [1:20] 2 1 0 1 0 1 0 1 1 0 ...
+ $ choco2 : num [1:20] 1 0 0 0 0 0 0 0 0 0 ...
+ $ choco3 : num [1:20] NA 1 NA 1 NA 1 NA 1 1 NA ...
+ $ extra1 : num [1:20] 0 0 0 0 0 1 1 0 0 0 ...
+ $ extra2 : chr [1:20] NA NA NA NA ...
+ $ veggie : num [1:20] 0 1 0 0 0 0 1 0 0 0 ...
+ - attr(*, &quot;spec&quot;)=
+  .. cols(
+  ..   UIN = col_double(),
+  ..   last = col_character(),
+  ..   first = col_character(),
+  ..   age = col_double(),
+  ..   grade = col_double(),
+  ..   school = col_character(),
+  ..   parent = col_character(),
+  ..   marry = col_character(),
+  ..   math1 = col_double(),
+  ..   math2 = col_double(),
+  ..   math3 = col_double(),
+  ..   read1 = col_double(),
+  ..   read2 = col_double(),
+  ..   read3 = col_double(),
+  ..   overall = col_double(),
+  ..   choco1 = col_double(),
+  ..   choco2 = col_double(),
+  ..   choco3 = col_double(),
+  ..   extra1 = col_double(),
+  ..   extra2 = col_character(),
+  ..   veggie = col_double()
+  .. )
+ - attr(*, &quot;problems&quot;)=&lt;externalptr&gt; </code></pre>
 <!-- rnb-output-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <div id="question-3" class="section level2">
 <h2>Question:</h2>
 <ol start="4" style="list-style-type: decimal">
-<li>According to the analysis you completed in Task 5, ____ people
-reported that their <code>sex</code> was <code>other</code>.</li>
+<li>The <code>choco_2</code> data frame contains ____ rows and ____
+columns.</li>
 </ol>
 <ul>
-<li>According to the analysis you completed in Task 5, 0 people reported
-that their <code>sex</code> was <code>other</code>.</li>
+<li>The <code>choco_2</code> data frame contains 20 rows and 21
+columns.</li>
 </ul>
 </div>
 </div>
 <div id="task-6" class="section level1">
 <h1>Task 6</h1>
-<p>Export <code>diab_demo</code> as an .Rds file with the same name
-(i.e., <code>diab_demo</code>).</p>
+<p>Import <code>Chocolate Study 3.txt</code> into your R global
+environment as <code>choco_3</code>. Make sure to tell R how to
+correctly identify missing values in the raw data.</p>
 <div id="question-4" class="section level2">
 <h2>Question:</h2>
 <ol start="5" style="list-style-type: decimal">
-<li>Which of the following code chunks will correctly export the
-<code>diab_demo</code> data frame as an .Rds file with the same name
-(i.e., <code>diab_demo</code>)?</li>
+<li>Which of the following code chunks will correctly import the
+<code>Chocolate Study 3.txt</code> data into your R global
+environment?</li>
 </ol>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjpbIiMgSW5jb3JyZWN0OiBUaGlzIGNvZGUgdXNlcyB0aGUgLmNzdiBmaWxlIGV4dGVuc2lvbiBpbnN0ZWFkIG9mIHRoZSAucmRzIGZpbGUgZXh0ZW5zaW9uLiAiLCJ3cml0ZV9yZHMoZGlhYl9kZW1vLCBcImRpYWJfZGVtby5jc3ZcIikiXX0= -->
-<pre class="r"><code># Incorrect: This code uses the .csv file extension instead of the .rds file extension. 
-write_rds(diab_demo, &quot;diab_demo.csv&quot;)</code></pre>
+<!-- rnb-source-begin eyJkYXRhIjpbIiMgSW5jb3JyZWN0OiByZWFkX3RhYmxlIHdpbGwgbm90IGNvcnJlY3RseSBoYW5kbGUgdmFsdWVzIHRoYXQgaW5jbHVkZSBzcGFjZXMgIiwiIyBzdWNoIGFzIFwiRmxvd2VyIEdyb3ZlXCIgaW4gdGhlIHNjaG9vbCBjb2x1bW4uIiwiY2hvY29fMyA8LSByZWFkX3RhYmxlKFwiQ2hvY29sYXRlIFN0dWR5IDMudHh0XCIpIl19 -->
+<pre class="r"><code># Incorrect: read_table will not correctly handle values that include spaces 
+# such as &quot;Flower Grove&quot; in the school column.
+choco_3 &lt;- read_table(&quot;Chocolate Study 3.txt&quot;)</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjpbIiMgSW5jb3JyZWN0OiBUaGUgdmFsdWVzIGJlaW5nIHBhc3NlZCB0byB0aGUgd3JpdGVfcmRzKCkgZnVuY3Rpb24gYXJlIGluIHRoZSBpbmNvcnJlY3Qgb3JkZXIuICIsIndyaXRlX3JkcyhcImRpYWJfZGVtby5yZHNcIiwgZGlhYl9kZW1vKSJdfQ== -->
-<pre class="r"><code># Incorrect: The values being passed to the write_rds() function are in the incorrect order. 
-write_rds(&quot;diab_demo.rds&quot;, diab_demo)</code></pre>
+<!-- rnb-source-begin eyJkYXRhIjpbIiMgSW5jb3JyZWN0OiBUaGlzIGNvZGUgZG9lcyBub3QgdGVsbCBSIGhvdyB0byBjb3JyZWN0bHkgaWRlbnRpZnkgbWlzc2luZyB2YWx1ZXMgaW4gdGhlIHJhdyBkYXRhLiIsImNob2NvXzMgPC0gcmVhZF9md2YoIiwiICBcIkNob2NvbGF0ZSBTdHVkeSAzLnR4dFwiLCIsIiAgY29sX3Bvc2l0aW9ucyA9IGZ3Zl93aWR0aHMoIiwiICAgIHdpZHRocyAgICA9IGMoNSwgOSwgOCwgNCwgNiwgMTMsIDksIDksIDYsIDYsIDYsIDYsIDYsIDYsIDgsIDcsIDcsIDcsIDcsIDksIDYpLCIsIiAgICBjb2xfbmFtZXMgPSBjKCIsIiAgICAgIFwidWluXCIsIFwibGFzdFwiLCBcImZpcnN0XCIsIFwiYWdlXCIsIFwiZ3JhZGVcIiwgXCJzY2hvb2xcIiwgXCJwYXJlbnRcIiwgXCJtYXJyeVwiLCAiLCIgICAgICBcIm1hdGgxXCIsIFwibWF0aDJcIiwgXCJtYXRoM1wiLCBcInJlYWQxXCIsIFwicmVhZDJcIiwgXCJyZWFkM1wiLCBcIm92ZXJhbGxcIiwgXCJjaG9jbzFcIiwgIiwiICAgICAgXCJjaG9jbzJcIiwgXCJjaG9jbzNcIiwgXCJleHRyYTFcIiwgXCJleHRyYTJcIiwgXCJ2ZWdnaWVcIiIsIiAgICApIiwiICApLCIsIiAgc2tpcCA9IDEsIiwiICBuYS5ybSA9IFRSVUUiLCIpIl19 -->
+<pre class="r"><code># Incorrect: This code does not tell R how to correctly identify missing values in the raw data.
+choco_3 &lt;- read_fwf(
+  &quot;Chocolate Study 3.txt&quot;,
+  col_positions = fwf_widths(
+    widths    = c(5, 9, 8, 4, 6, 13, 9, 9, 6, 6, 6, 6, 6, 6, 8, 7, 7, 7, 7, 9, 6),
+    col_names = c(
+      &quot;uin&quot;, &quot;last&quot;, &quot;first&quot;, &quot;age&quot;, &quot;grade&quot;, &quot;school&quot;, &quot;parent&quot;, &quot;marry&quot;, 
+      &quot;math1&quot;, &quot;math2&quot;, &quot;math3&quot;, &quot;read1&quot;, &quot;read2&quot;, &quot;read3&quot;, &quot;overall&quot;, &quot;choco1&quot;, 
+      &quot;choco2&quot;, &quot;choco3&quot;, &quot;extra1&quot;, &quot;extra2&quot;, &quot;veggie&quot;
+    )
+  ),
+  skip = 1,
+  na.rm = TRUE
+)</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjpbIiMgSW5jb3JyZWN0OiBUaGVyZSBpcyBubyBmdW5jdGlvbiBjYWxsZWQgd3JpdGUucmRzKCkuIiwid3JpdGUucmRzKGRpYWJfZGVtbywgXCJkaWFiX2RlbW8ucmRzXCIpIl19 -->
-<pre class="r"><code># Incorrect: There is no function called write.rds().
-write.rds(diab_demo, &quot;diab_demo.rds&quot;)</code></pre>
+<!-- rnb-source-begin eyJkYXRhIjpbIiMgSW5jb3JyZWN0OiBUaGlzIGNvZGUgZ2l2ZXMgY29sdW1uIHN0YXJ0IHZhbHVlcyBpbnN0ZWFkIG9mIGNvbHVtbiB3aWR0aHMiLCJjaG9jb18zIDwtIHJlYWRfZndmKCIsIiAgXCJDaG9jb2xhdGUgU3R1ZHkgMy50eHRcIiwiLCIgIGNvbF9wb3NpdGlvbnMgPSBmd2Zfd2lkdGhzKCIsIiAgICB3aWR0aHMgICAgPSBjKDUsIDksIDgsIDQsIDYsIDEzLCA5LCA5LCA2LCA2LCA2LCA2LCA2LCA2LCA4LCA3LCA3LCA3LCA3LCA5LCA2KSwiLCIgICAgY29sX25hbWVzID0gYygiLCIgICAgICBcInVpblwiLCBcImxhc3RcIiwgXCJmaXJzdFwiLCBcImFnZVwiLCBcImdyYWRlXCIsIFwic2Nob29sXCIsIFwicGFyZW50XCIsIFwibWFycnlcIiwgIiwiICAgICAgXCJtYXRoMVwiLCBcIm1hdGgyXCIsIFwibWF0aDNcIiwgXCJyZWFkMVwiLCBcInJlYWQyXCIsIFwicmVhZDNcIiwgXCJvdmVyYWxsXCIsIFwiY2hvY28xXCIsICIsIiAgICAgIFwiY2hvY28yXCIsIFwiY2hvY28zXCIsIFwiZXh0cmExXCIsIFwiZXh0cmEyXCIsIFwidmVnZ2llXCIiLCIgICAgKSIsIiAgKSwiLCIgIHNraXAgPSAxLCIsIiAgbmEgPSBcIi5cIiIsIikiXX0= -->
+<pre class="r"><code># Incorrect: This code gives column start values instead of column widths
+choco_3 &lt;- read_fwf(
+  &quot;Chocolate Study 3.txt&quot;,
+  col_positions = fwf_widths(
+    widths    = c(5, 9, 8, 4, 6, 13, 9, 9, 6, 6, 6, 6, 6, 6, 8, 7, 7, 7, 7, 9, 6),
+    col_names = c(
+      &quot;uin&quot;, &quot;last&quot;, &quot;first&quot;, &quot;age&quot;, &quot;grade&quot;, &quot;school&quot;, &quot;parent&quot;, &quot;marry&quot;, 
+      &quot;math1&quot;, &quot;math2&quot;, &quot;math3&quot;, &quot;read1&quot;, &quot;read2&quot;, &quot;read3&quot;, &quot;overall&quot;, &quot;choco1&quot;, 
+      &quot;choco2&quot;, &quot;choco3&quot;, &quot;extra1&quot;, &quot;extra2&quot;, &quot;veggie&quot;
+    )
+  ),
+  skip = 1,
+  na = &quot;.&quot;
+)</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjpbIiMgQ29ycmVjdC4iLCJ3cml0ZV9yZHMoZGlhYl9kZW1vLCBcImRpYWJfZGVtby5yZHNcIikiXX0= -->
-<pre class="r"><code># Correct.
-write_rds(diab_demo, &quot;diab_demo.rds&quot;)</code></pre>
+<!-- rnb-source-begin eyJkYXRhIjpbIiMgQ29ycmVjdCIsImNob2NvXzMgPC0gcmVhZF9md2YoIiwiICBcIkNob2NvbGF0ZSBTdHVkeSAzLnR4dFwiLCIsIiAgY29sX3Bvc2l0aW9ucyA9IGZ3Zl93aWR0aHMoIiwiICAgIHdpZHRocyAgICA9IGMoNSwgOSwgOCwgNCwgNiwgMTMsIDksIDksIDYsIDYsIDYsIDYsIDYsIDYsIDgsIDcsIDcsIDcsIDcsIDksIDYpLCIsIiAgICBjb2xfbmFtZXMgPSBjKCIsIiAgICAgIFwidWluXCIsIFwibGFzdFwiLCBcImZpcnN0XCIsIFwiYWdlXCIsIFwiZ3JhZGVcIiwgXCJzY2hvb2xcIiwgXCJwYXJlbnRcIiwgXCJtYXJyeVwiLCAiLCIgICAgICBcIm1hdGgxXCIsIFwibWF0aDJcIiwgXCJtYXRoM1wiLCBcInJlYWQxXCIsIFwicmVhZDJcIiwgXCJyZWFkM1wiLCBcIm92ZXJhbGxcIiwgXCJjaG9jbzFcIiwgIiwiICAgICAgXCJjaG9jbzJcIiwgXCJjaG9jbzNcIiwgXCJleHRyYTFcIiwgXCJleHRyYTJcIiwgXCJ2ZWdnaWVcIiIsIiAgICApIiwiICApLCIsIiAgc2tpcCA9IDEsIiwiICBuYSA9IFwiLlwiIiwiKSJdfQ== -->
+<pre class="r"><code># Correct
+choco_3 &lt;- read_fwf(
+  &quot;Chocolate Study 3.txt&quot;,
+  col_positions = fwf_widths(
+    widths    = c(5, 9, 8, 4, 6, 13, 9, 9, 6, 6, 6, 6, 6, 6, 8, 7, 7, 7, 7, 9, 6),
+    col_names = c(
+      &quot;uin&quot;, &quot;last&quot;, &quot;first&quot;, &quot;age&quot;, &quot;grade&quot;, &quot;school&quot;, &quot;parent&quot;, &quot;marry&quot;, 
+      &quot;math1&quot;, &quot;math2&quot;, &quot;math3&quot;, &quot;read1&quot;, &quot;read2&quot;, &quot;read3&quot;, &quot;overall&quot;, &quot;choco1&quot;, 
+      &quot;choco2&quot;, &quot;choco3&quot;, &quot;extra1&quot;, &quot;extra2&quot;, &quot;veggie&quot;
+    )
+  ),
+  skip = 1,
+  na = &quot;.&quot;
+)</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjpbIiMgRm9yIERyLiBDYW5uZWxsJ3MgY29tcHV0ZXIuIiwid3JpdGVfcmRzKGRpYWJfZGVtbywgXCIvVXNlcnMvYnJhZGNhbm5lbGwvRGVza3RvcC9kaWFiX2RlbW8ucmRzXCIpIl19 -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBGb3IgRHIuIENhbm5lbGwncyBjb21wdXRlci5cbmNob2NvXzMgPC0gcmVhZF9md2YoXG4gIFwiL1VzZXJzL2JyYWRjYW5uZWxsL0Ryb3Bib3gvRGF0YXNldHMvQ2hvY29sYXRlL0Nob2NvbGF0ZSBTdHVkeSAzLnR4dFwiLFxuICBjb2xfcG9zaXRpb25zID0gZndmX3dpZHRocyhcbiAgICB3aWR0aHMgICAgPSBjKDUsIDksIDgsIDQsIDYsIDEzLCA5LCA5LCA2LCA2LCA2LCA2LCA2LCA2LCA4LCA3LCA3LCA3LCA3LCA5LCA2KSxcbiAgICBjb2xfbmFtZXMgPSBjKFxuICAgICAgXCJ1aW5cIiwgXCJsYXN0XCIsIFwiZmlyc3RcIiwgXCJhZ2VcIiwgXCJncmFkZVwiLCBcInNjaG9vbFwiLCBcInBhcmVudFwiLCBcIm1hcnJ5XCIsIFxuICAgICAgXCJtYXRoMVwiLCBcIm1hdGgyXCIsIFwibWF0aDNcIiwgXCJyZWFkMVwiLCBcInJlYWQyXCIsIFwicmVhZDNcIiwgXCJvdmVyYWxsXCIsIFwiY2hvY28xXCIsIFxuICAgICAgXCJjaG9jbzJcIiwgXCJjaG9jbzNcIiwgXCJleHRyYTFcIiwgXCJleHRyYTJcIiwgXCJ2ZWdnaWVcIlxuICAgIClcbiAgKSxcbiAgc2tpcCA9IDEsXG4gIG5hID0gXCIuXCJcbilcbmBgYCJ9 -->
 <pre class="r"><code># For Dr. Cannell&#39;s computer.
-write_rds(diab_demo, &quot;/Users/bradcannell/Desktop/diab_demo.rds&quot;)</code></pre>
+choco_3 &lt;- read_fwf(
+  &quot;/Users/bradcannell/Dropbox/Datasets/Chocolate/Chocolate Study 3.txt&quot;,
+  col_positions = fwf_widths(
+    widths    = c(5, 9, 8, 4, 6, 13, 9, 9, 6, 6, 6, 6, 6, 6, 8, 7, 7, 7, 7, 9, 6),
+    col_names = c(
+      &quot;uin&quot;, &quot;last&quot;, &quot;first&quot;, &quot;age&quot;, &quot;grade&quot;, &quot;school&quot;, &quot;parent&quot;, &quot;marry&quot;, 
+      &quot;math1&quot;, &quot;math2&quot;, &quot;math3&quot;, &quot;read1&quot;, &quot;read2&quot;, &quot;read3&quot;, &quot;overall&quot;, &quot;choco1&quot;, 
+      &quot;choco2&quot;, &quot;choco3&quot;, &quot;extra1&quot;, &quot;extra2&quot;, &quot;veggie&quot;
+    )
+  ),
+  skip = 1,
+  na = &quot;.&quot;
+)</code></pre>
 <!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiUm93czogMTAgQ29sdW1uczogMjHilIDilIAgQ29sdW1uIHNwZWNpZmljYXRpb24g4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSAXG5cbmNociAgKDYpOiBsYXN0LCBmaXJzdCwgc2Nob29sLCBwYXJlbnQsIG1hcnJ5LCBleHRyYTJcbmRibCAoMTUpOiB1aW4sIGFnZSwgZ3JhZGUsIG1hdGgxLCBtYXRoMiwgbWF0aDMsIHJlYWQxLCByZWFkMiwgcmVhZDMsIG92ZXJhbGwsIGNob2NvMSwgY2hvY28yLCBjaG9jbzMsIGV4dHJhMSwgdmUuLi5cbuKEuSBVc2UgYHNwZWMoKWAgdG8gcmV0cmlldmUgdGhlIGZ1bGwgY29sdW1uIHNwZWNpZmljYXRpb24gZm9yIHRoaXMgZGF0YS5cbuKEuSBTcGVjaWZ5IHRoZSBjb2x1bW4gdHlwZXMgb3Igc2V0IGBzaG93X2NvbF90eXBlcyA9IEZBTFNFYCB0byBxdWlldCB0aGlzIG1lc3NhZ2UuXG4ifQ== -->
+<pre><code>Rows: 10 Columns: 21── Column specification ────────────────────────────────────────────────────────────────────────────────────────────
+
+chr  (6): last, first, school, parent, marry, extra2
+dbl (15): uin, age, grade, math1, math2, math3, read1, read2, read3, overall, choco1, choco2, choco3, extra1, ve...
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
+<!-- rnb-output-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 </div>
 </div>
 <div id="task-7" class="section level1">
 <h1>Task 7</h1>
-<p>Import the diabetes study outcomes data into R as a data frame named
-<code>diab_out</code>. Make sure to tell R how to correctly identify
-missing values in the raw data.</p>
+<p>View the structure of <code>choco_3</code> using the
+<code>str()</code> function.</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuc3RyKGNob2NvXzMpXG5gYGAifQ== -->
+<pre class="r"><code>str(choco_3)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoic3BlY190YmxfZGYgWzEwIMOXIDIxXSAoUzM6IHNwZWNfdGJsX2RmL3RibF9kZi90YmwvZGF0YS5mcmFtZSlcbiAkIHVpbiAgICA6IG51bSBbMToxMF0gMTQ0MCAxNDQ0IDE0NDkgMTQ2NSAxNDcwIC4uLlxuICQgbGFzdCAgIDogY2hyIFsxOjEwXSBcIkxlbXVzXCIgXCJXaGl0bG9ja1wiIFwiU3RhcGxlc1wiIFwiQm95a2luXCIgLi4uXG4gJCBmaXJzdCAgOiBjaHIgWzE6MTBdIFwiUm9iXCIgXCJCcmlhblwiIFwiTW9pc2VzXCIgXCJDbGlmZlwiIC4uLlxuICQgYWdlICAgIDogbnVtIFsxOjEwXSAxMiAxMyAxMCAxMSAxMSAxMSAxMiAxMCAxMiAxMlxuICQgZ3JhZGUgIDogbnVtIFsxOjEwXSA3IDggNSA2IDYgNiA3IDUgNiA2XG4gJCBzY2hvb2wgOiBjaHIgWzE6MTBdIFwiRmxvd2VyIEdyb3ZlXCIgXCJGbG93ZXIgR3JvdmVcIiBcIkNlbnRyYWxcIiBcIldpbGxpYW1zb25cIiAuLi5cbiAkIHBhcmVudCA6IGNociBbMToxMF0gXCJHdWFyZGlhblwiIFwiR3VhcmRpYW5cIiBcIk1vdGhlclwiIFwiR3VhcmRpYW5cIiAuLi5cbiAkIG1hcnJ5ICA6IGNociBbMToxMF0gXCJNYXJyaWVkXCIgXCJEaXZvcmNlZFwiIFwiTWFycmllZFwiIFwiRGl2b3JjZWRcIiAuLi5cbiAkIG1hdGgxICA6IG51bSBbMToxMF0gMSAxIDIgMi4yIDQgMSA1IDMgMiA0XG4gJCBtYXRoMiAgOiBudW0gWzE6MTBdIDUgMiAyIDMuMyAzIDQgNCA1IDMgM1xuICQgbWF0aDMgIDogbnVtIFsxOjEwXSAyIDIgMiAxIDMuNyAxLjIgNSAyIDMgM1xuICQgcmVhZDEgIDogbnVtIFsxOjEwXSAyIDMgNCAyIDUgMy40IDEgMSAzIDRcbiAkIHJlYWQyICA6IG51bSBbMToxMF0gMyAzIDQgMSA0LjQgMyA1IDUgNSAxXG4gJCByZWFkMyAgOiBudW0gWzE6MTBdIDEgNSA1IDIgNC42IDIgMSAxIDMgMlxuICQgb3ZlcmFsbDogbnVtIFsxOjEwXSAxNCAxNiAxOSAxMS41IDI0LjcgMTQuNiAyMSAxNyAxOSAxN1xuICQgY2hvY28xIDogbnVtIFsxOjEwXSAwIDEgMSAwIDEgMiAxIDAgMSAwXG4gJCBjaG9jbzIgOiBudW0gWzE6MTBdIDAgMCAwIDAgMCAxIDAgMCAwIDBcbiAkIGNob2NvMyA6IG51bSBbMToxMF0gTkEgMSAxIDAgMCBOQSAxIE5BIDEgTkFcbiAkIGV4dHJhMSA6IG51bSBbMToxMF0gMCAwIDEgMCAxIDAgMCAwIDEgMFxuICQgZXh0cmEyIDogY2hyIFsxOjEwXSBOQSBOQSBcInNvY2NlclwiIE5BIC4uLlxuICQgdmVnZ2llIDogbnVtIFsxOjEwXSAwIDAgMCAwIDAgMCAxIDAgMCAwXG4gLSBhdHRyKCosIFwic3BlY1wiKT1cbiAgLi4gY29scyhcbiAgLi4gICB1aW4gPSBjb2xfZG91YmxlKCksXG4gIC4uICAgbGFzdCA9IGNvbF9jaGFyYWN0ZXIoKSxcbiAgLi4gICBmaXJzdCA9IGNvbF9jaGFyYWN0ZXIoKSxcbiAgLi4gICBhZ2UgPSBjb2xfZG91YmxlKCksXG4gIC4uICAgZ3JhZGUgPSBjb2xfZG91YmxlKCksXG4gIC4uICAgc2Nob29sID0gY29sX2NoYXJhY3RlcigpLFxuICAuLiAgIHBhcmVudCA9IGNvbF9jaGFyYWN0ZXIoKSxcbiAgLi4gICBtYXJyeSA9IGNvbF9jaGFyYWN0ZXIoKSxcbiAgLi4gICBtYXRoMSA9IGNvbF9kb3VibGUoKSxcbiAgLi4gICBtYXRoMiA9IGNvbF9kb3VibGUoKSxcbiAgLi4gICBtYXRoMyA9IGNvbF9kb3VibGUoKSxcbiAgLi4gICByZWFkMSA9IGNvbF9kb3VibGUoKSxcbiAgLi4gICByZWFkMiA9IGNvbF9kb3VibGUoKSxcbiAgLi4gICByZWFkMyA9IGNvbF9kb3VibGUoKSxcbiAgLi4gICBvdmVyYWxsID0gY29sX2RvdWJsZSgpLFxuICAuLiAgIGNob2NvMSA9IGNvbF9kb3VibGUoKSxcbiAgLi4gICBjaG9jbzIgPSBjb2xfZG91YmxlKCksXG4gIC4uICAgY2hvY28zID0gY29sX2RvdWJsZSgpLFxuICAuLiAgIGV4dHJhMSA9IGNvbF9kb3VibGUoKSxcbiAgLi4gICBleHRyYTIgPSBjb2xfY2hhcmFjdGVyKCksXG4gIC4uICAgdmVnZ2llID0gY29sX2RvdWJsZSgpXG4gIC4uIClcbiAtIGF0dHIoKiwgXCJwcm9ibGVtc1wiKT08ZXh0ZXJuYWxwdHI+IFxuIn0= -->
+<pre><code>spec_tbl_df [10 × 21] (S3: spec_tbl_df/tbl_df/tbl/data.frame)
+ $ uin    : num [1:10] 1440 1444 1449 1465 1470 ...
+ $ last   : chr [1:10] &quot;Lemus&quot; &quot;Whitlock&quot; &quot;Staples&quot; &quot;Boykin&quot; ...
+ $ first  : chr [1:10] &quot;Rob&quot; &quot;Brian&quot; &quot;Moises&quot; &quot;Cliff&quot; ...
+ $ age    : num [1:10] 12 13 10 11 11 11 12 10 12 12
+ $ grade  : num [1:10] 7 8 5 6 6 6 7 5 6 6
+ $ school : chr [1:10] &quot;Flower Grove&quot; &quot;Flower Grove&quot; &quot;Central&quot; &quot;Williamson&quot; ...
+ $ parent : chr [1:10] &quot;Guardian&quot; &quot;Guardian&quot; &quot;Mother&quot; &quot;Guardian&quot; ...
+ $ marry  : chr [1:10] &quot;Married&quot; &quot;Divorced&quot; &quot;Married&quot; &quot;Divorced&quot; ...
+ $ math1  : num [1:10] 1 1 2 2.2 4 1 5 3 2 4
+ $ math2  : num [1:10] 5 2 2 3.3 3 4 4 5 3 3
+ $ math3  : num [1:10] 2 2 2 1 3.7 1.2 5 2 3 3
+ $ read1  : num [1:10] 2 3 4 2 5 3.4 1 1 3 4
+ $ read2  : num [1:10] 3 3 4 1 4.4 3 5 5 5 1
+ $ read3  : num [1:10] 1 5 5 2 4.6 2 1 1 3 2
+ $ overall: num [1:10] 14 16 19 11.5 24.7 14.6 21 17 19 17
+ $ choco1 : num [1:10] 0 1 1 0 1 2 1 0 1 0
+ $ choco2 : num [1:10] 0 0 0 0 0 1 0 0 0 0
+ $ choco3 : num [1:10] NA 1 1 0 0 NA 1 NA 1 NA
+ $ extra1 : num [1:10] 0 0 1 0 1 0 0 0 1 0
+ $ extra2 : chr [1:10] NA NA &quot;soccer&quot; NA ...
+ $ veggie : num [1:10] 0 0 0 0 0 0 1 0 0 0
+ - attr(*, &quot;spec&quot;)=
+  .. cols(
+  ..   uin = col_double(),
+  ..   last = col_character(),
+  ..   first = col_character(),
+  ..   age = col_double(),
+  ..   grade = col_double(),
+  ..   school = col_character(),
+  ..   parent = col_character(),
+  ..   marry = col_character(),
+  ..   math1 = col_double(),
+  ..   math2 = col_double(),
+  ..   math3 = col_double(),
+  ..   read1 = col_double(),
+  ..   read2 = col_double(),
+  ..   read3 = col_double(),
+  ..   overall = col_double(),
+  ..   choco1 = col_double(),
+  ..   choco2 = col_double(),
+  ..   choco3 = col_double(),
+  ..   extra1 = col_double(),
+  ..   extra2 = col_character(),
+  ..   veggie = col_double()
+  .. )
+ - attr(*, &quot;problems&quot;)=&lt;externalptr&gt; </code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
 <div id="question-5" class="section level2">
 <h2>Question:</h2>
 <ol start="6" style="list-style-type: decimal">
-<li>Which of the following code chunks will correctly import the
-diabetes study outcomes data into R as a data frame named
-<code>diab_out</code>?</li>
+<li>The <code>choco_3</code> data frame contains ____ rows and ____
+columns.</li>
 </ol>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjpbIiMgSW5jb3JyZWN0OiBUaGlzIGNvZGUgZG9lcyBub3Qgc3VwcGx5IGVub3VnaCB2YWx1ZXMgdG8gdGhlIGNvbF90eXBlcyBhcmd1bWVudC4iLCJkaWFiX291dCA8LSByZWFkX2V4Y2VsKCIsIiAgXCJkaWFiZXRlcy54bHN4XCIsIiwiICBzaGVldCA9IFwib3V0Y29tZXNcIiwiLCIgIGNvbF9uYW1lcyA9IGMoXCJwaWRcIiwgXCJkaWFiZXRlc1wiLCBcImRldmljZVwiLCBcImJ0MVwiLCBcImJ0MlwiLCBcImNvc3RcIiksIiwiICBjb2xfdHlwZXMgPSBjKFwidGV4dFwiLCByZXAoXCJndWVzc1wiLCA0KSksIiwiICBuYSA9IGMoXCJcIiwgXCJOQVwiLCBcIk1pc3NpbmdcIiksIiwiICBza2lwID0gMiIsIikiXX0= -->
-<pre class="r"><code># Incorrect: This code does not supply enough values to the col_types argument.
-diab_out &lt;- read_excel(
-  &quot;diabetes.xlsx&quot;,
-  sheet = &quot;outcomes&quot;,
-  col_names = c(&quot;pid&quot;, &quot;diabetes&quot;, &quot;device&quot;, &quot;bt1&quot;, &quot;bt2&quot;, &quot;cost&quot;),
-  col_types = c(&quot;text&quot;, rep(&quot;guess&quot;, 4)),
-  na = c(&quot;&quot;, &quot;NA&quot;, &quot;Missing&quot;),
-  skip = 2
-)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjpbIiMgSW5jb3JyZWN0OiBUaGlzIGNvZGUgZG9lcyBub3QgdGVsbCBSIGhvdyB0byBjb3JyZWN0bHkgaWRlbnRpZnkgbWlzc2luZyB2YWx1ZXMgaW4gdGhlIHJhdyBkYXRhLiIsImRpYWJfb3V0IDwtIHJlYWRfZXhjZWwoIiwiICBcImRpYWJldGVzLnhsc3hcIiwiLCIgIHNoZWV0ID0gXCJvdXRjb21lc1wiLCIsIiAgY29sX25hbWVzID0gYyhcInBpZFwiLCBcImRpYWJldGVzXCIsIFwiZGV2aWNlXCIsIFwiYnQxXCIsIFwiYnQyXCIsIFwiY29zdFwiKSwiLCIgIGNvbF90eXBlcyA9IGMoXCJ0ZXh0XCIsIHJlcChcImd1ZXNzXCIsIDUpKSwiLCIgIG5hID0gYyhcIlwiKSwiLCIgIHNraXAgPSAyIiwiKSJdfQ== -->
-<pre class="r"><code># Incorrect: This code does not tell R how to correctly identify missing values in the raw data.
-diab_out &lt;- read_excel(
-  &quot;diabetes.xlsx&quot;,
-  sheet = &quot;outcomes&quot;,
-  col_names = c(&quot;pid&quot;, &quot;diabetes&quot;, &quot;device&quot;, &quot;bt1&quot;, &quot;bt2&quot;, &quot;cost&quot;),
-  col_types = c(&quot;text&quot;, rep(&quot;guess&quot;, 5)),
-  na = c(&quot;&quot;),
-  skip = 2
-)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjpbIiMgSW5jb3JyZWN0OiBUaGlzIGNvZGUgZG9lcyBub3QgdGVsbCBSIGhvdyB0byBjb3JyZWN0bHkgaWRlbnRpZnkgbWlzc2luZyB2YWx1ZXMgaW4gdGhlIHJhdyBkYXRhLiIsImRpYWJfb3V0IDwtIHJlYWRfZXhjZWwoIiwiICBcImRpYWJldGVzLnhsc3hcIiwiLCIgIHNoZWV0ID0gXCJvdXRjb21lc1wiLCIsIiAgY29sX25hbWVzID0gYyhcInBpZFwiLCBcImRpYWJldGVzXCIsIFwiZGV2aWNlXCIsIFwiYnQxXCIsIFwiYnQyXCIsIFwiY29zdFwiKSwiLCIgIGNvbF90eXBlcyA9IGMoXCJ0ZXh0XCIsIHJlcChcImd1ZXNzXCIsIDUpKSwiLCIgIHNraXAgPSAyIiwiKSJdfQ== -->
-<pre class="r"><code># Incorrect: This code does not tell R how to correctly identify missing values in the raw data.
-diab_out &lt;- read_excel(
-  &quot;diabetes.xlsx&quot;,
-  sheet = &quot;outcomes&quot;,
-  col_names = c(&quot;pid&quot;, &quot;diabetes&quot;, &quot;device&quot;, &quot;bt1&quot;, &quot;bt2&quot;, &quot;cost&quot;),
-  col_types = c(&quot;text&quot;, rep(&quot;guess&quot;, 5)),
-  skip = 2
-)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjpbIiMgQ29ycmVjdCIsImRpYWJfb3V0IDwtIHJlYWRfZXhjZWwoIiwiICBcImRpYWJldGVzLnhsc3hcIiwiLCIgIHNoZWV0ID0gXCJvdXRjb21lc1wiLCIsIiAgY29sX25hbWVzID0gYyhcInBpZFwiLCBcImRpYWJldGVzXCIsIFwiZGV2aWNlXCIsIFwiYnQxXCIsIFwiYnQyXCIsIFwiY29zdFwiKSwiLCIgIGNvbF90eXBlcyA9IGMoXCJ0ZXh0XCIsIHJlcChcImd1ZXNzXCIsIDUpKSwiLCIgIG5hID0gYyhcIlwiLCBcIk5BXCIsIFwiTWlzc2luZ1wiKSwiLCIgIHNraXAgPSAyIiwiKSJdfQ== -->
-<pre class="r"><code># Correct
-diab_out &lt;- read_excel(
-  &quot;diabetes.xlsx&quot;,
-  sheet = &quot;outcomes&quot;,
-  col_names = c(&quot;pid&quot;, &quot;diabetes&quot;, &quot;device&quot;, &quot;bt1&quot;, &quot;bt2&quot;, &quot;cost&quot;),
-  col_types = c(&quot;text&quot;, rep(&quot;guess&quot;, 5)),
-  na = c(&quot;&quot;, &quot;NA&quot;, &quot;Missing&quot;),
-  skip = 2
-)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYGBgclxuYGBgclxuZGlxX2kgPC0gcmVhZF94cHQoXFxodHRwczovL3d3d24uY2RjLmdvdi9OY2hzL05oYW5lcy8yMDE1LTIwMTYvRElRX0kuWFBUXFwpXG5gYGBcbmBgYFxuYGBgIn0= -->
-<pre class="r"><code>```r
-```r
-diq_i &lt;- read_xpt(\https://wwwn.cdc.gov/Nchs/Nhanes/2015-2016/DIQ_I.XPT\)</code></pre>
-<pre><code></code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYGBgclxuZGlxX2kgPC0gcmVhZF94cHQoXFxodHRwczovL3d3d24uY2RjLmdvdi9OY2hzL05oYW5lcy8yMDE1LTIwMTYvRElRX0kuWFBUXFwpXG5gYGBcbmBgYCJ9 -->
-<pre class="r"><code>```r
-diq_i &lt;- read_xpt(\https://wwwn.cdc.gov/Nchs/Nhanes/2015-2016/DIQ_I.XPT\)</code></pre>
-<pre><code>
-&lt;!-- rnb-source-end --&gt;
-
-&lt;!-- rnb-chunk-end --&gt;
-
-
-&lt;!-- rnb-text-begin --&gt;
-
-
-# Task 8
-
-Coerce the `diabetes` variable to a factor variable. Name the factor version of `diabetes` diabetes_f. Possible values that the diabetes_f should include “No” and  “Yes” — in that order.
-
-## Question:
-
-7. Fill in the following blanks to complete the code chunk that will coerce the `diabetes` variable to a factor with zeros labeled as &quot;`no`&quot; and ones labeled as &quot;`yes`&quot; -- in that order.
-
-
-&lt;!-- rnb-text-end --&gt;
-
-
-&lt;!-- rnb-chunk-begin --&gt;
-
-
-&lt;!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYGBgclxuZ2xpbXBzZShkaXFfaSlcbmBgYFxuYGBgIn0= --&gt;
-
-```r
-```r
-glimpse(diq_i)</code></pre>
-<pre><code>
-&lt;!-- rnb-source-end --&gt;
-
-&lt;!-- rnb-output-begin eyJkYXRhIjoiUm93czogOSw1NzVcbkNvbHVtbnM6IDU0XG4kIFNFUU4gICAgPGRibD4gODM3MzIsIDgzNzMzLCA4MzczNCwgODM3MzUsIDgzNzM2LCA4MzczNywgODM3MzgsIDgzNzM5LCA4Mzc0MCwgODM3NDEsIDgzNzQyLCA4Mzc0MywgODM3NDQs4oCmXG4kIERJUTAxMCAgPGRibD4gMSwgMiwgMSwgMiwgMiwgMiwgMiwgMiwgMiwgMiwgMiwgMiwgMSwgMiwgMiwgMiwgMiwgMiwgMiwgMiwgMiwgMiwgMiwgMSwgMiwgMSwgMiwgMiwgMiwgMiwg4oCmXG4kIERJRDA0MCAgPGRibD4gNDYsIE5BLCA1MiwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgNTMsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5B4oCmXG4kIERJUTE2MCAgPGRibD4gTkEsIDIsIE5BLCAxLCAyLCAyLCBOQSwgTkEsIE5BLCAyLCAyLCAyLCBOQSwgMiwgTkEsIDEsIE5BLCAyLCAyLCAyLCAyLCAyLCAxLCBOQSwgMiwgTkEsIDEs4oCmXG4kIERJUTE3MCAgPGRibD4gTkEsIDIsIE5BLCAxLCAyLCAyLCBOQSwgTkEsIE5BLCAyLCAyLCAyLCBOQSwgMiwgTkEsIDEsIE5BLCAyLCAyLCAyLCAyLCAyLCAxLCBOQSwgMiwgTkEsIDEs4oCmXG4kIERJUTE3MiAgPGRibD4gTkEsIDIsIE5BLCAyLCAxLCAyLCBOQSwgTkEsIE5BLCAxLCAxLCAyLCBOQSwgMiwgTkEsIDEsIE5BLCAyLCAyLCAyLCAyLCAyLCAxLCBOQSwgMiwgTkEsIDEs4oCmXG4kIERJUTE3NUEgPGRibD4gTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgMTAsIDEwLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIDEw4oCmXG4kIERJUTE3NUIgPGRibD4gTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIDEx4oCmXG4kIERJUTE3NUMgPGRibD4gTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5B4oCmXG4kIERJUTE3NUQgPGRibD4gTkEsIE5BLCBOQSwgTkEsIDEzLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5B4oCmXG4kIERJUTE3NUUgPGRibD4gTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5B4oCmXG4kIERJUTE3NUYgPGRibD4gTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5B4oCmXG4kIERJUTE3NUcgPGRibD4gTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5B4oCmXG4kIERJUTE3NUggPGRibD4gTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgMTcsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5B4oCmXG4kIERJUTE3NUkgPGRibD4gTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5B4oCmXG4kIERJUTE3NUogPGRibD4gTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgMTksIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIDE54oCmXG4kIERJUTE3NUsgPGRibD4gTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgMjAsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5B4oCmXG4kIERJUTE3NUwgPGRibD4gTkEsIE5BLCBOQSwgTkEsIDIxLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5B4oCmXG4kIERJUTE3NU0gPGRibD4gTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5B4oCmXG4kIERJUTE3NU4gPGRibD4gTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5B4oCmXG4kIERJUTE3NU8gPGRibD4gTkEsIE5BLCBOQSwgTkEsIDI0LCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIDI04oCmXG4kIERJUTE3NVAgPGRibD4gTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5B4oCmXG4kIERJUTE3NVEgPGRibD4gTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5B4oCmXG4kIERJUTE3NVIgPGRibD4gTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5B4oCmXG4kIERJUTE3NVMgPGRibD4gTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5B4oCmXG4kIERJUTE3NVQgPGRibD4gTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIDI54oCmXG4kIERJUTE3NVUgPGRibD4gTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5B4oCmXG4kIERJUTE3NVYgPGRibD4gTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5B4oCmXG4kIERJUTE3NVcgPGRibD4gTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5B4oCmXG4kIERJUTE3NVggPGRibD4gTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5B4oCmXG4kIERJUTE4MCAgPGRibD4gTkEsIDIsIE5BLCAxLCAyLCAxLCBOQSwgTkEsIE5BLCAxLCAxLCAyLCBOQSwgMiwgTkEsIDEsIE5BLCAyLCAxLCAyLCAxLCAyLCAxLCBOQSwgMiwgTkEsIDEs4oCmXG4kIERJUTA1MCAgPGRibD4gMSwgMiwgMiwgMiwgMiwgMiwgMiwgMiwgMiwgMiwgMiwgMiwgMSwgMiwgMiwgMiwgMiwgMiwgMiwgMiwgMiwgMiwgMiwgMSwgMiwgMSwgMiwgMiwgMiwgMiwg4oCmXG4kIERJRDA2MCAgPGRibD4gMTAsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgMywgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEs4oCmXG4kIERJUTA2MFUgPGRibD4gMiwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCAyLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwg4oCmXG4kIERJUTA3MCAgPGRibD4gMSwgTkEsIDIsIDIsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgMSwgTkEsIE5BLCAyLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCAyLCAxLCBO4oCmXG4kIERJUTIzMCAgPGRibD4gNCwgTkEsIDMsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIDEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCAy4oCmXG4kIERJUTI0MCAgPGRibD4gMSwgTkEsIDIsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIDEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCAy4oCmXG4kIERJRDI1MCAgPGRibD4gMiwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCAzLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwg4oCmXG4kIERJRDI2MCAgPGRibD4gMSwgTkEsIDIsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIDMsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCAx4oCmXG4kIERJUTI2MFUgPGRibD4gMSwgTkEsIDIsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIDEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCAx4oCmXG4kIERJUTI3NSAgPGRibD4gMSwgTkEsIDEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIDIsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCAx4oCmXG4kIERJUTI4MCAgPGRibD4gNy4zLCBOQSwgOTk5LjAsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5B4oCmXG4kIERJUTI5MSAgPGRibD4gMiwgTkEsIDIsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwg4oCmXG4kIERJUTMwMFMgPGRibD4gMTM0LCBOQSwgMTQxLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCAxOTAsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEs4oCmXG4kIERJUTMwMEQgPGRibD4gNzIsIE5BLCA2OCwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgOTksIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5B4oCmXG4kIERJRDMxMFMgPGRibD4gNjY2NiwgTkEsIDE0MCwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgOTk5OSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBO4oCmXG4kIERJRDMxMEQgPGRibD4gNjY2NiwgTkEsIDYwLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCA5OTk5LCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5B4oCmXG4kIERJRDMyMCAgPGRibD4gOTk5OSwgTkEsIDk5OTksIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIDk5OTksIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwg4oCmXG4kIERJRDMzMCAgPGRibD4gNjY2NiwgTkEsIDk5OTksIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIDk5OTksIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwg4oCmXG4kIERJRDM0MSAgPGRibD4gMCwgTkEsIDIsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIDIsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCAx4oCmXG4kIERJRDM1MCAgPGRibD4gMSwgTkEsIDIsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIDIsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCAx4oCmXG4kIERJUTM1MFUgPGRibD4gMSwgTkEsIDIsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIDEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCAx4oCmXG4kIERJUTM2MCAgPGRibD4gMiwgTkEsIDIsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIDMsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCAy4oCmXG4kIERJUTA4MCAgPGRibD4gMiwgTkEsIDIsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIDEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCBOQSwgTkEsIE5BLCAy4oCmXG4ifQ== --&gt;
-</code></pre>
-<p>Rows: 9,575 Columns: 54 $ SEQN <dbl> 83732, 83733, 83734, 83735,
-83736, 83737, 83738, 83739, 83740, 83741, 83742, 83743, 83744,… $ DIQ010
-<dbl> 1, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-2, 1, 2, 1, 2, 2, 2, 2, … $ DID040 <dbl> 46, NA, 52, NA, NA, NA, NA, NA,
-NA, NA, NA, NA, 53, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA… $ DIQ160
-<dbl> NA, 2, NA, 1, 2, 2, NA, NA, NA, 2, 2, 2, NA, 2, NA, 1, NA, 2, 2,
-2, 2, 2, 1, NA, 2, NA, 1,… $ DIQ170 <dbl> NA, 2, NA, 1, 2, 2, NA, NA,
-NA, 2, 2, 2, NA, 2, NA, 1, NA, 2, 2, 2, 2, 2, 1, NA, 2, NA, 1,… $ DIQ172
-<dbl> NA, 2, NA, 2, 1, 2, NA, NA, NA, 1, 1, 2, NA, 2, NA, 1, NA, 2, 2,
-2, 2, 2, 1, NA, 2, NA, 1,… $ DIQ175A <dbl> NA, NA, NA, NA, NA, NA, NA,
-NA, NA, 10, 10, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 10… $
-DIQ175B <dbl> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-NA, NA, NA, NA, NA, NA, NA, NA, 11… $ DIQ175C <dbl> NA, NA, NA, NA, NA,
-NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA…
-$ DIQ175D <dbl> NA, NA, NA, NA, 13, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-NA, NA, NA, NA, NA, NA, NA, NA, NA… $ DIQ175E <dbl> NA, NA, NA, NA, NA,
-NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA…
-$ DIQ175F <dbl> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-NA, NA, NA, NA, NA, NA, NA, NA, NA… $ DIQ175G <dbl> NA, NA, NA, NA, NA,
-NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA…
-$ DIQ175H <dbl> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-NA, 17, NA, NA, NA, NA, NA, NA, NA… $ DIQ175I <dbl> NA, NA, NA, NA, NA,
-NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA…
-$ DIQ175J <dbl> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-NA, 19, NA, NA, NA, NA, NA, NA, 19… $ DIQ175K <dbl> NA, NA, NA, NA, NA,
-NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 20, NA, NA, NA, NA, NA, NA, NA…
-$ DIQ175L <dbl> NA, NA, NA, NA, 21, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-NA, NA, NA, NA, NA, NA, NA, NA, NA… $ DIQ175M <dbl> NA, NA, NA, NA, NA,
-NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA…
-$ DIQ175N <dbl> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-NA, NA, NA, NA, NA, NA, NA, NA, NA… $ DIQ175O <dbl> NA, NA, NA, NA, 24,
-NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 24…
-$ DIQ175P <dbl> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-NA, NA, NA, NA, NA, NA, NA, NA, NA… $ DIQ175Q <dbl> NA, NA, NA, NA, NA,
-NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA…
-$ DIQ175R <dbl> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-NA, NA, NA, NA, NA, NA, NA, NA, NA… $ DIQ175S <dbl> NA, NA, NA, NA, NA,
-NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA…
-$ DIQ175T <dbl> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-NA, NA, NA, NA, NA, NA, NA, NA, 29… $ DIQ175U <dbl> NA, NA, NA, NA, NA,
-NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA…
-$ DIQ175V <dbl> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-NA, NA, NA, NA, NA, NA, NA, NA, NA… $ DIQ175W <dbl> NA, NA, NA, NA, NA,
-NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA…
-$ DIQ175X <dbl> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-NA, NA, NA, NA, NA, NA, NA, NA, NA… $ DIQ180 <dbl> NA, 2, NA, 1, 2, 1,
-NA, NA, NA, 1, 1, 2, NA, 2, NA, 1, NA, 2, 1, 2, 1, 2, 1, NA, 2, NA, 1,…
-$ DIQ050 <dbl> 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2,
-2, 2, 2, 2, 1, 2, 1, 2, 2, 2, 2, … $ DID060 <dbl> 10, NA, NA, NA, NA,
-NA, NA, NA, NA, NA, NA, NA, 3, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,…
-$ DIQ060U <dbl> 2, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 2, NA,
-NA, NA, NA, NA, NA, NA, NA, NA, NA, … $ DIQ070 <dbl> 1, NA, 2, 2, NA,
-NA, NA, NA, NA, NA, NA, NA, 1, NA, NA, 2, NA, NA, NA, NA, NA, NA, 2, 1,
-N… $ DIQ230 <dbl> 4, NA, 3, NA, NA, NA, NA, NA, NA, NA, NA, NA, 1, NA,
-NA, NA, NA, NA, NA, NA, NA, NA, NA, 2… $ DIQ240 <dbl> 1, NA, 2, NA, NA,
-NA, NA, NA, NA, NA, NA, NA, 1, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-2… $ DID250 <dbl> 2, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 3, NA,
-NA, NA, NA, NA, NA, NA, NA, NA, NA, … $ DID260 <dbl> 1, NA, 2, NA, NA,
-NA, NA, NA, NA, NA, NA, NA, 3, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-1… $ DIQ260U <dbl> 1, NA, 2, NA, NA, NA, NA, NA, NA, NA, NA, NA, 1, NA,
-NA, NA, NA, NA, NA, NA, NA, NA, NA, 1… $ DIQ275 <dbl> 1, NA, 1, NA, NA,
-NA, NA, NA, NA, NA, NA, NA, 2, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-1… $ DIQ280 <dbl> 7.3, NA, 999.0, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-NA, NA, NA, NA, NA, NA, NA, NA, NA, NA… $ DIQ291 <dbl> 2, NA, 2, NA, NA,
-NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
-… $ DIQ300S <dbl> 134, NA, 141, NA, NA, NA, NA, NA, NA, NA, NA, NA, 190,
-NA, NA, NA, NA, NA, NA, NA, NA, NA,… $ DIQ300D <dbl> 72, NA, 68, NA, NA,
-NA, NA, NA, NA, NA, NA, NA, 99, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA…
-$ DID310S <dbl> 6666, NA, 140, NA, NA, NA, NA, NA, NA, NA, NA, NA, 9999,
-NA, NA, NA, NA, NA, NA, NA, NA, N… $ DID310D <dbl> 6666, NA, 60, NA, NA,
-NA, NA, NA, NA, NA, NA, NA, 9999, NA, NA, NA, NA, NA, NA, NA, NA, NA… $
-DID320 <dbl> 9999, NA, 9999, NA, NA, NA, NA, NA, NA, NA, NA, NA, 9999,
-NA, NA, NA, NA, NA, NA, NA, NA, … $ DID330 <dbl> 6666, NA, 9999, NA, NA,
-NA, NA, NA, NA, NA, NA, NA, 9999, NA, NA, NA, NA, NA, NA, NA, NA, … $
-DID341 <dbl> 0, NA, 2, NA, NA, NA, NA, NA, NA, NA, NA, NA, 2, NA, NA,
-NA, NA, NA, NA, NA, NA, NA, NA, 1… $ DID350 <dbl> 1, NA, 2, NA, NA, NA,
-NA, NA, NA, NA, NA, NA, 2, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 1… $
-DIQ350U <dbl> 1, NA, 2, NA, NA, NA, NA, NA, NA, NA, NA, NA, 1, NA, NA,
-NA, NA, NA, NA, NA, NA, NA, NA, 1… $ DIQ360 <dbl> 2, NA, 2, NA, NA, NA,
-NA, NA, NA, NA, NA, NA, 3, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 2… $
-DIQ080 <dbl> 2, NA, 2, NA, NA, NA, NA, NA, NA, NA, NA, NA, 1, NA, NA,
-NA, NA, NA, NA, NA, NA, NA, NA, 2…</p>
-<pre><code>
-
-
-&lt;!-- rnb-output-end --&gt;
-
-&lt;!-- rnb-chunk-end --&gt;
-
-
-&lt;!-- rnb-text-begin --&gt;
-
-
-# Task 9
-
-Use the `str()` function to view the structure of `diab_out`. 
-
-
-&lt;!-- rnb-text-end --&gt;
-
-
-&lt;!-- rnb-chunk-begin --&gt;
-
-
-&lt;!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYGBgclxubmFtZXMoZGlxX2kpIDwtIG5hbWVzKGRpcV9pKSAlPiUgdG9sb3dlcigpXG5gYGBcbmBgYCJ9 --&gt;
-
-```r
-```r
-names(diq_i) &lt;- names(diq_i) %&gt;% tolower()</code></pre>
-<pre><code>
-&lt;!-- rnb-source-end --&gt;
-
-&lt;!-- rnb-chunk-end --&gt;
-
-
-&lt;!-- rnb-text-begin --&gt;
-
-
-# Task 10
-
-Export `diab_out` to an .Rds file on your computer’s desktop.
-
-## Question:
-
-8. Fill in the following blanks to complete the code chunk that will export `diab_out` to an .Rds file with the same name on the computer’s desktop.
-
-
-&lt;!-- rnb-text-end --&gt;
-
-
-&lt;!-- rnb-chunk-begin --&gt;
-
-
-&lt;!-- rnb-source-begin eyJkYXRhIjpbIiMgRXhhbXBsZSBmb3IgQ2FudmFzIiwid3JpdGVfcmRzKGRpYWJfb3V0LCBcIi9Vc2Vycy91c2VyL0Rlc2t0b3AvZGlhYl9vdXQucmRzXCIpIiwiIyBGb3IgRHIuIENhbm5lbGwncyIsIndyaXRlX3JkcyhkaWFiX291dCwgXCIvVXNlcnMvYnJhZGNhbm5lbGwvRGVza3RvcC9kaWFiX291dC5yZHNcIikiXX0= --&gt;
-
-```r
-# Example for Canvas
-write_rds(diab_out, &quot;/Users/user/Desktop/diab_out.rds&quot;)
-# For Dr. Cannell&#39;s
-write_rds(diab_out, &quot;/Users/bradcannell/Desktop/diab_out.rds&quot;)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
+<ul>
+<li>The <code>choco_3</code> data frame contains 10 rows and 21
+columns.</li>
+</ul>
 </div>
 </div>
-<div id="task-11" class="section level1">
-<h1>Task 11</h1>
-<p>Import the 2015-2016 NHANES diabetes questionnaire data into R as a
-data frame named <code>diq_i.</code></p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGlxX2kgPC0gcmVhZF94cHQoXCJodHRwczovL3d3d24uY2RjLmdvdi9OY2hzL05oYW5lcy8yMDE1LTIwMTYvRElRX0kuWFBUXCIpXG5gYGAifQ== -->
-<pre class="r"><code>diq_i &lt;- read_xpt(&quot;https://wwwn.cdc.gov/Nchs/Nhanes/2015-2016/DIQ_I.XPT&quot;)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
+<div id="task-8." class="section level1">
+<h1>Task 8.</h1>
+<p>Please view the National Health and Nutrition Examination Survey
+(NHANES) questionnaires, datasets, and related documentation website
+here: <a href="https://wwwn.cdc.gov/nchs/nhanes/" class="uri">https://wwwn.cdc.gov/nchs/nhanes/</a></p>
 </div>
-<div id="task-12" class="section level1">
-<h1>Task 12</h1>
-<p>Use the <code>glimpse()</code> function to view the structure of
-<code>diq_i</code>.</p>
+<div id="task-9." class="section level1">
+<h1>Task 9.</h1>
+<p>Import the 2015-2016 Alcohol Use data. Alcohol use was part of the
+NHANES questionnaire data.</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZ2xpbXBzZShkaXFfaSlcbmBgYCJ9 -->
-<pre class="r"><code>glimpse(diq_i)</code></pre>
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYWxxX2kgPC0gcmVhZF94cHQoXCJodHRwczovL3d3d24uY2RjLmdvdi9OY2hzL05oYW5lcy8yMDE1LTIwMTYvQUxRX0kuWFBUXCIpXG5gYGAifQ== -->
+<pre class="r"><code>alq_i &lt;- read_xpt(&quot;https://wwwn.cdc.gov/Nchs/Nhanes/2015-2016/ALQ_I.XPT&quot;)</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <div id="question-6" class="section level2">
 <h2>Question:</h2>
-<ol start="9" style="list-style-type: decimal">
-<li>The <code>diq_i</code> data frame contains ____ rows and ____
-columns.</li>
+<ol start="7" style="list-style-type: decimal">
+<li>What R package contains the <code>read_xpt()</code> function we need
+to use to import the NHANES data in Task 9?</li>
 </ol>
 <ul>
-<li>The <code>diq_i</code> data frame contains 9,575 rows and 54
-columns.</li>
+<li>The <a href="https://haven.tidyverse.org/">haven</a> package
+contains the <code>read_xpt()</code> function we need to use to import
+the NHANES data in Task 9.</li>
 </ul>
 </div>
 </div>
-<div id="task-13" class="section level1">
-<h1>Task 13</h1>
-<p>Coerce all of the variable names in <code>diq_i</code> to
-lowercase.</p>
-<div id="question-7" class="section level2">
-<h2>Question:</h2>
+<div id="task-10" class="section level1">
+<h1>Task 10</h1>
+<p>View the structure of <code>alq_i</code> using the <code>str()</code>
+function.</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuc3RyKGFscV9pKVxuYGBgIn0= -->
+<pre class="r"><code>str(alq_i)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoidGliYmxlIFs1LDczNSDDlyAxMF0gKFMzOiB0YmxfZGYvdGJsL2RhdGEuZnJhbWUpXG4gJCBTRVFOICAgOiBudW0gWzE6NTczNV0gODM3MzIgODM3MzMgODM3MzQgODM3MzUgODM3MzYgLi4uXG4gIC4uLSBhdHRyKCosIFwibGFiZWxcIik9IGNociBcIlJlc3BvbmRlbnQgc2VxdWVuY2UgbnVtYmVyXCJcbiAkIEFMUTEwMSA6IG51bSBbMTo1NzM1XSAxIDEgMSAyIDIgMiAxIDEgTkEgMSAuLi5cbiAgLi4tIGF0dHIoKiwgXCJsYWJlbFwiKT0gY2hyIFwiSGFkIGF0IGxlYXN0IDEyIGFsY29ob2wgZHJpbmtzLzEgeXI/XCJcbiAkIEFMUTExMCA6IG51bSBbMTo1NzM1XSBOQSBOQSBOQSAxIDEgMiBOQSBOQSBOQSBOQSAuLi5cbiAgLi4tIGF0dHIoKiwgXCJsYWJlbFwiKT0gY2hyIFwiSGFkIGF0IGxlYXN0IDEyIGFsY29ob2wgZHJpbmtzL2xpZmV0aW1lP1wiXG4gJCBBTFExMjBROiBudW0gWzE6NTczNV0gMSA3IDAgMyAxIE5BIDMgMSBOQSAwIC4uLlxuICAuLi0gYXR0cigqLCBcImxhYmVsXCIpPSBjaHIgXCJIb3cgb2Z0ZW4gZHJpbmsgYWxjb2hvbCBvdmVyIHBhc3QgMTIgbW9zXCJcbiAkIEFMUTEyMFU6IG51bSBbMTo1NzM1XSAyIDEgTkEgMyAzIE5BIDIgMiBOQSBOQSAuLi5cbiAgLi4tIGF0dHIoKiwgXCJsYWJlbFwiKT0gY2hyIFwiIyBkYXlzIGRyaW5rIGFsY29ob2wgcGVyIHdrLCBtbywgeXJcIlxuICQgQUxRMTMwIDogbnVtIFsxOjU3MzVdIDEgNiBOQSAxIDEgTkEgOCAxIE5BIE5BIC4uLlxuICAuLi0gYXR0cigqLCBcImxhYmVsXCIpPSBjaHIgXCJBdmcgIyBhbGNvaG9saWMgZHJpbmtzL2RheSAtIHBhc3QgMTIgbW9zXCJcbiAkIEFMUTE0MVE6IG51bSBbMTo1NzM1XSAwIDcgTkEgMCAwIE5BIDIwIDAgTkEgTkEgLi4uXG4gIC4uLSBhdHRyKCosIFwibGFiZWxcIik9IGNociBcIiMgZGF5cyBoYXZlIDQvNSBkcmlua3MgLSBwYXN0IDEyIG1vc1wiXG4gJCBBTFExNDFVOiBudW0gWzE6NTczNV0gTkEgMSBOQSBOQSBOQSBOQSAzIE5BIE5BIE5BIC4uLlxuICAuLi0gYXR0cigqLCBcImxhYmVsXCIpPSBjaHIgXCIjIGRheXMgcGVyIHdlZWssIG1vbnRoLCB5ZWFyP1wiXG4gJCBBTFExNTEgOiBudW0gWzE6NTczNV0gMiAxIDEgMiAyIE5BIDEgMiBOQSAxIC4uLlxuICAuLi0gYXR0cigqLCBcImxhYmVsXCIpPSBjaHIgXCJFdmVyIGhhdmUgNC81IG9yIG1vcmUgZHJpbmtzIGV2ZXJ5IGRheT9cIlxuICQgQUxRMTYwIDogbnVtIFsxOjU3MzVdIE5BIDAgTkEgTkEgTkEgTkEgMiBOQSBOQSBOQSAuLi5cbiAgLi4tIGF0dHIoKiwgXCJsYWJlbFwiKT0gY2hyIFwiIyBkYXlzIGhhdmUgNC81IG9yIG1vcmUgZHJpbmtzIGluIDIgaHJzXCJcbiAtIGF0dHIoKiwgXCJsYWJlbFwiKT0gY2hyIFwiQWxjb2hvbCBVc2VcIlxuIn0= -->
+<pre><code>tibble [5,735 × 10] (S3: tbl_df/tbl/data.frame)
+ $ SEQN   : num [1:5735] 83732 83733 83734 83735 83736 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;Respondent sequence number&quot;
+ $ ALQ101 : num [1:5735] 1 1 1 2 2 2 1 1 NA 1 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;Had at least 12 alcohol drinks/1 yr?&quot;
+ $ ALQ110 : num [1:5735] NA NA NA 1 1 2 NA NA NA NA ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;Had at least 12 alcohol drinks/lifetime?&quot;
+ $ ALQ120Q: num [1:5735] 1 7 0 3 1 NA 3 1 NA 0 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;How often drink alcohol over past 12 mos&quot;
+ $ ALQ120U: num [1:5735] 2 1 NA 3 3 NA 2 2 NA NA ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;# days drink alcohol per wk, mo, yr&quot;
+ $ ALQ130 : num [1:5735] 1 6 NA 1 1 NA 8 1 NA NA ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;Avg # alcoholic drinks/day - past 12 mos&quot;
+ $ ALQ141Q: num [1:5735] 0 7 NA 0 0 NA 20 0 NA NA ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;# days have 4/5 drinks - past 12 mos&quot;
+ $ ALQ141U: num [1:5735] NA 1 NA NA NA NA 3 NA NA NA ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;# days per week, month, year?&quot;
+ $ ALQ151 : num [1:5735] 2 1 1 2 2 NA 1 2 NA 1 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;Ever have 4/5 or more drinks every day?&quot;
+ $ ALQ160 : num [1:5735] NA 0 NA NA NA NA 2 NA NA NA ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;# days have 4/5 or more drinks in 2 hrs&quot;
+ - attr(*, &quot;label&quot;)= chr &quot;Alcohol Use&quot;</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<div id="questions" class="section level2">
+<h2>Questions:</h2>
+<ol start="9" style="list-style-type: decimal">
+<li>The <code>alq_i</code> data frame contains ____ rows and ____
+columns.</li>
+</ol>
+<ul>
+<li>The <code>alq_i</code> data frame contains 5,735 rows and 10
+columns.</li>
+</ul>
 <ol start="10" style="list-style-type: decimal">
-<li>Fill in the following blanks to complete the code chunk that will
-coerce all of the variable names in <code>diq_i</code> to
-lowercase.</li>
+<li>When you view the structure of <code>alq_i</code> using the
+<code>str()</code> function, what is the vector type shown for
+<code>alq101_f</code>? According to R, what kind of variable is
+<code>alq101_f</code>?</li>
 </ol>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubmFtZXMoZGlxX2kpIDwtIG5hbWVzKGRpcV9pKSAlPiUgdG9sb3dlcigpXG5gYGAifQ== -->
-<pre class="r"><code>names(diq_i) &lt;- names(diq_i) %&gt;% tolower()</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-</div>
-</div>
-<div id="task-14" class="section level1">
-<h1>Task 14</h1>
-<p>Print only the first 6 rows of <code>diq_i</code> to your screen.</p>
-<div id="question-8" class="section level2">
-<h2>Question:</h2>
-<ol start="11" style="list-style-type: decimal">
-<li>Fill in the following blanks to complete the code chunk that will
-print only the first 6 rows of <code>diq_i</code> to the screen.</li>
-</ol>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuaGVhZChkaXFfaSlcbmBgYCJ9 -->
-<pre class="r"><code>head(diq_i)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
+<ul>
+<li>When you view the structure of <code>alq_i</code> using the
+<code>str()</code> function, the vector type shown is
+<code>Factor</code>.</li>
+</ul>
 <!-- rnb-text-end -->
 </div>
 </div>
 
-<div id="rmd-source-code">LS0tCnRpdGxlOiAiTW9kdWxlIFF1aXo6IERhdGEgVHJhbnNmZXIiCm91dHB1dDogaHRtbF9ub3RlYm9vawotLS0KCmBgYHtyfQpsaWJyYXJ5KGRwbHlyLCB3YXJuLmNvbmZsaWN0cyA9IEZBTFNFKQpsaWJyYXJ5KHJlYWRyKQpsaWJyYXJ5KHJlYWR4bCkKbGlicmFyeShoYXZlbikKYGBgCgojIE92ZXJ2aWV3CgpUaGUgTlRSSEQgaXMgZG9pbmcgYW4gYW5hbHlzaXMgb2YgZGF0YSBhY3F1aXJlZCBmcm9tIGEgZGlhYmV0ZXMgbWVkaWNhbCBkZXZpY2Ugc3R1ZHkuIFRoZSBzdHVkeSB0b29rIHBsYWNlIGFjcm9zcyBtdWx0aXBsZSBjbGluaWNzLiBQaHlzaWNpYW5zIGNvbGxlY3RlZCBkYXRhIGF0IGVhY2ggY2xpbmljLCBjb21waWxlZCB0aGUgZGF0YSwgcmVjb3JkZWQgdGhlIGRhdGEgZWxlY3Ryb25pY2FsbHksIGFuZCB0aGVuIGVtYWlsZWQgdGhlIGRhdGEgdG8gdXMuIFdlIG5lZWQgeW91IHRvIGltcG9ydCB0aGUgcmF3IGRhdGEgc2V0IGludG8gUiBhbmQgc2F2ZSBpdCBsb2NhbGx5IGFzIGFuIC5SZHMgZmlsZSB0aGF0IHdlIHdpbGwgYW5hbHl6ZSBsYXRlci4gQWRkaXRpb25hbGx5LCB3ZSB3YW50IHRvIGNvbXBhcmUgdGhpcyBkaWFiZXRlcyBkYXRhIHRvIG5hdGlvbmFsIGRpYWJldGVzIGRhdGEgZnJvbSB0aGUgTmF0aW9uYWwgSGVhbHRoIGFuZCBOdXRyaXRpb24gRXhhbWluYXRpb24gU3VydmV5IChOSEFORVMpLiBTbywgSSB3b3VsZCBsaWtlIHlvdSB0byBpbXBvcnQsIGFsdGVyLCBhbmQgZXhwb3J0IHRoYXQgZGF0YSBhcyB3ZWxsLgoKIyBUYXNrIDEKCkNsaWNrIHRoZSBsaW5rIGJlbG93IHRvIGRvd25sb2FkIHRoZSByYXcgZGF0YSBmaWxlIHRvIHlvdXIgY29tcHV0ZXI6ICAgIAoKKiBbZGlhYmV0ZXMueGxzeF0oaHR0cHM6Ly93d3cuZHJvcGJveC5jb21cL3MvMGNpenNhM2VqaXkzank5L2RpYWJldGVzLnhsc3g/ZGw9MSkgICAgCgoqIE5vdGljZSB0aGF0IHRoaXMgZXhjZWwgd29ya2Jvb2sgY29udGFpbnMgdHdvIHNoZWV0cy4gT25lIHNoZWV0IGNvbnRhaW5zIGRlbW9ncmFwaGljIGluZm9ybWF0aW9uIGFib3V0IHRoZSBzdHVkeSBwYXJ0aWNpcGFudHMuIFRoZSBvdGhlciBzaGVldCBjb250YWlucyBzdHVkeSBvdXRjb21lcyBkYXRhLgoKIyBUYXNrIDIKCkltcG9ydCB0aGUgZGlhYmV0ZXMgc3R1ZHkgZGVtb2dyYXBoaWNzIGRhdGEgaW50byBSIGFzIGEgZGF0YSBmcmFtZSBuYW1lZCBgZGlhYl9kZW1vYC4KCiMjIFF1ZXN0aW9uOgoKMS4gV2hpY2ggb2YgdGhlIGZvbGxvd2luZyBjb2RlIGNodW5rcyB3aWxsIGNvcnJlY3RseSBpbXBvcnQgdGhlIGRpYWJldGVzIHN0dWR5IGRlbW9ncmFwaGljcyBkYXRhIGludG8gUiBhcyBhIGRhdGEgZnJhbWUgbmFtZWQgYGRpYWJfZGVtb2A/CgpgYGB7ciBldmFsPUZBTFNFfQojIEluY29ycmVjdDogVGhpcyBjb2RlIG5hbWVzIHRoZSBkYXRhIGZyYW1lIGRpYWIgaW5zdGVhZCBvZiBkaWFiX2RlbW8uCmRpYWIgPC0gcmVhZF9leGNlbCgKICAiZGlhYmV0ZXMueGxzeCIsCiAgc2hlZXQgPSAiZGVtbyIsCiAgY29sX25hbWVzID0gYygicGlkIiwgInNleCIsICJkb2IiKSwKICBjb2xfdHlwZXMgPSBjKCJ0ZXh0IiwgInRleHQiLCAiZGF0ZSIpLAogIHNraXAgPSAyCikKYGBgCgpgYGB7ciBldmFsPUZBTFNFfQojIEluY29ycmVjdDogcmVhZHhsIGlzIGEgcGFja2FnZSwgbm90IGEgZnVuY3Rpb24uCmRpYWJfZGVtbyA8LSByZWFkeGwoCiAgImRpYWJldGVzLnhsc3giLAogIHNoZWV0ID0gImRlbW8iLAogIGNvbF9uYW1lcyA9IGMoInBpZCIsICJzZXgiLCAiZG9iIiksCiAgY29sX3R5cGVzID0gYygidGV4dCIsICJ0ZXh0IiwgImRhdGUiKSwKICBza2lwID0gMgopCmBgYAoKYGBge3IgZXZhbD1GQUxTRX0KIyBJbmNvcnJlY3Q6IFRoZSByZWFkX2NzdigpIGZ1bmN0aW9uIGNhbid0IGJlIHVzZWQgdG8gaW1wb3J0IEV4Y2VsIGZpbGVzLgpkaWFiX2RlbW8gPC0gcmVhZF9jc3YoCiAgImRpYWJldGVzLnhsc3giLAogIHNoZWV0ID0gImRlbW8iLAogIGNvbF9uYW1lcyA9IGMoInBpZCIsICJzZXgiLCAiZG9iIiksCiAgY29sX3R5cGVzID0gYygidGV4dCIsICJ0ZXh0IiwgImRhdGUiKSwKICBza2lwID0gMgopCmBgYAoKYGBge3IgZXZhbD1GQUxTRX0KIyBDb3JyZWN0CmRpYWJfZGVtbyA8LSByZWFkX2V4Y2VsKAogICJkaWFiZXRlcy54bHN4IiwKICBzaGVldCA9ICJkZW1vIiwKICBjb2xfbmFtZXMgPSBjKCJwaWQiLCAic2V4IiwgImRvYiIpLAogIGNvbF90eXBlcyA9IGMoInRleHQiLCAidGV4dCIsICJkYXRlIiksCiAgc2tpcCA9IDIKKQpgYGAKCmBgYHtyfQojIEZvciBEci4gQ2FubmVsbCdzIGNvbXB1dGVyLgpkaWFiX2RlbW8gPC0gcmVhZF9leGNlbCgKICAiL1VzZXJzL2JyYWRjYW5uZWxsL0Ryb3Bib3gvRGF0YXNldHMvRGlhYmV0ZXMvZGlhYmV0ZXMueGxzeCIsCiAgc2hlZXQgPSAiZGVtbyIsCiAgY29sX25hbWVzID0gYygicGlkIiwgInNleCIsICJkb2IiKSwKICBjb2xfdHlwZXMgPSBjKCJ0ZXh0IiwgInRleHQiLCAiZGF0ZSIpLAogIHNraXAgPSAyCikKYGBgCgojIFRhc2sgMwoKQ29lcmNlIHRoZSBgc2V4YCB2YXJpYWJsZSB0byBhIGZhY3Rvci4gTmFtZSB0aGUgZmFjdG9yIHZlcnNpb24gb2YgYHNleGAsIGBzZXhfZmAuIFBvc3NpYmxlIHZhbHVlcyBvZiBgc2V4X2ZgIHNob3VsZCBpbmNsdWRlIGBmZW1hbGVgLCBgbWFsZWAsIGFuZCBgb3RoZXJgIOKAlCBpbiB0aGF0IG9yZGVyLgoKIyMgUXVlc3Rpb246CgoyLiBGaWxsIGluIHRoZSBmb2xsb3dpbmcgYmxhbmtzIHRvIGNvbXBsZXRlIHRoZSBjb2RlIGNodW5rIHRoYXQgd2lsbCBjb2VyY2UgdGhlIGBzZXhgIHZhcmlhYmxlIHRvIGEgZmFjdG9yIHdpdGggcG9zc2libGUgdmFsdWVzIG9mIGBmZW1hbGVgLCBgbWFsZWAsIGFuZCBgb3RoZXJgIOKAlCBpbiB0aGF0IG9yZGVyLgoKYGBge3J9CmRpYWJfZGVtbyA8LSBkaWFiX2RlbW8gJT4lIAogIG11dGF0ZShzZXhfZiA9IGZhY3RvcihzZXgsIGxldmVscyA9IGMoImZlbWFsZSIsICJtYWxlIiwgIm90aGVyIikpKQpgYGAKCiMgVGFzayA0CgpVc2UgdGhlIGBzdHIoKWAgZnVuY3Rpb24gdG8gdmlldyB0aGUgc3RydWN0dXJlIG9mIGBkaWFiX2RlbW9gLgoKYGBge3J9CnN0cihkaWFiX2RlbW8pCmBgYAoKIyMgUXVlc3Rpb246CgozLiBUaGUgYGRpYWJfZGVtb2AgZGF0YSBmcmFtZSBjb250YWlucyBfX19fIHJvd3MgYW5kIF9fX18gY29sdW1ucy4KCiogVGhlIGBkaWFiX2RlbW9gIGRhdGEgZnJhbWUgY29udGFpbnMgMjkgcm93cyBhbmQgNCBjb2x1bW5zLgoKIyBUYXNrIDUgCgpXcml0ZSBjb2RlIHRoYXQgaW5zdHJ1Y3RzIFIgdG8gY291bnQgdGhlIG51bWJlciBvZiBwYXJ0aWNpcGFudHMgd2hvIGZhbGwgaW50byBlYWNoIGNhdGVnb3J5IG9mIGBzZXhfZmAuCgpgYGB7cn0KdGFibGUoZGlhYl9kZW1vJHNleF9mKQpgYGAKCiMjIFF1ZXN0aW9uOgoKNC4gQWNjb3JkaW5nIHRvIHRoZSBhbmFseXNpcyB5b3UgY29tcGxldGVkIGluIFRhc2sgNSwgX19fXyBwZW9wbGUgcmVwb3J0ZWQgdGhhdCB0aGVpciBgc2V4YCB3YXMgYG90aGVyYC4KCiogQWNjb3JkaW5nIHRvIHRoZSBhbmFseXNpcyB5b3UgY29tcGxldGVkIGluIFRhc2sgNSwgMCBwZW9wbGUgcmVwb3J0ZWQgdGhhdCB0aGVpciBgc2V4YCB3YXMgYG90aGVyYC4KCiMgVGFzayA2CgpFeHBvcnQgYGRpYWJfZGVtb2AgYXMgYW4gLlJkcyBmaWxlIHdpdGggdGhlIHNhbWUgbmFtZSAoaS5lLiwgYGRpYWJfZGVtb2ApLgoKIyMgUXVlc3Rpb246Cgo1LiBXaGljaCBvZiB0aGUgZm9sbG93aW5nIGNvZGUgY2h1bmtzIHdpbGwgY29ycmVjdGx5IGV4cG9ydCB0aGUgYGRpYWJfZGVtb2AgZGF0YSBmcmFtZSBhcyBhbiAuUmRzIGZpbGUgd2l0aCB0aGUgc2FtZSBuYW1lIChpLmUuLCBgZGlhYl9kZW1vYCk/CgpgYGB7ciBldmFsPUZBTFNFfQojIEluY29ycmVjdDogVGhpcyBjb2RlIHVzZXMgdGhlIC5jc3YgZmlsZSBleHRlbnNpb24gaW5zdGVhZCBvZiB0aGUgLnJkcyBmaWxlIGV4dGVuc2lvbi4gCndyaXRlX3JkcyhkaWFiX2RlbW8sICJkaWFiX2RlbW8uY3N2IikKYGBgCgpgYGB7ciBldmFsPUZBTFNFfQojIEluY29ycmVjdDogVGhlIHZhbHVlcyBiZWluZyBwYXNzZWQgdG8gdGhlIHdyaXRlX3JkcygpIGZ1bmN0aW9uIGFyZSBpbiB0aGUgaW5jb3JyZWN0IG9yZGVyLiAKd3JpdGVfcmRzKCJkaWFiX2RlbW8ucmRzIiwgZGlhYl9kZW1vKQpgYGAKCmBgYHtyIGV2YWw9RkFMU0V9CiMgSW5jb3JyZWN0OiBUaGVyZSBpcyBubyBmdW5jdGlvbiBjYWxsZWQgd3JpdGUucmRzKCkuCndyaXRlLnJkcyhkaWFiX2RlbW8sICJkaWFiX2RlbW8ucmRzIikKYGBgCgpgYGB7ciBldmFsPUZBTFNFfQojIENvcnJlY3QuCndyaXRlX3JkcyhkaWFiX2RlbW8sICJkaWFiX2RlbW8ucmRzIikKYGBgCgpgYGB7ciBldmFsPUZBTFNFfQojIEZvciBEci4gQ2FubmVsbCdzIGNvbXB1dGVyLgp3cml0ZV9yZHMoZGlhYl9kZW1vLCAiL1VzZXJzL2JyYWRjYW5uZWxsL0Rlc2t0b3AvZGlhYl9kZW1vLnJkcyIpCmBgYAoKIyBUYXNrIDcKCkltcG9ydCB0aGUgZGlhYmV0ZXMgc3R1ZHkgb3V0Y29tZXMgZGF0YSBpbnRvIFIgYXMgYSBkYXRhIGZyYW1lIG5hbWVkIGBkaWFiX291dGAuIE1ha2Ugc3VyZSB0byB0ZWxsIFIgaG93IHRvIGNvcnJlY3RseSBpZGVudGlmeSBtaXNzaW5nIHZhbHVlcyBpbiB0aGUgcmF3IGRhdGEuCgojIyBRdWVzdGlvbjoKCjYuIFdoaWNoIG9mIHRoZSBmb2xsb3dpbmcgY29kZSBjaHVua3Mgd2lsbCBjb3JyZWN0bHkgaW1wb3J0IHRoZSBkaWFiZXRlcyBzdHVkeSBvdXRjb21lcyBkYXRhIGludG8gUiBhcyBhIGRhdGEgZnJhbWUgbmFtZWQgYGRpYWJfb3V0YD8KCmBgYHtyIGV2YWw9RkFMU0V9CiMgSW5jb3JyZWN0OiBUaGlzIGNvZGUgZG9lcyBub3Qgc3VwcGx5IGVub3VnaCB2YWx1ZXMgdG8gdGhlIGNvbF90eXBlcyBhcmd1bWVudC4KZGlhYl9vdXQgPC0gcmVhZF9leGNlbCgKICAiZGlhYmV0ZXMueGxzeCIsCiAgc2hlZXQgPSAib3V0Y29tZXMiLAogIGNvbF9uYW1lcyA9IGMoInBpZCIsICJkaWFiZXRlcyIsICJkZXZpY2UiLCAiYnQxIiwgImJ0MiIsICJjb3N0IiksCiAgY29sX3R5cGVzID0gYygidGV4dCIsIHJlcCgiZ3Vlc3MiLCA0KSksCiAgbmEgPSBjKCIiLCAiTkEiLCAiTWlzc2luZyIpLAogIHNraXAgPSAyCikKYGBgCgpgYGB7ciBldmFsPUZBTFNFfQojIEluY29ycmVjdDogVGhpcyBjb2RlIGRvZXMgbm90IHRlbGwgUiBob3cgdG8gY29ycmVjdGx5IGlkZW50aWZ5IG1pc3NpbmcgdmFsdWVzIGluIHRoZSByYXcgZGF0YS4KZGlhYl9vdXQgPC0gcmVhZF9leGNlbCgKICAiZGlhYmV0ZXMueGxzeCIsCiAgc2hlZXQgPSAib3V0Y29tZXMiLAogIGNvbF9uYW1lcyA9IGMoInBpZCIsICJkaWFiZXRlcyIsICJkZXZpY2UiLCAiYnQxIiwgImJ0MiIsICJjb3N0IiksCiAgY29sX3R5cGVzID0gYygidGV4dCIsIHJlcCgiZ3Vlc3MiLCA1KSksCiAgbmEgPSBjKCIiKSwKICBza2lwID0gMgopCmBgYAoKYGBge3IgZXZhbD1GQUxTRX0KIyBJbmNvcnJlY3Q6IFRoaXMgY29kZSBkb2VzIG5vdCB0ZWxsIFIgaG93IHRvIGNvcnJlY3RseSBpZGVudGlmeSBtaXNzaW5nIHZhbHVlcyBpbiB0aGUgcmF3IGRhdGEuCmRpYWJfb3V0IDwtIHJlYWRfZXhjZWwoCiAgImRpYWJldGVzLnhsc3giLAogIHNoZWV0ID0gIm91dGNvbWVzIiwKICBjb2xfbmFtZXMgPSBjKCJwaWQiLCAiZGlhYmV0ZXMiLCAiZGV2aWNlIiwgImJ0MSIsICJidDIiLCAiY29zdCIpLAogIGNvbF90eXBlcyA9IGMoInRleHQiLCByZXAoImd1ZXNzIiwgNSkpLAogIHNraXAgPSAyCikKYGBgCgpgYGB7ciBldmFsPUZBTFNFfQojIENvcnJlY3QKZGlhYl9vdXQgPC0gcmVhZF9leGNlbCgKICAiZGlhYmV0ZXMueGxzeCIsCiAgc2hlZXQgPSAib3V0Y29tZXMiLAogIGNvbF9uYW1lcyA9IGMoInBpZCIsICJkaWFiZXRlcyIsICJkZXZpY2UiLCAiYnQxIiwgImJ0MiIsICJjb3N0IiksCiAgY29sX3R5cGVzID0gYygidGV4dCIsIHJlcCgiZ3Vlc3MiLCA1KSksCiAgbmEgPSBjKCIiLCAiTkEiLCAiTWlzc2luZyIpLAogIHNraXAgPSAyCikKYGBgCgpgYGB7cn0KIyBGb3IgRHIuIENhbm5lbGwncyBjb21wdXRlci4KZGlhYl9vdXQgPC0gcmVhZF9leGNlbCgKICAiL1VzZXJzL2JyYWRjYW5uZWxsL0Ryb3Bib3gvRGF0YXNldHMvRGlhYmV0ZXMvZGlhYmV0ZXMueGxzeCIsCiAgc2hlZXQgPSAib3V0Y29tZXMiLAogIGNvbF9uYW1lcyA9IGMoInBpZCIsICJkaWFiZXRlcyIsICJkZXZpY2UiLCAiYnQxIiwgImJ0MiIsICJjb3N0IiksCiAgY29sX3R5cGVzID0gYygidGV4dCIsIHJlcCgiZ3Vlc3MiLCA1KSksCiAgbmEgPSBjKCIiLCAiTkEiLCAiTWlzc2luZyIpLCAjIE1ha2Ugc3VyZSB0aGV5IGFkZCAiTWlzc2luZyIgaGVyZQogIHNraXAgPSAyCikKYGBgCgpgYGB7cn0Kc3RyKGRpYWJfb3V0KQpgYGAKCiMgVGFzayA4CgpDb2VyY2UgdGhlIGBkaWFiZXRlc2AgdmFyaWFibGUgdG8gYSBmYWN0b3IgdmFyaWFibGUuIE5hbWUgdGhlIGZhY3RvciB2ZXJzaW9uIG9mIGBkaWFiZXRlc2AgZGlhYmV0ZXNfZi4gUG9zc2libGUgdmFsdWVzIHRoYXQgdGhlIGRpYWJldGVzX2Ygc2hvdWxkIGluY2x1ZGUg4oCcTm/igJ0gYW5kICDigJxZZXPigJ0g4oCUIGluIHRoYXQgb3JkZXIuCgojIyBRdWVzdGlvbjoKCjcuIEZpbGwgaW4gdGhlIGZvbGxvd2luZyBibGFua3MgdG8gY29tcGxldGUgdGhlIGNvZGUgY2h1bmsgdGhhdCB3aWxsIGNvZXJjZSB0aGUgYGRpYWJldGVzYCB2YXJpYWJsZSB0byBhIGZhY3RvciB3aXRoIHplcm9zIGxhYmVsZWQgYXMgImBub2AiIGFuZCBvbmVzIGxhYmVsZWQgYXMgImB5ZXNgIiAtLSBpbiB0aGF0IG9yZGVyLgoKYGBge3J9CmRpYWJfb3V0IDwtIGRpYWJfb3V0ICU+JSAKICBtdXRhdGUoZGlhYmV0ZXNfZiA9IGZhY3RvcihkaWFiZXRlcywgYygwLCAxKSwgYygibm8iLCAieWVzIikpKQpgYGAKCiMgVGFzayA5CgpVc2UgdGhlIGBzdHIoKWAgZnVuY3Rpb24gdG8gdmlldyB0aGUgc3RydWN0dXJlIG9mIGBkaWFiX291dGAuIAoKYGBge3J9CnN0cihkaWFiX291dCkKYGBgCgojIFRhc2sgMTAKCkV4cG9ydCBgZGlhYl9vdXRgIHRvIGFuIC5SZHMgZmlsZSBvbiB5b3VyIGNvbXB1dGVy4oCZcyBkZXNrdG9wLgoKIyMgUXVlc3Rpb246Cgo4LiBGaWxsIGluIHRoZSBmb2xsb3dpbmcgYmxhbmtzIHRvIGNvbXBsZXRlIHRoZSBjb2RlIGNodW5rIHRoYXQgd2lsbCBleHBvcnQgYGRpYWJfb3V0YCB0byBhbiAuUmRzIGZpbGUgd2l0aCB0aGUgc2FtZSBuYW1lIG9uIHRoZSBjb21wdXRlcuKAmXMgZGVza3RvcC4KCmBgYHtyIGV2YWw9RkFMU0V9CiMgRXhhbXBsZSBmb3IgQ2FudmFzCndyaXRlX3JkcyhkaWFiX291dCwgIi9Vc2Vycy91c2VyL0Rlc2t0b3AvZGlhYl9vdXQucmRzIikKIyBGb3IgRHIuIENhbm5lbGwncwp3cml0ZV9yZHMoZGlhYl9vdXQsICIvVXNlcnMvYnJhZGNhbm5lbGwvRGVza3RvcC9kaWFiX291dC5yZHMiKQpgYGAKCiMgVGFzayAxMQoKSW1wb3J0IHRoZSAyMDE1LTIwMTYgTkhBTkVTIGRpYWJldGVzIHF1ZXN0aW9ubmFpcmUgZGF0YSBpbnRvIFIgYXMgYSBkYXRhIGZyYW1lIG5hbWVkIGBkaXFfaS5gCgpgYGB7cn0KZGlxX2kgPC0gcmVhZF94cHQoImh0dHBzOi8vd3d3bi5jZGMuZ292L05jaHMvTmhhbmVzLzIwMTUtMjAxNi9ESVFfSS5YUFQiKQpgYGAKCiMgVGFzayAxMgoKVXNlIHRoZSBgZ2xpbXBzZSgpYCBmdW5jdGlvbiB0byB2aWV3IHRoZSBzdHJ1Y3R1cmUgb2YgYGRpcV9pYC4KCmBgYHtyfQpnbGltcHNlKGRpcV9pKQpgYGAKCiMjIFF1ZXN0aW9uOgoKOS4gVGhlIGBkaXFfaWAgZGF0YSBmcmFtZSBjb250YWlucyBfX19fIHJvd3MgYW5kIF9fX18gY29sdW1ucy4KCiogVGhlIGBkaXFfaWAgZGF0YSBmcmFtZSBjb250YWlucyA5LDU3NSByb3dzIGFuZCA1NCBjb2x1bW5zLgoKIyBUYXNrIDEzCgpDb2VyY2UgYWxsIG9mIHRoZSB2YXJpYWJsZSBuYW1lcyBpbiBgZGlxX2lgIHRvIGxvd2VyY2FzZS4KCiMjIFF1ZXN0aW9uOgoKMTAuIEZpbGwgaW4gdGhlIGZvbGxvd2luZyBibGFua3MgdG8gY29tcGxldGUgdGhlIGNvZGUgY2h1bmsgdGhhdCB3aWxsIGNvZXJjZSBhbGwgb2YgdGhlIHZhcmlhYmxlIG5hbWVzIGluIGBkaXFfaWAgdG8gbG93ZXJjYXNlLgoKYGBge3J9Cm5hbWVzKGRpcV9pKSA8LSBuYW1lcyhkaXFfaSkgJT4lIHRvbG93ZXIoKQpgYGAKCiMgVGFzayAxNAoKUHJpbnQgb25seSB0aGUgZmlyc3QgNiByb3dzIG9mICBgZGlxX2lgIHRvIHlvdXIgc2NyZWVuLgoKIyMgUXVlc3Rpb246CgoxMS4gRmlsbCBpbiB0aGUgZm9sbG93aW5nIGJsYW5rcyB0byBjb21wbGV0ZSB0aGUgY29kZSBjaHVuayB0aGF0IHdpbGwgcHJpbnQgb25seSB0aGUgZmlyc3QgNiByb3dzIG9mICBgZGlxX2lgIHRvIHRoZSBzY3JlZW4uCgpgYGB7cn0KaGVhZChkaXFfaSkKYGBgCgoKCg==</div>
+<div id="rmd-source-code">LS0tCnRpdGxlOiAiQ2hvY29sYXRlIFN0dWR5IgpvdXRwdXQ6IGh0bWxfbm90ZWJvb2sKLS0tCgojIE92ZXJ2aWV3CgpUaGUgTlRSSEQgaXMgcGFydCBvZiBhIHN0dWR5IGFib3V0IHRoZSBhc3NvY2lhdGlvbiBiZXR3ZWVuIGNob2NvbGF0ZSBlYXRpbmcgaGFiaXRzIGFuZCBhY2FkZW1pYyBhYmlsaXR5LiBUaGUgc3R1ZHkgdG9vayBwbGFjZSBhdCBtdWx0aXBsZSBzY2hvb2xzLCBjaG9zZW4gYXQgcmFuZG9tLCBmcm9tIGFyb3VuZCB0aGUgcmVnaW9uLiBHcmFkdWF0ZSBzdHVkZW50cyBhZG1pbmlzdGVyZWQgdGhlIHN1cnZleXMgdG8gc3R1ZGVudHMgYXQgZWFjaCBzY2hvb2wsIHJlY29yZGVkIHN1cnZleSByZXNwb25zZXMgZWxlY3Ryb25pY2FsbHksIGFuZCB0aGVuIGVtYWlsZWQgdGhlbSB0byB1cy4gTm93LCB3ZSBuZWVkIHlvdXIgaGVscCBpbXBvcnRpbmcgdGhlIGRhdGEgaW50byBSLCBkb2luZyBhIGxpdHRsZSBiaXQgb2YgZGF0YSBjbGVhbmluZywgYW5kIHNhdmluZyB0aGUgZGF0YSBhZ2FpbiBvbmNlIGl04oCZcyByZWFkeSBmb3IgYW5hbHlzaXMuIAoKYGBge3IgbWVzc2FnZT1GQUxTRX0KbGlicmFyeShkcGx5ciwgd2Fybi5jb25mbGljdHMgPSBGQUxTRSkKbGlicmFyeShyZWFkeGwpCmxpYnJhcnkocmVhZHIpCmxpYnJhcnkoaGF2ZW4pCmBgYAoKIyBUYXNrIDEgCgpDbGljayB0aGUgbGlua3MgYmVsb3cgdG8gZG93bmxvYWQgdGhlIHJhdyBkYXRhIGZpbGVzIHRvIHlvdXIgY29tcHV0ZXI6IAoKKiBbY2hvY29sYXRlIHN0dWR5IDEueGxzXShodHRwczovL3d3dy5kcm9wYm94LmNvbS9zLzlyaXFmaHRmNTgybzJhei9DaG9jb2xhdGUlMjBTdHVkeSUyMDEueGxzP2RsPTEpICAgCiogW2Nob2NvbGF0ZSBzdHVkeSAyLmNzdl0oaHR0cHM6Ly93d3cuZHJvcGJveC5jb20vcy9nZ2xuMDUxcmVkdzFnOTgvQ2hvY29sYXRlJTIwU3R1ZHklMjAyLmNzdj9kbD0xKQoqIFtjaG9jb2xhdGUgc3R1ZHkgMy50eHRdKGh0dHBzOi8vd3d3LmRyb3Bib3guY29tL3MvOTBuZG1kYzQ2M3VpODhqL0Nob2NvbGF0ZSUyMFN0dWR5JTIwMy50eHQ/ZGw9MSkKCiMgVGFzayAyCgpJbXBvcnQgYENob2NvbGF0ZSBTdHVkeSAxLnhsc2AgaW50byB5b3VyIFIgZ2xvYmFsIGVudmlyb25tZW50IGFzIGBjaG9jb18xYC4KCiMjIFF1ZXN0aW9uOgoKMS4gV2hpY2ggb2YgdGhlIGZvbGxvd2luZyBjb2RlIGNodW5rcyB3aWxsIGNvcnJlY3RseSBpbXBvcnQgdGhlIGBDaG9jb2xhdGUgU3R1ZHkgMS54bHNgIGRhdGEgaW50byB5b3VyIFIgZ2xvYmFsIGVudmlyb25tZW50IGFzIGBjaG9jb18xYD8KCmBgYHtyIGV2YWw9RkFMU0V9CiMgSW5jb3JyZWN0OiBjaG9jb2xhdGVfc3R1ZHlfMS54bHMgaXMgbm90IGEgY3N2IGZpbGUuCmNob2NvXzEgPC0gcmVhZF9jc3YoIkNob2NvbGF0ZSBTdHVkeSAxLnhscyIpCmBgYAoKYGBge3IgZXZhbD1GQUxTRX0KIyBJbmNvcnJlY3Q6IHJlYWR4bCBpcyB0aGUgbmFtZSBvZiBhbiBSIHBhY2thZ2UsIG5vdCBhIGZ1bmN0aW9uLgpjaG9jb18xIDwtIHJlYWR4bCgiQ2hvY29sYXRlIFN0dWR5IDEueGxzIikKYGBgCgpgYGB7ciBldmFsPUZBTFNFfQojIEluY29ycmVjdDogcmVhZHIgaXMgdGhlIG5hbWUgb2YgYW4gUiBwYWNrYWdlLCBub3QgYSBmdW5jdGlvbi4KY2hvY29fMSA8LSByZWFkcigiQ2hvY29sYXRlIFN0dWR5IDEueGxzIikKYGBgCgpgYGB7ciBldmFsPUZBTFNFfQojIENvcnJlY3QuCmNob2NvXzEgPC0gcmVhZF9leGNlbCgiQ2hvY29sYXRlIFN0dWR5IDEueGxzIikKYGBgCgpgYGB7cn0KIyBGb3IgRHIuIENhbm5lbGwncyBjb21wdXRlci4KY2hvY29fMSA8LSByZWFkX2V4Y2VsKCIvVXNlcnMvYnJhZGNhbm5lbGwvRHJvcGJveC9EYXRhc2V0cy9DaG9jb2xhdGUvQ2hvY29sYXRlIFN0dWR5IDEueGxzIikKYGBgCgojIFRhc2sgMyAKClZpZXcgdGhlIHN0cnVjdHVyZSBvZiBgY2hvY29fMWAgdXNpbmcgdGhlIGBzdHIoKWAgZnVuY3Rpb24uCgpgYGB7cn0Kc3RyKGNob2NvXzEpCmBgYAoKIyMgUXVlc3Rpb246CgoyLiBUaGUgYGNob2NvXzFgIGRhdGEgZnJhbWUgY29udGFpbnMgX19fXyByb3dzIGFuZCBfX19fIGNvbHVtbnMuCgoqIFRoZSBgY2hvY29fMWAgZGF0YSBmcmFtZSBjb250YWlucyA1MCByb3dzIGFuZCAyMSBjb2x1bW5zLgoKIyBUYXNrIDQKCkltcG9ydCBgQ2hvY29sYXRlIFN0dWR5IDIuY3N2YCBpbnRvIHlvdXIgUiBnbG9iYWwgZW52aXJvbm1lbnQgYXMgYGNob2NvXzJgLgoKIyMgUXVlc3Rpb246CgozLiBXaGljaCBvZiB0aGUgZm9sbG93aW5nIGNvZGUgY2h1bmtzIHdpbGwgY29ycmVjdGx5IGltcG9ydCB0aGUgYENob2NvbGF0ZSBTdHVkeSAyLmNzdmAgZGF0YSBpbnRvIHlvdXIgUiBnbG9iYWwgZW52aXJvbm1lbnQ/CgpgYGB7ciBldmFsPUZBTFNFfQojIEluY29ycmVjdDogQWx0aG91Z2ggeW91IGNhbiBvcGVuIGNob2NvbGF0ZV9zdHVkeV8xLmNzdiBpbiBFeGNlbCwgaXQgZG9lc24ndCBoYXZlIGEgLnhscyBvciAueGxzeCBmaWxlIGV4dGVuc2lvbiwgd2hpY2ggaXMgd2hhdCByZWFkX2V4Y2VsIGV4cGVjdHMuCmNob2NvXzIgPC0gcmVhZF9leGNlbCgiQ2hvY29sYXRlIFN0dWR5IDIuY3N2IikKYGBgCgpgYGB7ciBldmFsPUZBTFNFfQojIEluY29ycmVjdDogVGhlcmUgaXMgYSByZWFkLmNzdigpIGZ1bmN0aW9uIHRoYXQgd2lsbCBpbXBvcnQgdGhpcyBkYXRhLiBIb3dldmVyLCBpdCBpc24ndCBpbiB0aGUgcmVhZHIgcGFja2FnZS4gVGhlIGRvdWJsZSBjb2xvbiBzeW50YXggdXNlZCBpbiB0aGUgY29kZSByZWFkcjo6cmVhZC5jc3YoKSB0ZWxscyBSIHRvIGxvb2sgZm9yIHRoZSByZWFkLmNzdigpIGZ1bmN0aW9uIGluIHRoZSByZWFkciBwYWNrYWdlLCB3aGljaCBkb2Vzbid0IGV4aXN0LiBUaGUgcmVhZF9jc3YoKSBmdW5jdGlvbiBpcyBhIGJhc2UgUiBmdW5jdGlvbi4gCmNob2NvXzIgPC0gcmVhZHI6OnJlYWQuY3N2KCJDaG9jb2xhdGUgU3R1ZHkgMi5jc3YiKQpgYGAKCmBgYHtyIGV2YWw9RkFMU0V9CiMgQ29ycmVjdC4gSG93ZXZlciwgSSBwcmVmZXIgcmVhZF9jc3YoKSBvdmVyIHJlYWQuY3N2KCkuCmNob2NvXzIgPC0gcmVhZC5jc3YoIkNob2NvbGF0ZSBTdHVkeSAyLmNzdiIpCmBgYAoKYGBge3IgZXZhbD1GQUxTRX0KIyBDb3JyZWN0LgpjaG9jb18yIDwtIHJlYWRfY3N2KCJDaG9jb2xhdGUgU3R1ZHkgMi5jc3YiKQpgYGAKCmBgYHtyfQojIEZvciBEci4gQ2FubmVsbCdzIGNvbXB1dGVyLgpjaG9jb18yIDwtIHJlYWRfY3N2KCIvVXNlcnMvYnJhZGNhbm5lbGwvRHJvcGJveC9EYXRhc2V0cy9DaG9jb2xhdGUvQ2hvY29sYXRlIFN0dWR5IDIuY3N2IikKYGBgCgojIFRhc2sgNSAKClZpZXcgdGhlIHN0cnVjdHVyZSBvZiBgY2hvY29fMmAgdXNpbmcgdGhlIGBzdHIoKWAgZnVuY3Rpb24uCgpgYGB7cn0Kc3RyKGNob2NvXzIpCmBgYAoKIyMgUXVlc3Rpb246Cgo0LiBUaGUgYGNob2NvXzJgIGRhdGEgZnJhbWUgY29udGFpbnMgX19fXyByb3dzIGFuZCBfX19fIGNvbHVtbnMuCgoqIFRoZSBgY2hvY29fMmAgZGF0YSBmcmFtZSBjb250YWlucyAyMCByb3dzIGFuZCAyMSBjb2x1bW5zLgoKIyBUYXNrIDYgCgpJbXBvcnQgYENob2NvbGF0ZSBTdHVkeSAzLnR4dGAgaW50byB5b3VyIFIgZ2xvYmFsIGVudmlyb25tZW50IGFzIGBjaG9jb18zYC4gTWFrZSBzdXJlIHRvIHRlbGwgUiBob3cgdG8gY29ycmVjdGx5IGlkZW50aWZ5IG1pc3NpbmcgdmFsdWVzIGluIHRoZSByYXcgZGF0YS4KCiMjIFF1ZXN0aW9uOgoKNS4gV2hpY2ggb2YgdGhlIGZvbGxvd2luZyBjb2RlIGNodW5rcyB3aWxsIGNvcnJlY3RseSBpbXBvcnQgdGhlIGBDaG9jb2xhdGUgU3R1ZHkgMy50eHRgIGRhdGEgaW50byB5b3VyIFIgZ2xvYmFsIGVudmlyb25tZW50PwoKYGBge3IgZXZhbD1GQUxTRX0KIyBJbmNvcnJlY3Q6IHJlYWRfdGFibGUgd2lsbCBub3QgY29ycmVjdGx5IGhhbmRsZSB2YWx1ZXMgdGhhdCBpbmNsdWRlIHNwYWNlcyAKIyBzdWNoIGFzICJGbG93ZXIgR3JvdmUiIGluIHRoZSBzY2hvb2wgY29sdW1uLgpjaG9jb18zIDwtIHJlYWRfdGFibGUoIkNob2NvbGF0ZSBTdHVkeSAzLnR4dCIpCmBgYAoKYGBge3IgZXZhbD1GQUxTRX0KIyBJbmNvcnJlY3Q6IFRoaXMgY29kZSBkb2VzIG5vdCB0ZWxsIFIgaG93IHRvIGNvcnJlY3RseSBpZGVudGlmeSBtaXNzaW5nIHZhbHVlcyBpbiB0aGUgcmF3IGRhdGEuCmNob2NvXzMgPC0gcmVhZF9md2YoCiAgIkNob2NvbGF0ZSBTdHVkeSAzLnR4dCIsCiAgY29sX3Bvc2l0aW9ucyA9IGZ3Zl93aWR0aHMoCiAgICB3aWR0aHMgICAgPSBjKDUsIDksIDgsIDQsIDYsIDEzLCA5LCA5LCA2LCA2LCA2LCA2LCA2LCA2LCA4LCA3LCA3LCA3LCA3LCA5LCA2KSwKICAgIGNvbF9uYW1lcyA9IGMoCiAgICAgICJ1aW4iLCAibGFzdCIsICJmaXJzdCIsICJhZ2UiLCAiZ3JhZGUiLCAic2Nob29sIiwgInBhcmVudCIsICJtYXJyeSIsIAogICAgICAibWF0aDEiLCAibWF0aDIiLCAibWF0aDMiLCAicmVhZDEiLCAicmVhZDIiLCAicmVhZDMiLCAib3ZlcmFsbCIsICJjaG9jbzEiLCAKICAgICAgImNob2NvMiIsICJjaG9jbzMiLCAiZXh0cmExIiwgImV4dHJhMiIsICJ2ZWdnaWUiCiAgICApCiAgKSwKICBza2lwID0gMSwKICBuYS5ybSA9IFRSVUUKKQpgYGAKCmBgYHtyIGV2YWw9RkFMU0V9CiMgSW5jb3JyZWN0OiBUaGlzIGNvZGUgZ2l2ZXMgY29sdW1uIHN0YXJ0IHZhbHVlcyBpbnN0ZWFkIG9mIGNvbHVtbiB3aWR0aHMKY2hvY29fMyA8LSByZWFkX2Z3ZigKICAiQ2hvY29sYXRlIFN0dWR5IDMudHh0IiwKICBjb2xfcG9zaXRpb25zID0gZndmX3dpZHRocygKICAgIHdpZHRocyAgICA9IGMoNSwgOSwgOCwgNCwgNiwgMTMsIDksIDksIDYsIDYsIDYsIDYsIDYsIDYsIDgsIDcsIDcsIDcsIDcsIDksIDYpLAogICAgY29sX25hbWVzID0gYygKICAgICAgInVpbiIsICJsYXN0IiwgImZpcnN0IiwgImFnZSIsICJncmFkZSIsICJzY2hvb2wiLCAicGFyZW50IiwgIm1hcnJ5IiwgCiAgICAgICJtYXRoMSIsICJtYXRoMiIsICJtYXRoMyIsICJyZWFkMSIsICJyZWFkMiIsICJyZWFkMyIsICJvdmVyYWxsIiwgImNob2NvMSIsIAogICAgICAiY2hvY28yIiwgImNob2NvMyIsICJleHRyYTEiLCAiZXh0cmEyIiwgInZlZ2dpZSIKICAgICkKICApLAogIHNraXAgPSAxLAogIG5hID0gIi4iCikKYGBgCgpgYGB7ciBldmFsPUZBTFNFfQojIENvcnJlY3QKY2hvY29fMyA8LSByZWFkX2Z3ZigKICAiQ2hvY29sYXRlIFN0dWR5IDMudHh0IiwKICBjb2xfcG9zaXRpb25zID0gZndmX3dpZHRocygKICAgIHdpZHRocyAgICA9IGMoNSwgOSwgOCwgNCwgNiwgMTMsIDksIDksIDYsIDYsIDYsIDYsIDYsIDYsIDgsIDcsIDcsIDcsIDcsIDksIDYpLAogICAgY29sX25hbWVzID0gYygKICAgICAgInVpbiIsICJsYXN0IiwgImZpcnN0IiwgImFnZSIsICJncmFkZSIsICJzY2hvb2wiLCAicGFyZW50IiwgIm1hcnJ5IiwgCiAgICAgICJtYXRoMSIsICJtYXRoMiIsICJtYXRoMyIsICJyZWFkMSIsICJyZWFkMiIsICJyZWFkMyIsICJvdmVyYWxsIiwgImNob2NvMSIsIAogICAgICAiY2hvY28yIiwgImNob2NvMyIsICJleHRyYTEiLCAiZXh0cmEyIiwgInZlZ2dpZSIKICAgICkKICApLAogIHNraXAgPSAxLAogIG5hID0gIi4iCikKYGBgCgpgYGB7cn0KIyBGb3IgRHIuIENhbm5lbGwncyBjb21wdXRlci4KY2hvY29fMyA8LSByZWFkX2Z3ZigKICAiL1VzZXJzL2JyYWRjYW5uZWxsL0Ryb3Bib3gvRGF0YXNldHMvQ2hvY29sYXRlL0Nob2NvbGF0ZSBTdHVkeSAzLnR4dCIsCiAgY29sX3Bvc2l0aW9ucyA9IGZ3Zl93aWR0aHMoCiAgICB3aWR0aHMgICAgPSBjKDUsIDksIDgsIDQsIDYsIDEzLCA5LCA5LCA2LCA2LCA2LCA2LCA2LCA2LCA4LCA3LCA3LCA3LCA3LCA5LCA2KSwKICAgIGNvbF9uYW1lcyA9IGMoCiAgICAgICJ1aW4iLCAibGFzdCIsICJmaXJzdCIsICJhZ2UiLCAiZ3JhZGUiLCAic2Nob29sIiwgInBhcmVudCIsICJtYXJyeSIsIAogICAgICAibWF0aDEiLCAibWF0aDIiLCAibWF0aDMiLCAicmVhZDEiLCAicmVhZDIiLCAicmVhZDMiLCAib3ZlcmFsbCIsICJjaG9jbzEiLCAKICAgICAgImNob2NvMiIsICJjaG9jbzMiLCAiZXh0cmExIiwgImV4dHJhMiIsICJ2ZWdnaWUiCiAgICApCiAgKSwKICBza2lwID0gMSwKICBuYSA9ICIuIgopCmBgYAoKIyBUYXNrIDcgCgpWaWV3IHRoZSBzdHJ1Y3R1cmUgb2YgYGNob2NvXzNgIHVzaW5nIHRoZSBgc3RyKClgIGZ1bmN0aW9uLgoKYGBge3J9CnN0cihjaG9jb18zKQpgYGAKCiMjIFF1ZXN0aW9uOgoKNi4gVGhlIGBjaG9jb18zYCBkYXRhIGZyYW1lIGNvbnRhaW5zIF9fX18gcm93cyBhbmQgX19fXyBjb2x1bW5zLgoKKiBUaGUgYGNob2NvXzNgIGRhdGEgZnJhbWUgY29udGFpbnMgMTAgcm93cyBhbmQgMjEgY29sdW1ucy4KCiMgVGFzayA4LiAKClBsZWFzZSB2aWV3IHRoZSBOYXRpb25hbCBIZWFsdGggYW5kIE51dHJpdGlvbiBFeGFtaW5hdGlvbiBTdXJ2ZXkgKE5IQU5FUykgcXVlc3Rpb25uYWlyZXMsIGRhdGFzZXRzLCBhbmQgcmVsYXRlZCBkb2N1bWVudGF0aW9uIHdlYnNpdGUgaGVyZTogaHR0cHM6Ly93d3duLmNkYy5nb3YvbmNocy9uaGFuZXMvIAoKIyBUYXNrIDkuIAoKSW1wb3J0IHRoZSAyMDE1LTIwMTYgQWxjb2hvbCBVc2UgZGF0YS4gQWxjb2hvbCB1c2Ugd2FzIHBhcnQgb2YgdGhlIE5IQU5FUyBxdWVzdGlvbm5haXJlIGRhdGEuCgpgYGB7cn0KYWxxX2kgPC0gcmVhZF94cHQoImh0dHBzOi8vd3d3bi5jZGMuZ292L05jaHMvTmhhbmVzLzIwMTUtMjAxNi9BTFFfSS5YUFQiKQpgYGAKCiMjIFF1ZXN0aW9uOgoKNy4gV2hhdCBSIHBhY2thZ2UgY29udGFpbnMgdGhlIGByZWFkX3hwdCgpYCBmdW5jdGlvbiB3ZSBuZWVkIHRvIHVzZSB0byBpbXBvcnQgdGhlIE5IQU5FUyBkYXRhIGluIFRhc2sgOT8KCiogVGhlIFtoYXZlbl0oaHR0cHM6Ly9oYXZlbi50aWR5dmVyc2Uub3JnLykgcGFja2FnZSBjb250YWlucyB0aGUgYHJlYWRfeHB0KClgIGZ1bmN0aW9uIHdlIG5lZWQgdG8gdXNlIHRvIGltcG9ydCB0aGUgTkhBTkVTIGRhdGEgaW4gVGFzayA5LgoKIyBUYXNrIDEwCgpWaWV3IHRoZSBzdHJ1Y3R1cmUgb2YgYGFscV9pYCB1c2luZyB0aGUgYHN0cigpYCBmdW5jdGlvbi4KCmBgYHtyfQpzdHIoYWxxX2kpCmBgYAoKIyMgUXVlc3Rpb25zOgoKOS4gVGhlIGBhbHFfaWAgZGF0YSBmcmFtZSBjb250YWlucyBfX19fIHJvd3MgYW5kIF9fX18gY29sdW1ucy4KCiogVGhlIGBhbHFfaWAgZGF0YSBmcmFtZSBjb250YWlucyA1LDczNSByb3dzIGFuZCAxMCBjb2x1bW5zLgoKMTAuIFdoZW4geW91IHZpZXcgdGhlIHN0cnVjdHVyZSBvZiBgYWxxX2lgIHVzaW5nIHRoZSBgc3RyKClgIGZ1bmN0aW9uLCB3aGF0IGlzIHRoZSB2ZWN0b3IgdHlwZSBzaG93biBmb3IgYGFscTEwMV9mYD8gQWNjb3JkaW5nIHRvIFIsIHdoYXQga2luZCBvZiB2YXJpYWJsZSBpcyBgYWxxMTAxX2ZgPyAKCiogV2hlbiB5b3UgdmlldyB0aGUgc3RydWN0dXJlIG9mIGBhbHFfaWAgdXNpbmcgdGhlIGBzdHIoKWAgZnVuY3Rpb24sIHRoZSB2ZWN0b3IgdHlwZSBzaG93biBpcyBgRmFjdG9yYC4KCg==</div>
 
 
 
@@ -2398,7 +2355,7 @@ $(document).ready(function () {
 <!-- code folding -->
 <script>
 $(document).ready(function () {
-  window.initializeSourceEmbed("quiz_data_transfer.Rmd");
+  window.initializeSourceEmbed("lab_data_transfer.Rmd");
   window.initializeCodeFolding("show" === "show");
 });
 </script>
