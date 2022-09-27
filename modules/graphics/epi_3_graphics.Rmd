@@ -326,6 +326,33 @@ table(pop$outcome)
 ```
 
 
+# Measures of association
+
+## Population vs a sample
+
+```{r}
+pop <- expand_grid(x = 1:15, y = 1:15)
+```
+
+```{r}
+ggplot(pop, aes(x, y)) + 
+  geom_point(size = 8, color = u_orange) +
+  # Draw sample box
+   geom_rect(
+    xmin = 0.5, xmax = 5.6, ymin = 4.5, ymax = 15.6,
+    alpha = 0, color = "#4e738a", size = 2
+  ) +
+  # No legend
+  theme(
+    panel.background = element_blank(),
+    axis.title = element_blank(),
+    axis.text = element_blank(),
+    axis.ticks = element_blank()
+  )
+
+# Print for PowerPoint
+ggsave("/users/bradcannell/Desktop/population_w_sample.png", width = 6.5, height = 7.5)
+```
 
 
 # 🗑Clean up
