@@ -12,7 +12,7 @@ library(freqtables)
 
 # Create 2x2 contingency tables
 
-There are many difference possible ways to create 2x2 contingency tables in R. I prefer building them as a matrix object. We haven't talked much about matrix objects up the this point, and for the most part, we don't need to use them very often. 
+There are many difference possible ways to create 2x2 contingency tables in R. I prefer building them as a matrix object. We haven't talked much about matrix objects up the this point, and for the most part, we don't need to use them very often.
 
 ## Matrix dimensions
 
@@ -31,10 +31,11 @@ If we want to select element "a", we can use bracket notation.
 v[1]
 ```
 
-Here is a matrix with character values. Remember, all elements of a vector must be of the same time (character, numeric, etc.), and a matrix _is_ a vector. So, all elements of a matrix must be of the same type.
+Here is a matrix with character values. Remember, all elements of a vector must be of the same time (character, numeric, etc.), and a matrix *is* a vector. So, all elements of a matrix must be of the same type.
 
 ```{r}
 mat <- matrix(v)
+mat <- matrix(c("a", "b", "c", "d"))
 mat
 ```
 
@@ -51,7 +52,7 @@ mat[1, 1]
 
 ## Matrix to 2x2 contingency tables
 
-Now, to make our matrix look and behave like a 2x2 table, we need our matrix to have 2 rows and 2 columns instead of 4 rows and 1 column. First, we can adjust either the `ncol` or `nrow` argument to the `matrix()` function. 
+Now, to make our matrix look and behave like a 2x2 table, we need our matrix to have 2 rows and 2 columns instead of 4 rows and 1 column. First, we can adjust either the `ncol` or `nrow` argument to the `matrix()` function.
 
 ```{r}
 matrix_ct <- matrix(
@@ -83,7 +84,7 @@ matrix_ct <- matrix(
 matrix_ct
 ```
 
-Now, we have a matrix object that looks and behaves like a 2x2 contingency table. 
+Now, we have a matrix object that looks and behaves like a 2x2 contingency table.
 
 ## Add row and column names
 
@@ -122,18 +123,34 @@ matrix_ct
 And now let's add the marginal totals. We could do this manually.
 
 ```{r}
+matrix_ct[, 1]
+```
+
+```{r}
+matrix_ct[, 2]
+```
+
+```{r}
 row_total <- matrix_ct[, 1] + matrix_ct[, 2]
 row_total
 ```
 
-Let's band those values as a new column in our matrix with the `cbind()` function. 
+Let's band those values as a new column in our matrix with the `cbind()` function.
 
 ```{r}
 matrix_ct_row_total <- cbind(matrix_ct, row_total)
 matrix_ct_row_total
 ```
 
-And then repeat for the column totals. 
+And then repeat for the column totals.
+
+```{r}
+matrix_ct_row_total[1, ]
+```
+
+```{r}
+matrix_ct_row_total[2, ]
+```
 
 ```{r}
 col_total <- matrix_ct_row_total[1, ] + matrix_ct_row_total[2, ]
@@ -154,11 +171,10 @@ matrix_ct_margins <- addmargins(matrix_ct)
 matrix_ct_margins
 ```
 
-
 # Incidence proportion ratio
 
-* Relative risk
-* Risk ratio
+-   Relative risk
+-   Risk ratio
 
 $$\frac{Incidence\, proportion\, in\, the\, exposed}{Incidence\, proportion\, in\, the\, unexposed}$$
 
@@ -182,7 +198,7 @@ matrix_ct
 ```
 
 ```{r}
-incidence_prop <- matrix_ct["Yes", ] / matrix_ct[, "row_sum"]
+incidence_prop <- matrix_ct[, "Yes"] / matrix_ct[, "row_sum"]
 incidence_prop
 ```
 
@@ -200,14 +216,13 @@ ipr
 
 ## Interpretation
 
-1. Among the members of our population, those who were exposed had 1.2 times the incidence of disease compared to those who were not exposed over the 12 months of follow-up period.
+1.  Among the members of our population, those who were exposed had 1.2 times the incidence of disease compared to those who were not exposed over the 12 months of follow-up period.
 
-2. Among the members of our population, those who were exposed had 1.2 times the risk of disease compared to those who were not exposed over the 12 months of follow-up period.
-
+2.  Among the members of our population, those who were exposed had 1.2 times the risk of disease compared to those who were not exposed over the 12 months of follow-up period.
 
 # Incidence proportion difference
 
-* Risk difference
+-   Risk difference
 
 $${Incidence\, proportion\, in\, the\, exposed}-{Incidence\, proportion\, in\, the\, unexposed}$$
 
@@ -217,7 +232,7 @@ $$\frac{a}{(a+b)}-\frac{c}{(c+d)}$$
 matrix_ct
 ```
 
-Calculate our incidence risk differnce
+Calculate our incidence risk difference
 
 ```{r}
 ird <- matrix_ct["Yes", "incidence_prop"] - matrix_ct["No", "incidence_prop"]
@@ -226,29 +241,27 @@ ird
 
 ## Interpretation
 
-1. Among the members of our population, those who were exposed had 0.1 additional cases of disease per person compared to those who were not exposed over the 12 months of follow-up period.
+1.  Among the members of our population, those who were exposed had 0.1 additional cases of disease per person compared to those who were not exposed over the 12 months of follow-up period.
 
 ```{r}
 ird * 100
 ```
 
-
-2. Among the members of our population, those who were exposed had 10 additional cases of disease per 100 people compared to those who were not exposed over the 12 months of follow-up period.
+2.  Among the members of our population, those who were exposed had 10 additional cases of disease per 100 people compared to those who were not exposed over the 12 months of follow-up period.
 
 **Tip 1:** If you have the incidence proportion expressed as percentage, convert it to convenient fractions so that you can express it as the additional risk in a group of people who have the exposure.
 
 **Tip 2:** Focus your interpretation on the additional risk in the exposed group.
 
-Example: “There were 10 additional cases of disease per 100 people in the group that was exposed, compared to the group without exposure.”
+Example: "There were 10 additional cases of disease per 100 people in the group that was exposed, compared to the group without exposure."
 
-**Tip 3:** Don’t forget to specify the time interval when using incidence proportion.
+**Tip 3:** Don't forget to specify the time interval when using incidence proportion.
 
-Example: “In the group that failed to adhere closely to the Mediterranean diet there were 120 excess deaths per 1,000 men during the two year period of observation compared to the group that did adhere to the Mediterranean diet.”
-
+Example: "In the group that failed to adhere closely to the Mediterranean diet there were 120 excess deaths per 1,000 men during the two year period of observation compared to the group that did adhere to the Mediterranean diet."
 
 # Incidence odds ratio
 
-* Odds ratio
+-   Odds ratio
 
 $$\frac{Incidence\, odds\, in\, the\, exposed}{Incidence\, odds\, in\, the\, unexposed}$$
 
@@ -285,4 +298,3 @@ ior
 ## Interpretation
 
 1. Among the members of our population, those who were exposed had 1.5 times the odds of incident disease compared to those who were not exposed over the 12 months of follow-up period.
-
