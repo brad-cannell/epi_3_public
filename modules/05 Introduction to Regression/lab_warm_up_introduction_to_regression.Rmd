@@ -36,7 +36,6 @@ Although not strictly necessary, we will also use the `broom` package to to make
 
 ```{r}
 library(dplyr, warn.conflicts = FALSE)
-library(readr)
 library(broom)
 library(ggplot2)
 library(meantables)
@@ -108,9 +107,9 @@ glm(
 
 #### Interpretation
 
-1. Intercept: The mean value of `y_cont` when `x_cont` is equal to zero. 
+1. Intercept: The mean value of `y_cont` when `x_cat` is equal to zero. 
 
-2. x_cont: The change in the mean value of `y_cont` when `x_cont` changes from zero to one. 
+2. x_cat: The change in the mean value of `y_cont` when `x_cat` changes from zero to one. 
 
 ## Logistic regression
 
@@ -146,7 +145,7 @@ glm(
 
 1. Intercept: The natural log of the odds of `y_cat` when `x_cat` is equal to zero. 
 
-2. x_cont: The average change in the natural log of the odds of `y_cont` when `x_cont` changes from zero to one.
+2. x_catt: The average change in the natural log of the odds of `y_cont` when `x_cat` changes from zero to one.
 
 ## Poisson regression
 
@@ -182,7 +181,7 @@ glm(
 
 1. Intercept: The natural log of the mean of `y_count` when `x_cat` is equal to zero. 
 
-2. x_cont: The average change in the natural log of the mean of `y_count` when `x_cont` changes from zero to one.
+2. x_cat: The average change in the natural log of the mean of `y_count` when `x_cat` changes from zero to one.
 
 
 # Regression Intuition
@@ -306,7 +305,7 @@ glm(
 
 #### Interpretation
 
-1. Intercept: The mean value of deep abdominal adipose tissue when waist circumference is -9.580. 
+1. Intercept: The mean value of deep abdominal adipose tissue when waist circumference is 0 is -9.580. 
 
 2. waist: The average change in deep abdominal adipose tissue for each one inch increase in waist circumference is 2.86. 
 
@@ -317,39 +316,39 @@ ggplot(daat_waist, aes(x = waist, y = daat)) +
   geom_abline(intercept = -9.580, slope = 2.862, color = "red", linetype = "dashed") 
 ```
 
-### Categorical regressor (tall)
+### Categorical regressor (large waist)
 
 ```{r}
 daat_waist <- daat_waist %>% 
   mutate(
-    tall  = if_else(waist < mean(waist), 0, 1),
-    tall_f = factor(tall, 0:1, c("No", "Yes"))
+    large_waist   = if_else(waist < mean(waist), 0, 1),
+    large_waist_f = factor(large_waist, 0:1, c("No", "Yes"))
   )
 daat_waist
 ```
 
 ```{r}
-daat_by_tall_f <- daat_waist %>% 
-  group_by(tall_f) %>% 
+daat_by_large_f <- daat_waist %>% 
+  group_by(large_waist_f) %>% 
   mean_table(daat)
 
-daat_by_tall_f
+daat_by_large_f
 ```
 
 ```{r}
-ggplot(daat_waist, aes(x = tall_f, y = daat)) +
+ggplot(daat_waist, aes(x = large_waist_f, y = daat)) +
   geom_point() +
   geom_segment(
     aes(x = c(0.75, 1.75), y = mean, xend = c(1.25, 2.25), yend = mean), 
-    size = 1.5, color = "red", data = daat_by_tall_f
+    size = 1.5, color = "red", data = daat_by_large_f
   )
 ```
 
-What is the relationship between deep abdominal adipose tissue (regressand) and waist circumference (regressor)?
+What is the relationship between deep abdominal adipose tissue (regressand) and tall (regressor)?
 
 ```{r}
 glm(
-  daat ~ tall_f,
+  daat ~ large_waist_f,
   family = gaussian(link = "identity"),
   data   = daat_waist
 )
@@ -359,7 +358,7 @@ glm(
 
 1. Intercept: The mean value of deep abdominal adipose tissue among people who are not tall is equal to 98.228. 
 
-2. waist: The average change in deep abdominal adipose tissue for tall people compared to not tall people is 8.854.
+2. large_waist_fYes: The average change in deep abdominal adipose tissue for people with a large waste circumference compared to people with a small waste circumference is 8.854.
 
 98.228 + 8.854
 
@@ -506,12 +505,12 @@ glm(
 ```
 
 ```{r}
-em_age_70 <- -3.180 + (70 * 0.02127)
+em_age_70 <- -3.180 + (0.02127 * 70)
 em_age_70
 ```
 
 ```{r}
-em_age_71 <- -3.180 + (71 * 0.02127)
+em_age_71 <- -3.180 + (0.02127 * 71)
 em_age_71
 ```
 
@@ -590,15 +589,15 @@ glm(
   broom::tidy(exp = TRUE)
 ```
 
-3. Participants reported 0.8 times the number of drinks at their last drinking episode for each one-year increase in age.
+3. Participants reported 0.9 times the number of drinks at their last drinking episode for each one-year increase in age.
 
 ```{r}
-drinks_age_50 <- 0.113739 + (50 * -0.001131)
+drinks_age_50 <- 0.113739 + (-0.001131 * 50)
 drinks_age_50
 ```
 
 ```{r}
-drinks_age_51 <- 0.113739 + (51 * -0.001131)
+drinks_age_51 <- 0.113739 + (-0.001131 * 51)
 drinks_age_51
 ```
 
