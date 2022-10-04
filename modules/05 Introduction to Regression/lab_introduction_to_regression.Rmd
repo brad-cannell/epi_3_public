@@ -1,0 +1,163 @@
+---
+title: "Lab: Introduction to Regression"
+output: html_notebook
+---
+
+# Load packages
+
+```{r}
+library(dplyr, warn.conflicts = FALSE)
+library(readr)
+library(broom)
+library(ggplot2)
+library(meantables)
+library(freqtables)
+```
+
+# Overview
+
+In this lab, we will explore some data collected from mothers and babies, which was indented to explore the occurrence of low birth weight. 
+
+# Task 1
+
+Please use the following links to download the low birth weight data to your computer and view the codebook:
+ * [Click here to view/download the codebook](https://www.dropbox.com/s/n6za9yhtw44bh7f/Codebook lowbwt.pdf?dl=0). Look over the codebook to learn a little bit about the data you will be working with.
+ * [Click here to view/download the data](https://www.dropbox.com/s/whel3kfsjswu2yy/lowbwt.rds?dl=0).
+ 
+# Task 2
+
+Import `lowbwt.rds` into your R global environment as `lowbwt`.
+
+```{r}
+lowbwt <- read_rds("/Users/bradcannell/Dropbox/Datasets/Low Birth Weight/lowbwt.rds")
+```
+
+# Task 3
+
+Please view the structure of `lowbwt` using the `str()` function or the `glimpse()` function.
+
+```{r}
+glimpse(lowbwt)
+```
+
+# Question 1
+
+* The `lowbwt` data frame contains ____ rows and ____ columns.
+
+* The `lowbwt` data frame contains 189 rows and 15 columns.
+
+# Task 4
+
+Please fit a linear regression model to the `lowbwt` data frame using `weight of mother at last menstrual period in pounds` as the regressand and the `age of the mother in years` as the regressor.
+
+```{r}
+glm(
+  lwt ~ age,
+  family = gaussian(link = "identity"),
+  data   = lowbwt
+)
+```
+
+# Question 2
+
+What is the mean value of the `weight of mother at last menstrual period in pounds` when the `mother’s age` is 0? (round to the nearest integer – no decimal places)
+
+The mean value of the weight of mother at last menstrual period in pounds when the mother’s age is 0 is 106.
+
+# Task 5
+
+Please fit a linear regression model to the `lowbwt` data frame using `weight of mother at last menstrual period in pound`s as the regressand and `mother’s smoking status` during pregnancy as the regressor.
+
+```{r}
+glm(
+  lwt ~ smoke_f,
+  family = gaussian(link = "identity"),
+  data   = lowbwt
+)
+```
+
+# Question 3
+
+* What is the mean value of the `weight of mother at last menstrual period in pounds` when the `mother smoked during pregnancy`? (round to the nearest integer – no decimal places)
+
+```{r}
+130.896 - 2.761
+```
+
+* The mean value of the `weight of mother at last menstrual period in pounds` when the `mother smoked during pregnancy` was 128. (rounded to the nearest integer – no decimal places)
+
+# Task 6
+
+Please fit a logistic regression model to the `lowbwt` data frame using `low birth weight` as the regressand and `age of mother in years` as the regressor.
+
+```{r}
+glm(
+  low  ~ age,
+  family = binomial(link = "logit"),
+  data   = lowbwt
+) %>% 
+  tidy(exp = TRUE)
+```
+
+# Question 4
+
+* On average, babies had _____ times the odds of `low birth weight` for each one-year increase in mother's age.(round to the hundredths place – two decimals)
+
+* On average, babies had 0.95 times the odds of `low birth weight` for each one-year increase in mother's age.
+
+# Task 7
+
+Please fit a logistic regression model to the `lowbwt` data frame using `low birth weight` as the regressand and `mother’s smoking status during pregnancy` as the regressor.
+
+```{r}
+glm(
+  low  ~ smoke_f,
+  family = binomial(link = "logit"),
+  data   = lowbwt
+) %>% 
+  tidy(exp = TRUE)
+```
+
+# Question 5
+
+* On average, `low birth weight` babies had _____ times the odds of having a `mother who smoked` compared to babies that were not born with a `low birth weight`. (round to the hundredths place – two decimals)
+
+* On average, `low birth weight` babies had 2.02 times the odds of having a `mother who smoked` compared to babies that were not born with a `low birth weight`. (rounded to the hundredths place – two decimals)
+
+# Task 8
+
+Please fit a Poisson regression model to the `lowbwt` data frame using `history of premature labor` as the regressand and `age of mother in years` as the regressor.
+
+```{r}
+glm(
+  ptl  ~ age,
+  family = poisson(link = "log"),
+  data   = lowbwt
+) %>% 
+  tidy(exp = TRUE)
+```
+
+# Question 6
+
+* Mother's reported _____ times the number of `premature deliveries`, on average, for each one-year increase in `age`. (rounded to the hundredths place – two decimals)
+
+* Mother's reported 1.03 times the number of `premature deliveries` for each one-year increase in `age`. (rounded to the hundredths place – two decimals)
+
+# Task 9
+
+Please fit a Poisson regression model to the `lowbwt` data frame using `history of premature labor` as the regressand and `mother’s smoking status during pregnancy` as the regressor.
+
+```{r}
+glm(
+  ptl  ~ smoke_f,
+  family = poisson(link = "log"),
+  data   = lowbwt
+) %>% 
+  tidy(exp = TRUE)
+```
+
+# Question 7
+
+* Mother's who `smoked during pregnancy` reported an average of _____ times the number of `premature deliveries` compared to mothers who did not smoke during pregnancy. (round to the hundredths place – two decimals)
+
+* Mother's who `smoked during pregnancy` reported an average of 2.55 times the number of `premature deliveries` compared to mothers who did not smoke during pregnancy. (rounded to the hundredths place – two decimals)
