@@ -1,0 +1,243 @@
+---
+title: "Causality lab 2022"
+author: "Libby Callender"
+date: "2022-10-10"
+output: html_document
+---
+
+
+## Overview
+
+The following lab will cover content that was reviewed in the readings and lectures, including causal models (sufficient component causes and directed acyclic graphs) and a short review of descriptive analysis and regression techniques.
+<br>
+<br>
+
+### Sufficient Component Causes
+
+**Task 1.**
+Choose one disease or health-related outcome that interests you most. Look up information about that disease or outcome and use that information to answer a few questions.
+<br>
+
+**Q1. Outcome of interest – 1 pt.**
+What disease or health-related outcome did you choose? 
+<br>
+
+**Task 2.** 
+Do some independent research. Identify multiple component causes for this outcome. Be sure there is at least some epidemiologic evidence that links these risk factors to your disease or health outcome of interest. This can include any type of observational study(ies) (e.g., cross-sectional, case-control, cohort, etc.). 
+<br>
+
+**Task 3.**
+Think through two or three sufficient cause sets (i.e., causal mechanisms) out of the component causes you have identified. In doing so, consider whether and how the component causes you include in each sufficient set interact with one another to cause disease. It can be useful to consider specific sub-groups to which each sufficient cause set may apply. 
+<br>
+
+**Q2. Component Cause sets – 1 pt.**
+List the groups of sufficient cause sets that you came up with.
+<br>
+
+**Q3. Necessary causes – 1 pt.**
+Are there any necessary causes for this disease? If so, please list them.
+<br>
+<br>
+<br>
+
+**Please use R to help with the rest of the questions**
+<br>
+<br>
+
+### Directed Acyclic Graphs
+<br>
+
+**Task 4.**
+Install the R package, "dagitty".
+
+```{r}
+install.packages("dagitty")
+```
+<br>
+
+**Task 5.**
+Load the dagitty package.
+
+```{r}
+library("dagitty")
+```
+<br>
+
+**Task 6. Construct DAG**
+Construct a DAG using R to depict the research question: Is “Smoking” a predictor for “MI” (myocardial infarctions)? 
+
+```{r}
+x <- dagitty('dag {
+    Smoking [pos="0,1"]
+    MI [pos="1,1"]
+       Smoking -> MI
+}')
+plot(x)
+```
+
+*Rationale *
+“Smoking” is a predictor for “MI”.
+<br>
+
+**Task 7. Construct DAG**
+Edit the DAG to depict how “Cholesterol” is included in this relationship.
+
+```{r}
+y <- dagitty('dag {
+    Smoking [pos="0,1"]
+    Cholesterol [pos="1,1"]
+    MI [pos="2,1"]
+       Smoking -> Cholesterol -> MI
+}')
+plot(y)
+```
+
+*Rationale *
+“Smoking” increases LDL or “bad cholesterol” and decreases HDL or “good cholesterol” which can constrict arteries and cause blockages which can lead to “MI".
+<br>
+
+**Q4. Choose DAG component – 1 pt.**
+In the final DAG model, “Smoking” is the [drop down: exposure, mediator, outcome].
+
+*Correct Answer *
+Exposure
+
+*Feedback*
+Smoking is at the beginning of the causal pathway and is the main exposure of interest in the research question. 
+<br>
+
+**Q5. Choose DAG component – 1 pt.**
+In the final DAG model, “Cholesterol” is the [drop down: exposure, mediator, outcome].
+
+*Correct Answer*
+Mediator
+
+*Feedback*
+“Smoking” increases LDL or “bad cholesterol” and decreases HDL or “good cholesterol” which can constrict arteries and cause blockages which can lead to “MI".
+<br>
+
+**Q6. Choose DAG component – 1 pt.**
+In the final DAG model, “Myocardial Infarction” is the [drop down: exposure, mediator, outcome].
+
+*Correct Answer*
+Outcome
+
+*Feedback*
+Myocardial infarctions is the outcome of the research question.
+<br>
+<br>
+
+### Regression Review
+<br>
+
+**Introduction to the Framingham Heart Study**
+The Framingham Heart Study is a long term prospective study of the etiology of cardiovascular disease among a population of free living subjects in the community of Framingham, Massachusetts. The Framingham Heart Study was a landmark study in epidemiology in that it was the first prospective study of cardiovascular disease and identified the concept of risk factors and their joint effects. The study began in 1948 and 5,209 subjects were initially enrolled in the study. Note that the following dataset is a teaching dataset and not suitable for publication purposes.
+<br>
+<br>
+
+**Task 8. **
+Click the following links to download the Framingham heart study dataset [link](https://uthtmc.sharepoint.com/:x:/s/SPHCannellEpiIII/Eeo9mu3rA5RCoFAbNcLSsEwBAPwW1CeeZExxWLc6Uv5zrQ?e=I7mah0) and codebook [link](https://uthtmc.sharepoint.com/:b:/s/SPHCannellEpiIII/EeGaU_pbLB9IkyZ1jN04UewB39gXnaMgkoOC-ToaxXHddQ?e=T1q4F4).
+<br>
+
+**Task 9. **
+Load the following packages in R: "readr", dplyr", "broom", "ggplot2", "meantables", and "freqtables".
+
+```{r}
+library(readr)
+library(dplyr, warn.conflicts = FALSE)
+library(broom)
+library(ggplot2)
+library(meantables)
+library(freqtables)
+```
+<br>
+
+**Task 10. **
+Import the Framingham heart study dataset into R and as a data frame named fram.
+
+```{r}
+fram <- read_csv("framingham.csv")
+```
+<br>
+
+**Task 11. **
+View the structure of the data frame.
+
+```{r}
+str(fram)
+```
+<br>
+
+**Instructions**
+The remaining tasks and questions will help us answer the following research question:
+
+What is the relationship between the exposure systolic blood pressure ("sysbp") and the outcome heart rate ("heartrte")?
+
+
+**Q7. Summary of exposure – 1 pt. **
+What is the mean and standard deviation of systolic blood pressure? Round to the nearest 10th decimal.
+
+```{r}
+mean(fram$sysbp, na.rm=TRUE)
+sd(fram$sysbp, na.rm=TRUE)
+```
+
+
+**Q8. Summary of outcome – 1 pt. **
+What is the mean and standard deviation of heart rate? Round to the nearest 10th decimal. Hint: there are missing values labeled as NA within this column.
+
+```{r}
+mean(fram$heartrte, na.rm=TRUE)
+sd(fram$heartrte, na.rm=TRUE)
+```
+
+
+**Q9. Regression type – 1 pt. **
+Which type of regression model would you use to answer this research question?
+
+[linear, logistic, poisson]
+
+*Correct answer*
+Linear because the outcome measure is continuous.
+
+
+**Task 12. **
+Fit the appropriate regression model to answer the research question.
+
+
+```{r}
+glm(
+  heartrte ~ sysbp,
+  family = gaussian(link = "identity"),
+  data = fram
+)
+```
+
+
+**Q10. Interpretation – 1 pt. **
+Fill in the blanks to interpret the result rounding to the nearest 10th decimal place.
+
+For each unit [drop down: increase/decrease] in systolic blood pressure, there is an average [drop down: increase/decrease] of [0.1] beats for heart rate.
+
+*Correct answers*
+Blank1: Increase
+Blank2: Increase
+Blank3: 0.1
+
+
+**Task 13. **
+Create a scatterplot with the slope to depict the relationship of systolic blood pressure and heart rate.
+
+```{r}
+ggplot(fram, aes(x = sysbp, y = heartrte)) +
+  geom_point() +
+  geom_smooth(method = 'lm', se = FALSE) +
+  geom_abline(intercept = 62.77, slope = 0.098)
+```
+
+
+**Q11. Interpret scatterplot – 1 pt. **
+Based on the graph, would you characterize the relationship of systolic blood pressure and heart rate as a [strong positive, weak positive, neutral, weak negative, or strong negative] relationship?
+
+*Correct answer*
+Weak positive because the slope is slightly angled in a positive direction.
