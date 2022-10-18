@@ -1,0 +1,247 @@
+---
+title: "Lab Warm-up: Random Error"
+output: html_notebook
+---
+
+# Load packages
+
+Remember, it's considered a best practice to load all the packages that your file will use up at the top of the file. If you have not yet installed a package, you will need to do so by running `install.packages("package name")` in the R console. For example, to install the `dplyr` package, you would run `install.packages("dplyr")`. However, you typically **do not** want to type the code to install the package here in your Rmd file. That is because you only need to install the package once on a given computer. Not every time you run your R code.
+
+```{r}
+library(dplyr, warn.conflicts = FALSE) # The "warn.conflicts" part is optional
+library(broom)
+library(meantables)
+library(freqtables)
+library(ggplot2)
+library(purrr)
+library(tidyr)
+```
+
+
+# Overview
+
+This R Notebook contains a demonstration that is intended to help you develop an intuition for frequentist interpretations of p-values and 95% confidence intervals.
+
+
+# Example: Class height
+
+In this first example, we will estimate the mean height for a group of students who took my course several years ago. 
+
+```{r}
+class_heights <- tibble(
+  id = 1:52,
+  height = c(
+    71, 74, 62, 64, 62, 63, 63, 70, 68, 66, 65, 59, 61, 66, 74, 62, 65, 64, 71, 
+    67, 63, 70, 68, 63, 63, 78, 67, 68, 67, 68, 66, 64, 62, 64, 73, 64, 65, 76, 
+    67, 64, 59, 66, 71, 73, 65, 64, 66, 67, 65, 62, 48, 66
+  ),
+  sex = c(
+    'Female', 'Male', 'Female', 'Female', 'Female', 'Female', 'Female', 'Male', 
+    'Male', 'Male', 'Female', 'Female', 'Female', 'Female', 'Male', 'Female', 
+    'Male', 'Female', 'Male', 'Female', 'Female', 'Male', 'Male', 'Female', 
+    'Female', 'Male', 'Female', 'Male', 'Female', 'Male', 'Female', 'Female', 
+    'Female', 'Female', 'Male', 'Female', 'Male', 'Male', 'Male', 'Female', 
+    'Female', 'Male', 'Female', 'Male', 'Female', 'Female', 'Female', 'Female', 
+    'Male', 'Female', 'Male', 'Male'
+  )
+)
+```
+
+Estimating difference in mean height by sex assigned at birth.
+
+```{r}
+glm(
+  height ~ sex,
+  family = gaussian(link = "identity"),
+  class_heights
+) %>% 
+  tidy()
+```
+
+* The estimated mean height among females is 64.2.
+
+* On average, males are 4.3 inches taller than females. 
+
+* Null hypothesis: The true difference in height between males and females is zero.
+
+* Test statistic is 3.5
+
+* The probability of finding a p-value of 3.5 or higher if all of the assumptions are correct is 0.001.
+
+
+# Confidence intervals
+
+Generating 10,000 random participants. About half male and half female.
+
+```{r}
+set.seed(123)
+n <- 10000
+random_data <- tibble(
+  sex = sample(c("Female", "Male"), n, T)
+)
+```
+
+```{r}
+random_data %>% 
+  freq_table(sex)
+```
+
+Assigning heights to the generated participants at random (within certain parameters).
+
+```{r}
+set.seed(123)
+random_data <- random_data %>% 
+  mutate(
+    height = if_else(
+      sex == "Female",
+      rnorm(n, 71.00, 4.32),
+      rnorm(n, 64.30, 2.11)
+    )
+  )
+```
+
+```{r}
+random_data %>% 
+  group_by(sex) %>% 
+  mean_table(height) %>% 
+  select(group_cat, mean, sd, lcl, ucl)
+```
+
+Randomly select samples of 100 participants
+
+```{r}
+# Demonstrate sample of data
+set.seed(123)
+sample_n(random_data, 10)
+```
+
+```{r}
+# Demonstrate multiple samples of data
+set.seed(123)
+map(1:2, ~ sample_n(random_data, 10))
+```
+
+```{r}
+set.seed(137)
+n_samples <- 100
+random_samples <- tibble(
+  sample = 1:n_samples,
+  data = map(1:n_samples, ~ sample_n(random_data, 10))
+)
+```
+
+```{r}
+# Demonstrate extracting a df from a list column
+random_samples$data[[1]]
+```
+
+```{r}
+# Demonstrate passing an extracted df to the mean_table() function
+random_samples$data[[1]] %>% 
+  mean_table(height) %>% 
+  select(mean, lcl, ucl)
+```
+
+Calculate the stats of interest for each of the samples
+
+```{r}
+random_samples <- random_samples %>% 
+  mutate(
+    mean_table = map(data, ~ mean_table(.x, height))
+  )
+```
+
+```{r}
+# Demonstrate extracting a df of results from a list column
+random_samples$mean_table[[1]]
+```
+Unnest the results
+
+```{r}
+random_samples %>% 
+  unnest(mean_table)
+```
+
+Count the number of CI's that do not include the true population mean
+
+```{r}
+mean_table(random_data, height)
+```
+
+```{r}
+summary <- random_samples %>% 
+  unnest(mean_table) %>% 
+  select(sample, mean, lcl, ucl)
+```
+
+```{r}
+summary <- summary %>% 
+  mutate(contain_pop_mean = lcl <= 67.67 & 67.67 <= ucl)
+```
+
+```{r}
+summary
+```
+
+```{r}
+summary %>% 
+  freq_table(contain_pop_mean)
+```
+
+
+```{r}
+set.seed(123)
+n_samples <- 100
+random_samples <- tibble(
+  sample = 1:n_samples,
+  data = map(1:n_samples, ~ sample_n(random_data, 10))
+)
+```
+
+```{r}
+random_samples <- random_samples %>% 
+  mutate(
+    mean_table = map(data, ~ mean_table(.x, height))
+  )
+```
+
+```{r}
+summary <- random_samples %>% 
+  unnest(mean_table) %>% 
+  select(sample, mean, lcl, ucl)
+```
+
+```{r}
+summary <- summary %>% 
+  mutate(contain_pop_mean = lcl <= 67.67 & 67.67 <= ucl)
+```
+
+```{r}
+summary %>% 
+  freq_table(contain_pop_mean)
+```
+
+
+# Example: Class height 2
+
+```{r}
+glm(
+  height ~ sex,
+  family = gaussian(link = "identity"),
+  class_heights
+) %>% 
+  tidy(conf.int = TRUE)
+```
+
+* The estimated mean height among females is 64.2.
+
+* On average, males are 4.3 inches taller than females. 
+
+* Null hypothesis: The true difference in height between males and females is zero.
+
+* Test statistic is 3.5
+
+* The probability of finding a p-value of 3.5 or higher if all of the assumptions are correct is 0.001.
+
+* The confidence limits indicate that these data are highly compatible with estimates between 1.9 inches and 6.8 inches— assuming that the statistical model used to construct the limits is correct and that our estimates were free from bias.
+

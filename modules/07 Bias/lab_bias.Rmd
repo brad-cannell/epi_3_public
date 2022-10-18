@@ -1,0 +1,395 @@
+---
+title: "Bias lab"
+author: "Libby Callender"
+date: "2022-10-16"
+output: html_document
+---
+
+## Instructions
+Please complete the following lab assignment. You may work on the assignment in groups or on your own. However, to get credit, you must submit your own answers in Canvas. This lab is open note and open book. You may also ask the instructor and the TA questions. Please note that in most cases we will try to guide you towards answering your own question rather than directly providing you with an answer. 
+<br><br>
+
+## Q1
+[Multiple Choice]<br>
+
+In a case-control study, recall bias is most likely to result in what type of misclassification?
+<br>
+
+* **Differential**
+* Non-differential
+* Neither
+<br>
+
+### Q1. Feedback
+In a case-control study, recall bias is most likely to result in differential misclassification?
+<br>
+
+"Because, on occasion in case-control studies, recall bias may be caused by “rumination” by cases regarding the causes of their disease," it is often assumed to result in differential misclassification.
+<br>
+
+Szklo, Moyses,Nieto, F. Javier. Epidemiology (Kindle Locations 3580-3581). Jones & Bartlett Learning. Kindle Edition.
+<br>
+
+Said another way, cases in a case-control study are often assumed to more accurately remember their past exposures than controls because they spend more time thinking about why they become sick (when the outcome is a disease).
+<br>
+
+Please make sure you understand why this is the correct answer. You may use the "Previous" button below to update your answer if your original answer was incorrect. Click the "Next" button below to move on to the next question.
+<br><br>
+
+## Q2
+[Multiple Choice]<br>
+
+Non-differential misclassification, when there are two exposure (exposed & non-exposed) categories, is expected to typically lead to:
+<br>
+
+* An overestimation of the true association
+* **An underestimation of the true association**
+* Either an under- or overestimation of the true association
+<br>
+
+### Q2 Feedback
+Non-differential misclassification, when there are two exposure (exposed & non-exposed) categories, is expected to typically lead to an underestimation of the true association.
+<br>
+
+"In this simple situation when there are only two exposure categories (for instance, “yes” or “no”), nondifferential misclassification tends to bias the association toward the null hypothesis."
+<br>
+
+Szklo, Moyses, Nieto, F. Javier. Epidemiology (Kindle Locations 3702-3703). Jones & Bartlett Learning. Kindle Edition.
+<br>
+
+Please make sure you understand why this is the correct answer. You may use the "Previous" button below to update your answer if your original answer was incorrect. Click the "Next" button below to move on to the next question.
+<br><br>
+
+## Q3
+[Numerical Answer]<br>
+
+In a hypothetical retrospective cohort study that is investigating an occupational exposure to an organic solvent that occurred 15-20 years ago in a factory and its relationship to adverse health events of employees. The study was conducted using the employee health records. If all records had been retained the results may have looked like those shown in the contingency table below
+<br>
+
+Exposure       |Diseased       |Non-diseased   |Total
+---------------|---------------|---------------|-------------
+Solvent Exp    |40             |960            |1000
+No Solvent Exp |15             |985            |1000
+Total          |55             |1945           |2000
+
+Using the table provided, calculate the risk ratio. Round your answer to 3 decimal places.
+<br>
+
+#### Task 1. Load packages
+```{r}
+library(dplyr, warn.conflicts = FALSE)
+library(freqtables)
+library(fmsb)
+```
+
+#### Task 2. Create 2x2 matrix
+```{r}
+# Input values into a matrix
+matrix_obj <- matrix(
+  c(a = 40, b = 960, c = 15, d = 985), 
+  ncol = 2, 
+  byrow = TRUE
+)
+
+# Add margin totals
+matrix_obj <- addmargins(matrix_obj)
+
+# Add column and row labels
+dimnames(matrix_obj) <- list(
+  Exposure = c("Solvent Exp", "No Solvent Exp", "col_sum"), # Row Names
+  Outcome  = c("Diseased", "Non-diseased", "row_sum") # Column Names
+)
+
+# View table
+matrix_obj
+```
+
+#### Task 3. Calculate incidence proportions for each row
+```{r}
+# Calculate incidence proportion for each row
+ip <- matrix_obj[, "Diseased"] / matrix_obj[, "row_sum"]
+
+# Add column of incidence proportions to the matrix
+matrix_obj <- cbind(matrix_obj, ip)
+
+# View matrix
+matrix_obj
+```
+
+#### Task 4. Calculate incidence proportion ration (AKA risk ratio, relative risk)
+
+```{r}
+ipr_q3 <- matrix_obj["Solvent Exp", "ip"] / matrix_obj["No Solvent Exp", "ip"]
+ipr_q3
+```
+
+```{r}
+# Can calculate incidence proportion ration (AKA risk ratio, relative risk) and obtain CI's using fmsb package
+
+# Syntax
+# riskratio (X, Y, m1, m2, conf.level = 0.95, p.calc.by.independence = TRUE)
+
+# Arguments
+# X = number of diseased among exposed
+# Y = number of diseased among non-exposed
+# m1 = number of individuals in exposed cohort
+# m2 = number of indivdiuals in non-exposed cohort
+
+riskratio(40, 15, 1000, 1000, conf.level = 0.95, p.calc.by.independence = TRUE)
+
+```
+
+#### Q3 Answer rounded to 3 decimal places
+
+2.667
+<br>
+
+### Q3 Feedback
+Risk in Exposed = 40 / 1,000 = 0.04
+<br>
+
+Risk in Unexposed = 15 / 1,000 = 0.015
+<br>
+
+IPR = 0.04 / 0.015 = 2.667
+<br>
+
+Please make sure you understand why this is the correct answer. You may use the "Previous" button below to update your answer if your original answer was incorrect. Click the "Next" button below to move on to the next question.
+<br><br>
+
+## Q3.1
+[Fill in Multiple Blanks]<br>
+
+1. Using the fmsb package, what is the lower 95% confidence limit for the risk ratio? Round your answer to 3 decimal places.
+2. What is the upper 95% confidence limit for the risk ratio? Round your answer to 3 decimal places.
+<br>
+
+### Q3.1 Feedback
+Output listed under "95 percent confidence interval" above.
+<br>
+
+1. LCL = 1.483
+2. UCL = 4.796
+<br>
+
+Please make sure you understand why this is the correct answer. You may use the "Previous" button below to update your answer if your original answer was incorrect. Click the "Next" button below to move on to the next question.
+<br><br>
+
+## Q4
+[Fill in Multiple Blanks]<br>
+
+Suppose that many of the old records had been lost or discarded, but given the suspicion about the effects of the solvent, the records of employees who had worked with the solvent and subsequently had health problems were more likely to be retained. Record retention was **95%** among workers who were **exposed and developed health problems**, but record retention was only **80%** for **all other workers**. Create a new contingency table to match the data. Assume no confounding effects and no information bias. 
+<br>
+For this answer, round to the nearest integer, if necessary.
+<br>
+
+Exposure       |Diseased       |Non-diseased   |Total
+---------------|---------------|---------------|-------------
+Solvent Exp    |[R1]           |[R2]           |806
+No Solvent Exp |12             |[R3]           |[R4]
+Total          |[R5]           |1556           |1606
+
+<br>
+
+#### Task 5. Calculate solution in R
+```{r}
+#Solution for each Response cell
+R1 <- 40 * 0.95
+R2 <- 960 * 0.8
+R3 <- 985 * 0.8
+R4 <- 12 + R3
+R5 <- R1 + 12
+
+#Print responses
+R1
+R2
+R3
+R4
+R5
+```
+<br>
+
+### Q4 Feedback
+Exposure       |Diseased       |Non-diseased   |Total
+---------------|---------------|---------------|-------------
+Solvent Exp    |40 * 0.95 = 38 |960 * 0.8 = 768|806
+No Solvent Exp |15 * 0.8 = 12  |985 * 0.8 = 788|800
+Total          |50             |1556           |1606
+
+Please make sure you understand why this is the correct answer. You may use the "Previous" button below to update your answer if your original answer was incorrect. Click the "Next" button below to move on to the next question.
+<br><br>
+
+## Q5
+[Numerical Answer]<br>
+
+Using the data from the new contingency table from the last question, calculate the biased risk ratio. Please round your answer to 3 decimal places at each step.
+<br>
+
+Exposure       |Diseased       |Non-diseased   |Total
+---------------|---------------|---------------|-------------
+Solvent Exp    |38             |768            |806
+No Solvent Exp |12             |788            |800
+Total          |50             |1556           |1606
+
+#### Task 6. Calculate solution in R
+```{r}
+ipr_q5 <- ((38 / 806) / (12 / 800))
+ipr_q5
+```
+
+#### Q5 Rounded Answer: 3.143
+<br>
+
+### Q5 Feedback
+Risk in Exposed = 38 / 806 = 0.047
+<br>
+
+Risk in Unexposed = 12 / 800 = 0.015
+<br>
+
+RR = 0.047 / 0.015 = 3.133
+<br>
+
+Please make sure you understand why this is the correct answer. You may use the "Previous" button below to update your answer if your original answer was incorrect. Click the "Next" button below to move on to the next question.
+<br><br>
+
+## Q6
+[Multiple Dropdowns]<br>
+
+Compare the true RR (2.667) with the biased RR (3.133). The [Type] loss of records resulted in selection bias and an [Direction] of the association.
+<br>
+
+1. Type
+  + **Differential**
+  + Non-differential
+<br>
+
+2. Direction
+  + **Overestimation**
+  + Underestimation
+<br>
+
+### Q6 Feedback
+Compare the true RR (2.667) with the biased RR (3.133). The biased RR is larger than the true RR.  Differential loss of records resulted in selection bias and an overestimation of the association.
+<br>
+
+Please make sure you understand why this is the correct answer. You may use the "Previous" button below to update your answer if your original answer was incorrect. Click the "Next" button below to move on to the next question.
+<br><br>
+
+## Q7
+[Multiple Choice]<br>
+
+What potential bias could have been introduced if you found out that those who interviewed cases took 30 minutes longer on average than those who interviewed controls?
+<br>
+
+* Loss to follow-up
+* Volunteer bias
+* Selection bias
+* **Interviewer bias**
+<br>
+
+### Q7 Feedback
+"When data collection in a case-control study is not masked with regard to the disease status of study participants, observer bias in ascertaining exposure, such as interviewer bias, may occur. Interviewer bias may be a consequence of trying to “clarify” questions when such clarifications are not part of the study protocol and failing to follow either the protocol-determined probing or skipping rules of questionnaires."
+<br>
+
+Szklo, Moyses, Nieto, F. Javier. Epidemiology (Kindle Locations 3620-3622). Jones & Bartlett Learning. Kindle Edition.
+<br>
+
+Please make sure you understand why this is the correct answer. You may use the "Previous" button below to update your answer if your original answer was incorrect. Click the "Next" button below to move on to the next question.
+<br><br>
+
+## Q8
+[Multiple Choice]<br>
+
+Researchers conducted a prospective cohort study of the association between air pollution exposure and asthma. Some study participants were lost to follow-up (dropped out of the study) over time. The researchers were able to obtain data on the exposure and the health outcome for participants who remained in the study as well as for participants who dropped out of the study. The researchers discovered that the rate of loss to follow-up did not differ when comparing exposed and unexposed groups. The researchers also found that the rate of loss to follow-up did not differ when comparing people who developed asthma and people who did not develop asthma. **Based on this information, which one of the following statements is most likely to be true?**
+<br>
+
+* Selection bias likely did not occur in this study because people cannot choose if they are exposed to air pollution or not exposed to air pollution
+* Selection bias likely occurred in this study because both of the outcome groups (people with asthma and people without asthma) experienced loss to follow-up
+* **Selection bias likely did not occur in this study because exposure status and health outcome status did not influence whether or not people dropped out of the study**
+* Selection bias likely occurred in this study because both exposure groups experienced loss to follow-up
+<br>
+
+### Q8 Feedback
+Selection bias likely did not occur in this study because exposure status and health outcome status did not influence whether or not people dropped out of the study.
+<br>
+
+Please make sure you understand why this is the correct answer. You may use the "Previous" button below to update your answer if your original answer was incorrect. Click the "Next" button below to move on to the next question.
+<br><br>
+
+## Q9
+[Multiple Choice]<br>
+
+During the sample selection for this study, if researcher A misclassified the exposure of both the cases and controls by a sensitivity of 0.8 and a specificity of 0.8, **what type of misclassification would possibly occur?**
+<br>
+
+* Differential misclassification
+* **Non-differential misclassification**
+<br>
+
+### Q9 Feedback
+In this case, we have non-differential misclassification of the exposure. The sensitivity and specificity of the exposure are not dependent on outcome status. Said another way, there is equal misclassification of the exposure between participants with the outcome and participants without the outcome.
+<br>
+
+Please make sure you understand why this is the correct answer. You may use the "Previous" button below to update your answer if your original answer was incorrect. Click the "Next" button below to move on to the next question.
+<br><br>
+
+## Q10
+[Multiple Choice]<br>
+
+During the sample selection for this, if the researcher B misclassified the exposure of cases by a sensitivity of 0.4 and a specificity of 0.6, and the exposure of controls by a sensitivity of 0.6 and a specificity of 0.8. **What type of misclassification would possibly occur?**
+
+* **Differential misclassification**
+* Non-differential misclassification
+<br>
+
+### Q10 Feedback
+In this case, we have differential misclassification of the exposure. The sensitivity and specificity of the exposure are dependent on outcome status. Said another way, there is unequal misclassification of the exposure between participants with the outcome and participants without the outcome.
+<br>
+
+Please make sure you understand why this is the correct answer. You may use the "Previous" button below to update your answer if your original answer was incorrect. Click the "Next" button below to move on to the next question.
+<br><br>
+
+## Q11
+[Multiple Choice]<br>
+
+A cohort study was conducted among 2000 subjects ages 15 – 75, to examine if age was a risk factor for cardiovascular disease. The cohort was categorized into 2 groups (<40 yrs and 40 yrs and above) of equal number. The participants were followed for 10 years. A total of 400 subjects dropped out of the study for several reasons before the study ended. Out of the 400 that dropped out, 300 of them were over 50 years of age. **What type of bias will most likely affect the result of this study?**
+<br>
+
+* Information bias
+* **Selection bias**
+* Recall bias
+* The study is not biased
+<br>
+
+### Q11 Feedback
+The correct answer is selection bias. The age of the study participants is associated with the outcome of the study. Since the dropouts are older, those left in the study are less likely to have the outcome in comparison to those that dropped out of the study. This biases the original selection (exposed-unexposed ratio) and the true estimate between the exposure of interest and the outcome.
+<br>
+
+Please make sure you understand why this is the correct answer. You may use the "Previous" button below to update your answer if your original answer was incorrect. Click the "Next" button below to move on to the next question.
+<br><br>
+
+## Q12
+[Multiple Choice]<br>
+Even if the investigators are careful in the selection of cases and controls, selection bias can make interpretation of results difficult. Which of the following is NOT a situation that can produce selection bias? **Choose one best answer.**
+
+* The exposure has some influence on the process by which controls are selected
+* The exposure has some influence on the process of case ascertainment.
+* The exposed cases are reported to registries more than unexposed.
+* **All of the above will produce selection bias**
+<br>
+
+### Q12 Feedback
+The best answer is that all of the above will produce selection bias.
+<br>
+
+Please make sure you understand why this is the correct answer. You may use the "Previous" button below to update your answer if your original answer was incorrect. Click the "Next" button below to move on to the next question.
+<br><br>
+
+## Q13 Optional Feedback
+[Essay Question]<br>
+**Optional:** Please feel free to leave any comments below about the usefulness of this lab. Which parts were helpful? What could I do to improve it? What is still unclear?
+
+
+
+

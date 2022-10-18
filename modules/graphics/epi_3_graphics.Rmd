@@ -355,6 +355,102 @@ ggsave("/users/bradcannell/Desktop/population_w_sample.png", width = 6.5, height
 ```
 
 
+# Normal distribution plot
+
+<!-- Helpful site: http://t-redactyl.io/blog/2016/03/creating-plots-in-r-using-ggplot2-part-9-function-plots.html -->
+
+```{r echo=FALSE}
+mean      <- 68
+sd        <- 10.95
+limits    <- c(mean - 4 * sd, mean + 4 * sd)
+my_breaks <- purrr::map_dbl(seq(-4, 4, 1), ~ mean + . * sd)
+peak      <- dnorm(mean, mean = mean, sd = sd)
+
+shaded <- function(x, n_sds) {
+  y <- dnorm(x, mean = mean, sd = sd)
+  y[x < (mean - n_sds * sd) | x > (mean + n_sds * sd)] <- NA
+  y
+}
+
+y_labels <- function(x) {
+  out <- dnorm(x, mean = mean, sd = sd)
+  out
+}
+
+ggplot(tibble(x = c(limits[1], limits[2])), aes(x = x)) + 
+  stat_function(fun = dnorm, args = list(mean = mean, sd = sd)) +
+  geom_segment(aes(x = mean, y = 0, xend = mean, yend = peak), color = "red", linetype = "dashed") +
+  scale_x_continuous("Heights", breaks = my_breaks) +
+  # Add shaded area for 68%
+  stat_function(fun = shaded, args = list(n_sds = 3), geom = "area", fill = "#005493", alpha = 0.2) +
+  geom_text(aes(x = my_breaks[c(4, 6)], y = y_labels(my_breaks[c(4, 6)]), label = "1 SD \n 68%"), nudge_y = 0.007) +
+  # Add shaded area for 95%
+  stat_function(fun = shaded, args = list(n_sds = 2), geom = "area", fill = "#005493", alpha = 0.2) +
+  geom_text(aes(x = my_breaks[c(3, 7)], y = y_labels(my_breaks[c(3, 7)]), label = "2 SD \n 95%"), nudge_y = 0.005) +
+  # Add shaded area for 99%
+  stat_function(fun = shaded, args = list(n_sds = 1), geom = "area", fill = "#005493", alpha = 0.2) +
+  geom_text(aes(x = my_breaks[c(2, 8)], y = y_labels(my_breaks[c(2, 8)]), label = "3 SD \n 99%"), nudge_y = 0.003) +
+  # Change theme
+  theme_classic() +
+  theme(
+    axis.line.y = element_blank(), axis.text.y = element_blank(), 
+    axis.ticks.y = element_blank(), axis.title.y = element_blank(),
+    axis.line.x = element_blank(), axis.text.x = element_blank(), 
+    axis.ticks.x = element_blank(), axis.title.x = element_blank(),
+  )
+
+ggsave("/Users/bradcannell/Desktop/normal_curve.png")
+
+rm(mean, sd, limits, my_breaks, peak, shaded, y_labels)
+```
+
+Normal distribution with mean 30 and standard error instead of standard deviation.
+
+```{r echo=FALSE}
+mean      <- 30
+sd        <- 4
+limits    <- c(mean - 4 * sd, mean + 4 * sd)
+my_breaks <- purrr::map_dbl(seq(-4, 4, 1), ~ mean + . * sd)
+peak      <- dnorm(mean, mean = mean, sd = sd)
+
+shaded <- function(x, n_sds) {
+  y <- dnorm(x, mean = mean, sd = sd)
+  y[x < (mean - n_sds * sd) | x > (mean + n_sds * sd)] <- NA
+  y
+}
+
+y_labels <- function(x) {
+  out <- dnorm(x, mean = mean, sd = sd)
+  out
+}
+
+ggplot(tibble(x = c(limits[1], limits[2])), aes(x = x)) + 
+  stat_function(fun = dnorm, args = list(mean = mean, sd = sd)) +
+  geom_segment(aes(x = mean, y = 0, xend = mean, yend = peak), color = "red", linetype = "dashed") +
+  scale_x_continuous("BMI", breaks = my_breaks) +
+  # Add shaded area for 68%
+  stat_function(fun = shaded, args = list(n_sds = 3), geom = "area", fill = "#005493", alpha = 0.2) +
+  geom_text(aes(x = my_breaks[c(4, 6)], y = y_labels(my_breaks[c(4, 6)]), label = "1 SE \n 68%"), nudge_y = 0.020) +
+  # Add shaded area for 95%
+  stat_function(fun = shaded, args = list(n_sds = 2), geom = "area", fill = "#005493", alpha = 0.2) +
+  geom_text(aes(x = my_breaks[c(3, 7)], y = y_labels(my_breaks[c(3, 7)]), label = "2 SE \n 95%"), nudge_y = 0.015) +
+  # Add shaded area for 99%
+  stat_function(fun = shaded, args = list(n_sds = 1), geom = "area", fill = "#005493", alpha = 0.2) +
+  geom_text(aes(x = my_breaks[c(2, 8)], y = y_labels(my_breaks[c(2, 8)]), label = "3 SE \n 99%"), nudge_y = 0.009) +
+  # Change theme
+  theme_classic() +
+  theme(
+    axis.line.y = element_blank(), axis.text.y = element_blank(), 
+    axis.ticks.y = element_blank(), axis.title.y = element_blank()
+  )
+
+ggsave("/Users/bradcannell/Desktop/normal_curve.png")
+
+rm(mean, sd, limits, my_breaks, peak, shaded, y_labels)
+```
+ 
+
+
 # 🗑Clean up
 
 ```{r}
