@@ -448,6 +448,73 @@ ggsave("/Users/bradcannell/Desktop/normal_curve.png")
 
 rm(mean, sd, limits, my_breaks, peak, shaded, y_labels)
 ```
+
+
+# DAGS
+
+## For confounding
+
+### DAG - Ice cream and murder
+
+```{r}
+dag <- dagitty('dag {
+  x [pos="0.000,0.000"]
+  z [pos="1.000,1.000"]
+  y [pos="2.000,0.000"]
+  z -> x
+  z -> y
+}')
+
+dag <- tidy_dagitty(dag) %>% 
+  dag_label(labels = c(
+    "x" = "ice cream", "y" = "murder", "z" = "temperature"
+  ))
+```
+
+```{r}
+ggdag(dag, use_labels = "label") + 
+  theme_dag_blank()
+```
+
+```{r eval=FALSE, echo=FALSE}
+ggsave("/Users/bradcannell/Desktop/dag_ice_cream_1.png", width = 3.5, height = 4)
+```
+
+```{r}
+dag <- dagitty('dag {
+  x [pos="0.000,0.000"]
+  z [pos="1.000,1.000"]
+  y [pos="2.000,0.000"]
+  z -> x
+  z -> y
+  x -> y
+}')
+
+dag <- tidy_dagitty(dag) %>% 
+  dag_label(labels = c(
+    "x" = "ice cream", "y" = "murder", "z" = "temperature"
+  ))
+```
+
+```{r}
+set.seed(123)
+ggdag(dag) + 
+  geom_dag_label_repel(aes(label = label), nudge_x = .2, nudge_y = .5) +
+  theme_dag_blank()
+```
+
+```{r}
+ggdag(dag) +
+  ggrepel::geom_label_repel(aes(label = label))
+```
+
+
+```{r eval=FALSE, echo=FALSE}
+ggsave("/Users/bradcannell/Desktop/dag_ice_cream_2.png", width = 3.5, height = 4)
+```
+
+So far, I haven't been able to get the labels moved out of the way enough to see the arrows. I need to play around with this more when I have more time. 
+
  
 
 
