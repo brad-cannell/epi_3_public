@@ -66,7 +66,7 @@ glm(
 
 * Test statistic is 3.5
 
-* The probability of finding a p-value of 3.5 or higher if all of the assumptions are correct is 0.001.
+* The probability of finding a test statistic of 3.5 or higher if all of the assumptions are correct is 0.001.
 
 
 # Confidence intervals
@@ -102,10 +102,9 @@ random_data <- random_data %>%
 
 ```{r}
 random_data %>% 
-  group_by(sex) %>% 
-  mean_table(height) %>% 
-  select(group_cat, mean, sd, lcl, ucl)
+  mean_table(height)
 ```
+
 
 Randomly select samples of 100 participants
 
