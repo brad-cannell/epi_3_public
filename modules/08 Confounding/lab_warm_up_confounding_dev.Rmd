@@ -1,0 +1,1407 @@
+---
+title: "Lab Warm-up: Confounding"
+output: html_notebook
+---
+
+# Load packages
+
+Remember, it's considered a best practice to load all the packages that your file will use up at the top of the file. If you have not yet installed a package, you will need to do so by running `install.packages("package name")` in the R console. For example, to install the `dplyr` package, you would run `install.packages("dplyr")`. However, you typically **do not** want to type the code to install the package here in your Rmd file. That is because you only need to install the package once on a given computer. Not every time you run your R code.
+
+```{r}
+library(dplyr, warn.conflicts = FALSE) # The "warn.conflicts" part is optional
+library(ggplot2)
+library(broom)
+library(freqtables)
+library(meantables)
+library(dagitty)
+library(ggdag, warn.conflicts = FALSE)
+```
+
+# Overview
+
+The code below contains examples to help us learn about confounding.  
+
+
+# Ice cream and murder rates
+
+We just discussed a classic example of confounding -- ice cream sales and murder. Let's take a look at some simulated data designed to recreate this scenario. 
+
+First, we will create temperature. We will make it normally distributed with a mean of 50 and a standard deviation of 12.
+
+```{r}
+# Random number seed so that we can reproduce our results
+set.seed(123)
+
+# Sample size
+n <- 10000
+
+# Create z - temperature
+df_ice_cream <- tibble(temperature = rnorm(n, 50, 12))
+```
+
+And here is what our temperature data looks like in a histogram.
+
+```{r}
+hist(df_ice_cream$temperature)
+```
+
+Now, let's create ice cream sales. In the code below, the values of ice_cream are only determined by our random number generator and the value of temperature. They are totally oblivious to the values of murder. In fact, the murder variable doesn't even exist yet.
+
+```{r}
+set.seed(234)
+sd <- 100
+df_ice_cream <- df_ice_cream %>% 
+  mutate(
+    ice_cream = case_when(
+      temperature < 20 ~ rnorm(n, 100, sd),
+      temperature < 40 ~ rnorm(n, 300, sd),
+      temperature < 60 ~ rnorm(n, 500, sd),
+      temperature < 80 ~ rnorm(n, 800, sd),
+      temperature < 100 ~ rnorm(n, 1000, sd),
+      temperature > 100 ~ rnorm(n, 1200, sd),
+    )
+  )
+```
+
+And here is what our ice cream sales data looks like in a histogram.
+
+```{r}
+hist(df_ice_cream$ice_cream)
+```
+
+Finally, let's create the murder variable. In the code below, the values of murder are only determined by our random number generator and the value of temperature. They are totally oblivious to the values of ice cream sales.
+
+```{r}
+set.seed(456)
+sd <- 5
+df_ice_cream <- df_ice_cream %>% 
+  mutate(
+    murder = case_when(
+      temperature < 20 ~ rnorm(n, 20, sd),
+      temperature < 40 ~ rnorm(n, 30, sd),
+      temperature < 60 ~ rnorm(n, 40, sd),
+      temperature < 80 ~ rnorm(n, 50, sd),
+      temperature < 100 ~ rnorm(n, 60, sd),
+      temperature > 100 ~ rnorm(n, 70, sd),
+    )
+  )
+
+# Change negative murder rates to 0
+df_ice_cream <- mutate(df_ice_cream, murder = if_else(murder < 0, 0, murder))
+```
+
+And here is what our murder data looks like in a histogram.
+
+```{r}
+hist(df_ice_cream$murder)
+```
+
+We know that there is no causal relationship between ice_cream and murder because we created them both. 
+* The value of ice_cream is only determined by temperature, not by murders.
+* The value of murder is only determined by temperature, not by ice cream sales.
+
+Therefore, we might naively expect there to be *NO* correlation between ice cream sales and murder.
+
+```{r}
+ggplot(df_ice_cream, aes(ice_cream, murder)) + 
+  geom_point() + 
+  geom_smooth(se = FALSE) + 
+  theme_classic()
+```
+
+However, there is an obvious correlation between in the data when we view it as a scatter plot. As ice cream sales rise, so do the number of murders, on average.
+
+```{r}
+cor.test(df_ice_cream$ice_cream, df_ice_cream$murder)
+```
+
+Further, our Pearson's correlation coefficient (0.67) indicates that ice cream sales and murder are highly positively correlated in our population.
+
+Again, the association between ice cream sales and murder is a real, valid association. It just doesn't represent a causal effect. Rather, it's purely due to the fact that ice cream sales and murder share a common cause -- temperature.
+
+
+# Regression adjustment
+
+Perhaps the most common way to control for confounding is to add a sufficient set of deconfounders to our regression models. In the following examples, we will demonstrate how to add multiple variables to our regression models in R, and how to interpret our results. 
+
+## Multiple linear regression - continuous regressand
+
+```{r}
+glm(
+  ice_cream ~ murder,
+  gaussian(link = "identity"),
+  df_ice_cream
+) %>% 
+  tidy()
+```
+
+### Interpretation
+
+* On average, the mean value of ice cream sales is approximately -$95.20 on days when zero murders occur.
+
+* Ice cream sales increase by an average of $15.40 for each additional occurrence of murder.
+
+```{r}
+glm(
+  ice_cream ~ murder + temperature,
+  gaussian(link = "identity"),
+  df_ice_cream
+) %>% 
+  tidy()
+```
+
+### Interpretation
+
+* On average, the mean value of ice cream sales is approximately -$178.97 on days when zero murders occur after adjusting for temperature.
+
+* Ice cream sales increase by an average of $6.29 for each additional occurrence of murder after adjusting for temperature.
+
+Why isn't it zero?
+
+Let's simulate our data in a different way this time.
+
+```{r}
+set.seed(123)
+n <- 10000
+df_ice_cream_2 <- tibble(
+  temperature = rnorm(n, 50, 12),
+  ice_cream   = 500 + (20 * temperature) + rnorm(n, 0, 20),
+  murder      = 5 + (1.5 * temperature) + (0 * ice_cream) + rnorm(n, 0, 16)
+)
+```
+
+```{r}
+ggplot(df_ice_cream_2, aes(ice_cream, murder)) + 
+  geom_point() + 
+  geom_smooth(se = FALSE) + 
+  theme_classic()
+```
+
+Let's draw a sample of 100 people from our simulated population.
+
+```{r}
+set.seed(123)
+ice_cream_sample <- sample_n(df_ice_cream_2, 100)
+```
+
+```{r}
+ggplot(ice_cream_sample, aes(ice_cream, murder)) + 
+  geom_point() + 
+  geom_smooth(se = FALSE) + 
+  theme_classic()
+```
+
+Estimate the relationship between variables, given our model assumptions.
+
+```{r}
+glm(
+  ice_cream ~ murder, 
+  gaussian(link = "identity"),
+  ice_cream_sample
+) %>% 
+  tidy()
+```
+
+### Interpretation
+
+* On average, the mean value of ice cream sales is approximately $900.96 on days when zero murders occur.
+
+* Ice cream sales increase by an average of $7.54 for each additional occurrence of murder.
+
+```{r}
+glm(
+  ice_cream ~ murder + temperature, 
+  gaussian(link = "identity"),
+  ice_cream_sample
+) %>% 
+  tidy(conf.int = TRUE)
+```
+
+### Interpretation
+
+* On average, the mean value of ice cream sales is approximately $487.67 on days when zero murders occur after adjusting for temperature.
+
+* Ice cream sales decrease by an average of $0.22 for each additional occurrence of murder after adjusting for temperature.
+
+* Null hypothesis for murder: The true difference in ice cream sales for each one unit increase in murder is zero dollars.
+
+* Test statistic is -1.78
+
+* The probability of finding a test statistic at least as extreme as -1.78 if all of the model assumptions are correct is 0.079.
+
+* The confidence limits indicate that these data are highly compatible with estimates between -0.46 and 0.02 dollars— assuming that the statistical model used to construct the limits is correct and that our estimates were free from bias.
+
+Now, let's draw a sample of 500 people from our simulated population.
+
+```{r}
+set.seed(123)
+ice_cream_sample <- sample_n(df_ice_cream_2, 500)
+```
+
+```{r}
+glm(
+  ice_cream ~ murder + temperature, 
+  gaussian(link = "identity"),
+  ice_cream_sample
+) %>% 
+  tidy(conf.int = TRUE)
+```
+
+### Interpretation
+
+* On average, the mean value of ice cream sales is approximately $492.76 on days when zero murders occur after adjusting for temperature.
+
+* Ice cream sales decrease by an average of $0.07 for each additional occurrence of murder after adjusting for temperature.
+
+* Null hypothesis for murder: The true difference in ice cream sales for each one unit increase in murder is zero dollars.
+
+* Test statistic is -1.18
+
+* The probability of finding a test statistic at least as extreme as -1.18 if all of the model assumptions are correct is 0.24.
+
+* The confidence limits indicate that these data are highly compatible with estimates between -0.18 and 0.05 dollars— assuming that the statistical model used to construct the limits is correct and that our estimates were free from bias.
+
+## Multiple linear regression - categorical regressor
+
+```{r}
+set.seed(123)
+n <- 10000
+df_ice_cream_3 <- tibble(
+  summer    = rbinom(n, 1, .30),
+  ice_cream = 500 + (700 * summer) + rnorm(n, 0, 20),
+  murder    = 5 + (100 * summer) + (0 * ice_cream) + rnorm(n, 0, 16),
+  summer_f  = factor(summer, 0:1, c("No", "Yes"))
+)
+```
+
+```{r}
+ggplot(df_ice_cream_3, aes(ice_cream, murder, color = summer_f)) + 
+  geom_point() + 
+  theme_classic()
+```
+
+Now, let's draw a sample of 500 people from our simulated population.
+
+```{r}
+set.seed(123)
+ice_cream_sample <- sample_n(df_ice_cream_3, 500)
+```
+
+```{r}
+glm(
+  ice_cream ~ murder + summer_f, 
+  gaussian(link = "identity"),
+  ice_cream_sample
+) %>% 
+  tidy(conf.int = TRUE)
+```
+
+### Interpretation
+
+* On average, the mean value of ice cream sales is approximately $501.19 on days when zero murders occur after adjusting for summer season.
+
+* Ice cream sales increase by an average of $0.02 for each additional occurrence of murder after adjusting for summer season.
+
+* Null hypothesis for murder: The true difference in ice cream sales for each one unit increase in murder is zero dollars.
+
+* Test statistic is 0.4
+
+* The probability of finding a test statistic at least as extreme as 0.40 if all of the model assumptions are correct is 0.68.
+
+* The confidence limits indicate that these data are highly compatible with estimates between -0.08 and 0.13 dollars — assuming that the statistical model used to construct the limits is correct and that our estimates were free from bias.
+
+
+## Multiple linear regression - categorical regressor
+
+```{r}
+set.seed(123)
+n <- 10000
+df_physact <- tibble(
+  age = rnorm(n, 55, 5),
+  z = 1 + (2 * age),
+  cvd_pr = 1 / (1 + exp(-z)),
+  cvd = rbinom(n, 1, cvd_pr)
+)
+```
+
+```{r}
+set.seed(123)
+n <- 10000
+df_physact <- tibble(
+  age = rnorm(n, 55, 5),
+  age_50 = age - 50,
+  cvd_pr_50 = .4,
+  cvd_odds_50 = cvd_pr_50 / (1 - cvd_pr_50),
+  beta0_50 = log(cvd_odds_50),
+  beta1_50 = log(1.2),
+  cvd_pr = 1 / (1 + exp(-1 * (beta0_50 + (beta1_50*age_50)))),
+  cvd = rbinom(n, 1, cvd_pr),
+  physact = 8 + (-4.1 * cvd) + (-0.01 * age_50) + rnorm(n, 0, 0.9),
+)
+```
+
+```{r}
+summary(df_physact$physact)
+```
+
+
+```{r}
+ggplot(df_physact, aes(cvd, age)) + geom_point()
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Example: Deep abdominal adipose tissue and waist circumference.
+
+```{r}
+set.seed(123)
+n <- 100
+daat_waist <- tibble(
+  waist    = rnorm(n, 39, 2),
+  waist_c  = waist - 39,
+  beta1    = rnorm(n, 3.45, 0.2),
+  daat_bar = rnorm(n, 101, 8),
+  daat     = daat_bar + (beta1 * waist_c)
+)
+daat_waist
+```
+
+
+
+What is the average waist circumference?
+
+```{r}
+mean(daat_waist$waist)
+```
+
+What is the average deep abdominal adipose tissue?
+
+```{r}
+mean(daat_waist$daat)
+```
+
+What is the relationship between deep abdominal adipose tissue and waist circumference?
+
+```{r}
+ggplot(daat_waist, aes(x = waist, y = daat)) +
+  geom_point()
+```
+
+```{r}
+ggplot(daat_waist, aes(x = waist, y = daat)) +
+  geom_point() +
+  geom_hline(yintercept = mean(daat_waist$daat), color = "red") 
+```
+
+```{r}
+cor.test(daat_waist$daat, daat_waist$waist)
+```
+
+```{r}
+ggplot(daat_waist, aes(x = waist, y = daat)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) 
+```
+
+What is the relationship between deep abdominal adipose tissue (regressand) and waist circumference (regressor)?
+
+```{r}
+glm(
+  daat ~ waist,
+  family = gaussian(link = "identity"),
+  data   = daat_waist
+)
+```
+
+#### Interpretation
+
+1. Intercept: The mean value of deep abdominal adipose tissue when waist circumference is 0 is -9.580. 
+
+2. waist: The average change in deep abdominal adipose tissue for each one inch increase in waist circumference is 2.86. 
+
+```{r}
+ggplot(daat_waist, aes(x = waist, y = daat)) +
+  geom_point() +
+  geom_smooth(method = 'lm', se = FALSE) + 
+  geom_abline(intercept = -9.580, slope = 2.862, color = "red", linetype = "dashed") 
+```
+
+### Categorical regressor (large waist)
+
+```{r}
+daat_waist <- daat_waist %>% 
+  mutate(
+    large_waist   = if_else(waist < mean(waist), 0, 1),
+    large_waist_f = factor(large_waist, 0:1, c("No", "Yes"))
+  )
+daat_waist
+```
+
+```{r}
+daat_by_large_f <- daat_waist %>% 
+  group_by(large_waist_f) %>% 
+  mean_table(daat)
+
+daat_by_large_f
+```
+
+```{r}
+ggplot(daat_waist, aes(x = large_waist_f, y = daat)) +
+  geom_point() +
+  geom_segment(
+    aes(x = c(0.75, 1.75), y = mean, xend = c(1.25, 2.25), yend = mean), 
+    size = 1.5, color = "red", data = daat_by_large_f
+  )
+```
+
+What is the relationship between deep abdominal adipose tissue (regressand) and tall (regressor)?
+
+```{r}
+glm(
+  daat ~ large_waist_f,
+  family = gaussian(link = "identity"),
+  data   = daat_waist
+)
+```
+
+#### Interpretation
+
+1. Intercept: The mean value of deep abdominal adipose tissue among people who are not tall is equal to 98.228. 
+
+2. large_waist_fYes: The average change in deep abdominal adipose tissue for people with a large waste circumference compared to people with a small waste circumference is 8.854.
+
+98.228 + 8.854
+
+
+# Logistic regression
+
+## Elder mistreatment
+
+```{r}
+set.seed(123)
+n <- 100
+em_dementia <- tibble(
+  age = sample(65:100, n, TRUE),
+  dementia = case_when(
+    age < 70 ~ sample(0:1, n, TRUE, c(.99, .01)),
+    age < 75 ~ sample(0:1, n, TRUE, c(.97, .03)),
+    age < 80 ~ sample(0:1, n, TRUE, c(.91, .09)),
+    age < 85 ~ sample(0:1, n, TRUE, c(.84, .16)),
+    age < 90 ~ sample(0:1, n, TRUE, c(.78, .22)),
+    TRUE ~ sample(0:1, n, TRUE, c(.67, .33))
+  ),
+  dementia_f = factor(dementia, 0:1, c("No", "Yes")),
+  em = case_when(
+    dementia_f == "No"  ~ sample(0:1, n, TRUE, c(.9, .1)),
+    dementia_f == "Yes" ~ sample(0:1, n, TRUE, c(.5, .5))
+  ),
+  em_f = factor(em, 0:1, c("No", "Yes"))
+)
+em_dementia
+```
+
+### Categorical regressor (dementia)
+
+```{r}
+em_dementia %>% 
+  freq_table(dementia_f, em_f) %>% 
+  select(row_var:n_row, percent_row)
+```
+
+```{r}
+glm(
+  em_f  ~ dementia_f,
+  family = binomial(link = "logit"),
+  data   = em_dementia
+)
+```
+
+#### Interpretation
+
+1. Intercept: The natural log of the odds of `elder mistreatment` among people who do not have dementia is -2.734. (Generally not of great interest or directly interpreted)
+
+2. dementia_fYes: The average change in the natural log of the odds of `elder mistreatment` among people with dementia compared to people without dementia.
+
+```{r}
+tibble(
+  intercpet   = exp(-2.1734),
+  dementia_or = exp(2.282)
+)
+```
+
+3. dementia_fYes: People with dementia have 9.8 times the odds of `elder mistreatment` among compared to people without dementia.
+
+```{r}
+em_dementia_ct <- matrix(
+  c(a = 7, b = 11, c = 5, d = 77),
+  ncol = 2,
+  byrow = TRUE
+)
+
+em_dementia_ct <- addmargins(em_dementia_ct)
+
+dimnames(em_dementia_ct) <- list(
+  Dementia = c("Yes", "No", "col_sum"), # Row names
+  EM       = c("Yes", "No", "row_sum")  # Then column names
+)
+
+em_dementia_ct
+```
+
+```{r}
+incidence_prop <- em_dementia_ct[, "Yes"] / em_dementia_ct[, "row_sum"]
+em_dementia_ct <- cbind(em_dementia_ct, incidence_prop)
+em_dementia_ct
+```
+
+```{r}
+incidence_odds <- em_dementia_ct[, "incidence_prop"] / (1 - em_dementia_ct[, "incidence_prop"])
+em_dementia_ct <- cbind(em_dementia_ct, incidence_odds)
+em_dementia_ct
+```
+
+```{r}
+ior <- em_dementia_ct["Yes", "incidence_odds"] / em_dementia_ct["No", "incidence_odds"]
+ior
+```
+
+```{r}
+# Alternative coding
+em_dementia %>% 
+  freq_table(dementia_f, em_f) %>% 
+  select(row_var:n_row, percent_row) %>% 
+  filter(col_cat == "Yes") %>% 
+  mutate(
+    prop_row = percent_row / 100,
+    odds = prop_row / (1 - prop_row)
+  ) %>% 
+  summarise(or = odds[row_cat == "Yes"] / odds[row_cat == "No"])
+```
+
+### Continuous regressor (age)
+
+```{r}
+ggplot(em_dementia, aes(x = age, y = em_f)) +
+  geom_point()
+```
+
+```{r}
+em_dementia %>%
+  group_by(em_f) %>% 
+  mean_table(age)
+```
+
+```{r}
+glm(
+  em_f  ~ age,
+  family = binomial(link = "logit"),
+  data   = em_dementia
+)
+```
+
+#### Interpretation
+
+1. Intercept: The natural log of the odds of `elder mistreatment` among people who do not have dementia is -3.80. (Generally not of great interest or directly interpreted)
+
+2. age: The average change in the natural log of the odds of `elder mistreatment` for each one-year increase in age is 0.02.
+
+```{r}
+glm(
+  em_f  ~ age,
+  family = binomial(link = "logit"),
+  data   = em_dementia
+) %>% 
+  broom::tidy(exp = TRUE, ci = TRUE)
+```
+
+```{r}
+em_age_70 <- -3.180 + (0.02127 * 70)
+em_age_70
+```
+
+```{r}
+em_age_71 <- -3.180 + (0.02127 * 71)
+em_age_71
+```
+
+```{r}
+em_age_71 - em_age_70
+```
+
+```{r}
+exp(0.02127)
+```
+
+```{r}
+em_dementia %>% 
+  filter(age %in% c(70, 71))
+```
+
+
+# Poisson regression
+
+## Number of drinks and personal problems
+
+```{r}
+set.seed(100)
+n <- 100
+drinks <- tibble(
+  problems = sample(0:1, n, TRUE, c(.7, .3)),
+  age = rnorm(n, 50, 10),
+  drinks = case_when(
+    problems == 0 & age > 50 ~ sample(0:5, n, TRUE, c(.8, .05, .05, .05, .025, .025)),
+    problems == 0 & age <= 50 ~ sample(0:5, n, TRUE, c(.7, .1, .1, .05, .025, .025)),
+    problems == 1 & age > 50 ~ sample(0:5, n, TRUE, c(.2, .3, .2, .2, .05, .05)),
+    problems == 1 & age <= 50 ~ sample(0:5, n, TRUE, c(.3, .1, .1, .2, .2, .1)),
+  )
+)
+
+drinks
+```
+
+### Count regressand and continuous regressor
+
+```{r}
+mean(drinks$drinks)
+```
+
+```{r}
+ggplot(drinks, aes(x = age, y = drinks)) +
+  geom_point() 
+```
+
+```{r}
+ggplot(drinks, aes(x = age, y = drinks)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE)
+```
+
+```{r}
+glm(
+  drinks  ~ age,
+  family  = poisson(link = "log"),
+  data    = drinks
+)
+```
+
+#### Interpretation
+
+1. Intercept: The natural log of the mean number of `drinks` when `age` is equal to zero is 0.113739. 
+
+2. age: The average change in the natural log of the mean number of `drinks` for each one-year increase in `age` is -0.001131. 
+
+```{r}
+glm(
+  drinks  ~ age,
+  family  = poisson(link = "log"),
+  data    = drinks
+) %>% 
+  broom::tidy(exp = TRUE)
+```
+
+3. Participants reported 0.9 times the number of drinks at their last drinking episode for each one-year increase in age.
+
+```{r}
+drinks_age_50 <- 0.113739 + (-0.001131 * 50)
+drinks_age_50
+```
+
+```{r}
+drinks_age_51 <- 0.113739 + (-0.001131 * 51)
+drinks_age_51
+```
+
+```{r}
+drinks_age_51 - drinks_age_50
+```
+
+```{r}
+exp(-0.001131)
+```
+
+This is an incidence rate ratio. Remember that a rate is just the number of events per some specified period of time. In this case, the specified period of time is the same for all participants, so the “missing” time cancels out, and we get a rate ratio.
+
+What's our null value for a rate ratio?
+
+### Count regressand categorical regressor
+
+```{r}
+mean(drinks$drinks)
+```
+
+```{r}
+ggplot(drinks, aes(x = factor(problems), y = drinks)) +
+  geom_point() 
+```
+
+```{r}
+ggplot(drinks, aes(x = factor(problems), y = drinks)) +
+  geom_jitter(width = 0, height = 0.25, alpha = .5) 
+```
+
+```{r}
+glm(
+  drinks  ~ problems,
+  family  = poisson(link = "log"),
+  data    = drinks
+)
+```
+
+#### Interpretation
+
+1. Intercept: The natural log of the mean number of `drinks` when `problems` is equal to zero is -0.3848. 
+
+2. problems: The average change in the natural log of the mean of `drinks` when `problems` changes from zero to one.
+
+```{r}
+glm(
+  drinks  ~ problems,
+  family  = poisson(link = "log"),
+  data    = drinks
+) %>% 
+  broom::tidy(exp = TRUE)
+```
+
+3. Participants reporting that they had personal problems, drank 2.99 times more drinks at their last drinking episode compared to those who reported no personal problems.
+
+This is an incidence rate ratio. Remember that a rate is just the number of events per some specified period of time. In this case, the specified period of time is the same for all participants, so the “missing” time cancels out, and we get a rate ratio.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Old stuff
+
+How do you simulate seasonal effects?
+
+```{r}
+set.seed(123)
+ice_cream <- tibble(
+  month = 1:12,
+  sales = rnorm(1, 100, 1),
+  murder = rnorm(1, 10, .5)
+)
+```
+
+```{r}
+ice_cream <- ice_cream %>% 
+  mutate(month_f = factor(month, 1:12, month.abb))
+```
+
+```{r}
+ice_cream <- ice_cream %>% 
+  tidyr::pivot_longer(
+    cols = c(sales, murder)
+  )
+```
+
+```{r}
+ggplot(ice_cream, aes(x = month_f, y = value, color = name, group = name)) +
+  geom_point() +
+  geom_line() + 
+  facet_wrap(vars(name), scales = "free")
+```
+
+```{r}
+set.seed(123)
+ice_cream <- ice_cream %>% 
+  # Peak at month 8
+  mutate(
+    month_adjust = abs(8 - month) * -1,
+    # Adjust by 1/12 SD * month_adjust
+    sd = if_else(name == "sales", 1, 0.5),
+    sd_12th = rnorm(24, sd / 12, .01),
+    adjustment = month_adjust * sd_12th,
+    value_adjusted = value + adjustment
+  )
+```
+
+```{r}
+ggplot(ice_cream, aes(x = month_f, y = value_adjusted, color = name, group = name)) +
+  geom_point() +
+  geom_line() + 
+  facet_wrap(vars(name), scales = "free")
+```
+
+```{r}
+glm(
+  value ~ name,
+  gaussian(link = "identity"),
+  ice_cream
+) %>% 
+  broom::tidy()
+```
+
+```{r}
+glm(
+  value ~ name + month_f,
+  gaussian(link = "identity"),
+  ice_cream
+) %>% 
+  broom::tidy()
+```
+
+This is a bad way to model this data. However, I have the bones here for something. I might need to: \* create daily numbers withing month. \* use stratification \* Look at a small section of the year where the relationship is more or less linear.
+
+
+
+
+Going back to our ice cream and murder example. We believe that temperature is a common cause of both
+
+```{r}
+df_ice_cream_50 <- df_ice_cream %>% 
+  filter(z > 49 & z < 51)
+```
+
+```{r}
+ggplot(df_ice_cream_50, aes(x, y)) + 
+  geom_point() + 
+  geom_smooth(se = FALSE) + 
+  theme_classic()
+```
+
+However, there is an obvious correlation in the data when we view it as a scatter plot.
+
+```{r}
+cor.test(df_ice_cream_50$x, df_ice_cream_50$y)
+```
+
+And now, 
+
+
+# Actually, maybe make the DAG later?
+
+Start with a very simple DAG
+
+```{r}
+dag <- dagitty('dag {
+  bb="0,0,1,1"
+  x [pos="0.124,0.363"]
+  z [pos="0.391,0.400"]
+  y [pos="0.638,0.363"]
+  z -> x
+  z -> y
+}')
+
+dag <- tidy_dagitty(dag) %>% 
+  dag_label(labels = c(
+    "x" = "ice cream", "y" = "violent crime", "z" = "temperature"
+  ))
+```
+
+```{r}
+ggdag(dag, use_labels = "label") + 
+  theme_dag_blank()
+```
+
+How can this be?
+
+An open backdoor path from x <- z -> y. Remember that causation only flows in the direction of the arrows, but association/correlation flows in both directions. For example,
+
+```{r}
+set.seed(456)
+n <- 100
+flow_example <- tibble(
+  exposure = sample(0:1, n, TRUE),
+  outcome  = if_else(
+    exposure == 0, 
+    sample(0:1, n, TRUE, c(.9, .1)),
+    sample(0:1, n, TRUE, c(.1, .9))
+  )
+)
+```
+
+We expect, outcome to be associated with exposure, because exposure causes outcome. We designed it that way.
+
+```{r}
+flow_example %>% 
+  freq_table(exposure, outcome) %>% 
+  select(row_var:n, percent_row)
+```
+
+So, knowing exposure status tells us a lot about outcome status. Again, we expect this because we know exposure causes outcome. We designed the data that way.
+
+But, does know outcome status tell us anything about exposure status?
+
+```{r}
+flow_example %>% 
+  freq_table(outcome, exposure) %>% 
+  select(row_var:n, percent_row)
+```
+
+Yes! Even though outcome doesn't cause exposure, knowing a person's outcome tells us something about their exposure -- they are associated.
+
+In the ice cream and murder example, we see an association for a similar reason. Association is flowing from x to y through z even though that isn't a causal path. 
+
+
+
+
+
+
+
+
+
+
+
+# Change in estimate method
+
+```{r}
+set.seed(123)
+n <- 10000
+cie_method <- tibble(
+  smoking = sample(0:1, n, TRUE, c(.88, .12))
+)
+```
+
+```{r}
+cie_method %>% 
+  freq_table(smoking)
+```
+
+```{r}
+cie_method <- cie_method %>% 
+  mutate(
+    yellow_fingers = if_else(
+      smoking == 0,
+      sample(0:1, n, TRUE, c(.99, .01)),
+      sample(0:1, n, TRUE, c(.5, .5))
+    ),
+    lung_cancer = if_else(
+      smoking == 0,
+      sample(0:1, n, TRUE, c(.97, .03)),
+      sample(0:1, n, TRUE, c(.7, .3))
+    )
+  )
+```
+
+```{r}
+cie_method %>% 
+  freq_table(smoking, yellow_fingers) %>% 
+  filter(col_cat == 1) %>% 
+  select(row_var:col_cat, percent_row) 
+```
+
+```{r}
+# Tells us nothing about causal direction
+cie_method %>% 
+  freq_table(yellow_fingers, smoking) %>% 
+  filter(col_cat == 1) %>% 
+  select(row_var:col_cat, percent_row) 
+```
+
+```{r}
+cie_method %>% 
+  freq_table(smoking, lung_cancer) %>% 
+  filter(col_cat == 1) %>% 
+  select(row_var:col_cat, percent_row) 
+```
+
+Perhaps most importantly, is there an association between yellow_fingers and lung cancer
+
+```{r}
+cie_method %>% 
+  freq_table(yellow_fingers, lung_cancer) %>% 
+  filter(col_cat == 1) %>% 
+  select(row_var:col_cat, percent_row) 
+```
+
+Yes! But, we know that this is ridiculous. Why? Common sense, but more importantly, we simulated the data. There was not dependency between yellow fingers and lung cancer in the *data generating process* (i.e., our simulation decisions).
+
+If we look at the DAG, we can see that this bears out graphically.
+
+What happens if we adjust for/condition on smoking?
+
+```{r}
+cie_method %>% 
+  filter(smoking == 0) %>% 
+  freq_table(yellow_fingers, lung_cancer) %>% 
+  filter(col_cat == 1) %>% 
+  select(row_var:col_cat, percent_row) 
+```
+
+```{r}
+cie_method %>% 
+  filter(smoking == 1) %>% 
+  freq_table(yellow_fingers, lung_cancer) %>% 
+  filter(col_cat == 1) %>% 
+  select(row_var:col_cat, percent_row) 
+```
+
+-   Less likely in this case?
+
+Let's calculate incidence proportion ratio.
+
+```{r}
+cie_method %>% 
+  freq_table(yellow_fingers, lung_cancer)
+```
+
+How can I convert the table above into a matrix?
+
+```{r}
+yf_lc_freq_table <- cie_method %>% 
+  freq_table(yellow_fingers, lung_cancer)
+```
+
+<p class="warning">
+
+⚠️**Warning:** Notice that the "No" category comes before the "Yes" category by default when passing a frequency table to the `xtabs()` function. This typically not the order we would put them in for analysis. To prevent this from happening, change the ordering of the factor levels in the frequency table (demonstrated below).
+
+</p>
+
+```{r}
+yf_lc_freq_table <- arrange(yf_lc_freq_table, desc(row_cat), desc(col_cat))
+```
+
+```{r}
+xtab_ct <- xtabs(n ~ row_cat + col_cat, yf_lc_freq_table)
+xtab_ct
+```
+
+Interesting. xtab will still order in ascending order.
+
+```{r}
+xtabs(n ~ row_cat + col_cat, yf_lc_freq_table) %>% ftable()
+```
+
+```{r}
+ftable_ct <- ftable(cie_method, row.vars = "yellow_fingers", col.vars = "lung_cancer")
+ftable_ct
+```
+
+Ok, but how do we reorder them?
+
+Here is what we want:
+
+|                   | Lung Cancer | No Lung Cancer |
+|-------------------|-------------|----------------|
+| Yellow Fingers    | 150         | 501            |
+| No Yellow Fingers | 428         | 8921           |
+|                   |             |                |
+
+```{r}
+# Copy column 1 to the right side of column two
+xtab_ct_reorder <- cbind(xtab_ct, xtab_ct[, 1])
+# Create new table that doesn't include column 1
+xtab_ct_reorder <- xtab_ct_reorder[, 2:3]
+# Copy row 1 to below row 2
+xtab_ct_reorder <- rbind(xtab_ct_reorder, xtab_ct_reorder[1,])
+# Create new table that doesn't include row 1
+xtab_ct_reorder <- xtab_ct_reorder[2:3,]
+xtab_ct_reorder
+```
+
+This works, but it's long and manual. Also, the row names and col names are dropped. 
+
+```{r}
+ftable_ct[, 1]
+```
+
+Figure out how to automate this later when I'm off the plane. Not a good use of time right now without Google.
+
+```{r}
+matrix_yf_lc <- matrix(
+  c(a = 150, b = 501, c = 428, d = 8921),
+  ncol = 2,
+  byrow = TRUE
+)
+
+matrix_yf_lc <- addmargins(matrix_yf_lc)
+
+dimnames(matrix_yf_lc) <- list(
+  yf = c("Yes", "No", "col_sum"), # Row names
+  lc  = c("Yes", "No", "row_sum")  # Then column names
+)
+
+matrix_yf_lc
+```
+
+Let's calculate incidence proportion ratio.
+
+```{r}
+incidence_prop <- matrix_yf_lc[, "Yes"] / matrix_yf_lc[, "row_sum"]
+matrix_yf_lc <- cbind(matrix_yf_lc, incidence_prop)
+matrix_yf_lc
+```
+
+```{r}
+ipr <- matrix_yf_lc["Yes", "incidence_prop"] / matrix_yf_lc["No", "incidence_prop"]
+ipr
+```
+
+Incidence proportion ratio = 5. People with yf had 5 times the proportion of lc than people without yf. 
+
+In this case, "adjusted" would be a mantel-hanzel. Need to Google that too.
+
+
+
+
+
+
+# How do we control for confounding
+
+Start with a very simple DAG
+
+```{r}
+dag <- dagitty('dag {
+  bb="0,0,1,1"
+  x [pos="0.124,0.363"]
+  z [pos="0.391,0.400"]
+  y [pos="0.638,0.363"]
+  z -> x
+  z -> y
+}')
+```
+
+```{r}
+ggdag(dag)
+```
+
+Where:
+* z is temperature
+* x is ice cream sales
+* y is murder
+
+Now, simulate some data
+
+```{r}
+set.seed(123)
+
+# Sample size
+n <- 10000
+
+# Create z - temperature
+df <- tibble(z = rnorm(n, 50, 12))
+```
+
+```{r}
+hist(df$z)
+```
+
+Now make x - ice cream sales
+
+```{r}
+set.seed(234)
+sd <- 100
+df <- df %>% 
+  mutate(
+    x = case_when(
+      z < 20 ~ rnorm(n, 100, sd),
+      z < 40 ~ rnorm(n, 300, sd),
+      z < 60 ~ rnorm(n, 500, sd),
+      z < 80 ~ rnorm(n, 800, sd),
+      z < 100 ~ rnorm(n, 1000, sd),
+      z > 100 ~ rnorm(n, 1200, sd),
+    )
+  )
+```
+
+```{r}
+hist(df$x)
+```
+
+Now make y - murder
+
+```{r}
+set.seed(456)
+sd <- 5
+df <- df %>% 
+  mutate(
+    y = case_when(
+      y < 20 ~ rnorm(n, 20, sd),
+      y < 40 ~ rnorm(n, 30, sd),
+      y < 60 ~ rnorm(n, 40, sd),
+      y < 80 ~ rnorm(n, 50, sd),
+      y < 100 ~ rnorm(n, 60, sd),
+      y > 100 ~ rnorm(n, 70, sd),
+    )
+  )
+
+# Change negative rates to 0
+# df <- mutate(df, y = if_else(y < 0, 0, y))
+```
+
+```{r}
+hist(df$y)
+```
+
+We know that there is no relationship between x and y because we created them both. 
+* The value of x is only determined by z, not by y
+* The value of y is only determined by z, not by x
+
+Therefore, we expect there to be no correlation between x and y
+
+```{r}
+cor.test(df$x, df$y)
+```
+
+How can this be? Because there is an open backdoor path. 
+
+So, if we control/adjust for z, then we close the open backdoor path and we expect the correlation to disappear.
+
+How can we control/adjust?
+* Restriction
+* Randomization
+* Matching
+* Stratification
+* Regression
+* Propensity score matching
+* IPW
+* Standardization (G-formula)
+* G-estimation
+* Instrumental variable methods
+
+## Restriction
+
+```{r}
+df_cold <- filter(df, z > 49 & z < 51)
+cor.test(df_cold$x, df_cold$y)
+```
+
+```{r}
+ggplot(df_cold, aes(x, y)) + geom_point() + geom_smooth(method = "lm")
+```
+
+```{r}
+set.seed(2202210)
+a <- rnorm(n)
+b <- rnorm(n)
+z <- sample(1:10, n, T)
+cor.test(a, b)
+```
+
+```{r}
+az <- a + z
+bz <- b + z
+cor.test(az, bz)
+```
+
+```{r}
+az_restrict <- az[z == 5]
+bz_restrict <- bz[z == 5]
+cor.test(az_restrict, bz_restrict)
+```
+
+Back to being very little correlation.
+
+## Matching
+
+When values of z match.
+I don't think I can use the cor.test any more. The selection of a's and b's is not independent.
+
+```{r}
+df <- tibble(a, b, z, az, bz)
+```
+
+I'm sure there is a better way to match cases and controls. Google it. 
+
+```{r}
+for (i in 1:10) {
+  nm <- paste0("bz_", i)
+  val <- filter(df, z == i) %>% pull(bz)
+  assign(nm, val)
+}
+```
+
+```{r}
+for (i in 1:nrow(df)) {
+  print(i)
+}
+```
+
+```{r}
+a_sample <- sample_n(df, 100)
+a_sample %>% 
+  rowwise() %>% 
+  mutate(b_sample = sample_n(df, 1))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

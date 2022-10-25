@@ -1,5 +1,5 @@
 ---
-title: "Lab Warm-up: Module Name"
+title: "Lab Warm-up: Confounding"
 output: html_notebook
 ---
 
@@ -9,12 +9,327 @@ Remember, it's considered a best practice to load all the packages that your fil
 
 ```{r}
 library(dplyr, warn.conflicts = FALSE) # The "warn.conflicts" part is optional
+library(ggplot2)
+library(broom)
+library(freqtables)
+library(meantables)
+library(dagitty)
+library(ggdag, warn.conflicts = FALSE)
 ```
 
 # Overview
 
-Here is an overview of what we will cover in this lab warm-up. You will be talking about the purpose of the code below during the live lab warm-up session; however, some written material here will probably be helpful to students who are reviewing the code later, outside of the lab session. 
+The code below contains examples to help us learn about confounding.  
 
-# Section 1
 
-The rest of what's in here will be fairly lesson specific. At least for now. 
+# Ice cream and murder rates
+
+We just discussed a classic example of confounding -- ice cream sales and murder. Let's take a look at some simulated data designed to recreate this scenario. 
+
+First, we will create temperature. We will make it normally distributed with a mean of 50 and a standard deviation of 12.
+
+```{r}
+# Random number seed so that we can reproduce our results
+set.seed(123)
+
+# Sample size
+n <- 10000
+
+# Create z - temperature
+df_ice_cream <- tibble(temperature = rnorm(n, 50, 12))
+```
+
+And here is what our temperature data looks like in a histogram.
+
+```{r}
+hist(df_ice_cream$temperature)
+```
+
+Now, let's create ice cream sales. In the code below, the values of ice_cream are only determined by our random number generator and the value of temperature. They are totally oblivious to the values of murder. In fact, the murder variable doesn't even exist yet.
+
+```{r}
+set.seed(234)
+sd <- 100
+df_ice_cream <- df_ice_cream %>% 
+  mutate(
+    ice_cream = case_when(
+      temperature < 20 ~ rnorm(n, 100, sd),
+      temperature < 40 ~ rnorm(n, 300, sd),
+      temperature < 60 ~ rnorm(n, 500, sd),
+      temperature < 80 ~ rnorm(n, 800, sd),
+      temperature < 100 ~ rnorm(n, 1000, sd),
+      temperature > 100 ~ rnorm(n, 1200, sd),
+    )
+  )
+```
+
+And here is what our ice cream sales data looks like in a histogram.
+
+```{r}
+hist(df_ice_cream$ice_cream)
+```
+
+Finally, let's create the murder variable. In the code below, the values of murder are only determined by our random number generator and the value of temperature. They are totally oblivious to the values of ice cream sales.
+
+```{r}
+set.seed(456)
+sd <- 5
+df_ice_cream <- df_ice_cream %>% 
+  mutate(
+    murder = case_when(
+      temperature < 20 ~ rnorm(n, 20, sd),
+      temperature < 40 ~ rnorm(n, 30, sd),
+      temperature < 60 ~ rnorm(n, 40, sd),
+      temperature < 80 ~ rnorm(n, 50, sd),
+      temperature < 100 ~ rnorm(n, 60, sd),
+      temperature > 100 ~ rnorm(n, 70, sd),
+    )
+  )
+
+# Change negative murder rates to 0
+df_ice_cream <- mutate(df_ice_cream, murder = if_else(murder < 0, 0, murder))
+```
+
+And here is what our murder data looks like in a histogram.
+
+```{r}
+hist(df_ice_cream$murder)
+```
+
+We know that there is no causal relationship between ice_cream and murder because we created them both. 
+* The value of ice_cream is only determined by temperature, not by murders.
+* The value of murder is only determined by temperature, not by ice cream sales.
+
+Therefore, we might naively expect there to be *NO* correlation between ice cream sales and murder.
+
+```{r}
+ggplot(df_ice_cream, aes(ice_cream, murder)) + 
+  geom_point() + 
+  geom_smooth(se = FALSE) + 
+  theme_classic()
+```
+
+However, there is an obvious correlation between in the data when we view it as a scatter plot. As ice cream sales rise, so do the number of murders, on average.
+
+```{r}
+cor.test(df_ice_cream$ice_cream, df_ice_cream$murder)
+```
+
+Further, our Pearson's correlation coefficient (0.67) indicates that ice cream sales and murder are highly positively correlated in our population.
+
+Again, the association between ice cream sales and murder is a real, valid association. It just doesn't represent a causal effect. Rather, it's purely due to the fact that ice cream sales and murder share a common cause -- temperature.
+
+
+# Regression adjustment
+
+Perhaps the most common way to control for confounding is to add a sufficient set of deconfounders to our regression models. In the following examples, we will demonstrate how to add multiple variables to our regression models in R, and how to interpret our results. 
+
+## Multiple linear regression - continuous regressand
+
+```{r}
+glm(
+  ice_cream ~ murder,
+  gaussian(link = "identity"),
+  df_ice_cream
+) %>% 
+  tidy()
+```
+
+### Interpretation
+
+* On average, the mean value of ice cream sales is approximately -$95.20 on days when zero murders occur.
+
+* Ice cream sales increase by an average of $15.40 for each additional occurrence of murder.
+
+```{r}
+glm(
+  ice_cream ~ murder + temperature,
+  gaussian(link = "identity"),
+  df_ice_cream
+) %>% 
+  tidy()
+```
+
+### Interpretation
+
+* On average, the mean value of ice cream sales is approximately -$178.97 on days when zero murders occur after adjusting for temperature.
+
+* Ice cream sales increase by an average of $6.29 for each additional occurrence of murder after adjusting for temperature.
+
+Why isn't it zero?
+
+Let's simulate our data in a different way this time.
+
+```{r}
+set.seed(123)
+n <- 10000
+df_ice_cream_2 <- tibble(
+  temperature = rnorm(n, 50, 12),
+  ice_cream   = 500 + (20 * temperature) + rnorm(n, 0, 20),
+  murder      = 5 + (1.5 * temperature) + (0 * ice_cream) + rnorm(n, 0, 16)
+)
+```
+
+```{r}
+ggplot(df_ice_cream_2, aes(ice_cream, murder)) + 
+  geom_point() + 
+  geom_smooth(se = FALSE) + 
+  theme_classic()
+```
+
+Let's draw a sample of 100 people from our simulated population.
+
+```{r}
+set.seed(123)
+ice_cream_sample <- sample_n(df_ice_cream_2, 100)
+```
+
+```{r}
+ggplot(ice_cream_sample, aes(ice_cream, murder)) + 
+  geom_point() + 
+  geom_smooth(se = FALSE) + 
+  theme_classic()
+```
+
+Estimate the relationship between variables, given our model assumptions.
+
+```{r}
+glm(
+  ice_cream ~ murder, 
+  gaussian(link = "identity"),
+  ice_cream_sample
+) %>% 
+  tidy()
+```
+
+### Interpretation
+
+* On average, the mean value of ice cream sales is approximately $900.96 on days when zero murders occur.
+
+* Ice cream sales increase by an average of $7.54 for each additional occurrence of murder.
+
+```{r}
+glm(
+  ice_cream ~ murder + temperature, 
+  gaussian(link = "identity"),
+  ice_cream_sample
+) %>% 
+  tidy(conf.int = TRUE)
+```
+
+### Interpretation
+
+* On average, the mean value of ice cream sales is approximately $487.67 on days when zero murders occur after adjusting for temperature.
+
+* Ice cream sales decrease by an average of $0.22 for each additional occurrence of murder after adjusting for temperature.
+
+* Null hypothesis for murder: The true difference in ice cream sales for each one unit increase in murder is zero dollars.
+
+* Test statistic is -1.78
+
+* The probability of finding a test statistic at least as extreme as -1.78 if all of the model assumptions are correct is 0.079.
+
+* The confidence limits indicate that these data are highly compatible with estimates between -0.46 and 0.02 dollars— assuming that the statistical model used to construct the limits is correct and that our estimates were free from bias.
+
+Now, let's draw a sample of 500 people from our simulated population.
+
+```{r}
+set.seed(123)
+ice_cream_sample <- sample_n(df_ice_cream_2, 500)
+```
+
+```{r}
+glm(
+  ice_cream ~ murder + temperature, 
+  gaussian(link = "identity"),
+  ice_cream_sample
+) %>% 
+  tidy(conf.int = TRUE)
+```
+
+### Interpretation
+
+* On average, the mean value of ice cream sales is approximately $492.76 on days when zero murders occur after adjusting for temperature.
+
+* Ice cream sales decrease by an average of $0.07 for each additional occurrence of murder after adjusting for temperature.
+
+* Null hypothesis for murder: The true difference in ice cream sales for each one unit increase in murder is zero dollars.
+
+* Test statistic is -1.18
+
+* The probability of finding a test statistic at least as extreme as -1.18 if all of the model assumptions are correct is 0.24.
+
+* The confidence limits indicate that these data are highly compatible with estimates between -0.18 and 0.05 dollars— assuming that the statistical model used to construct the limits is correct and that our estimates were free from bias.
+
+## Multiple linear regression - categorical regressor
+
+```{r}
+set.seed(123)
+n <- 10000
+df_ice_cream_3 <- tibble(
+  summer    = rbinom(n, 1, .30),
+  ice_cream = 500 + (700 * summer) + rnorm(n, 0, 20),
+  murder    = 5 + (100 * summer) + (0 * ice_cream) + rnorm(n, 0, 16),
+  summer_f  = factor(summer, 0:1, c("No", "Yes"))
+)
+```
+
+```{r}
+ggplot(df_ice_cream_3, aes(ice_cream, murder, color = summer_f)) + 
+  geom_point() + 
+  theme_classic()
+```
+
+Now, let's draw a sample of 500 people from our simulated population.
+
+```{r}
+set.seed(123)
+ice_cream_sample <- sample_n(df_ice_cream_3, 500)
+```
+
+```{r}
+glm(
+  ice_cream ~ murder + summer_f, 
+  gaussian(link = "identity"),
+  ice_cream_sample
+) %>% 
+  tidy(conf.int = TRUE)
+```
+
+### Interpretation
+
+* On average, the mean value of ice cream sales is approximately $501.19 on days when zero murders occur after adjusting for summer season.
+
+* Ice cream sales increase by an average of $0.02 for each additional occurrence of murder after adjusting for summer season.
+
+* Null hypothesis for murder: The true difference in ice cream sales for each one unit increase in murder is zero dollars.
+
+* Test statistic is 0.4
+
+* The probability of finding a test statistic at least as extreme as 0.40 if all of the model assumptions are correct is 0.68.
+
+* The confidence limits indicate that these data are highly compatible with estimates between -0.08 and 0.13 dollars — assuming that the statistical model used to construct the limits is correct and that our estimates were free from bias.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
