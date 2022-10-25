@@ -1,24 +1,21 @@
 ---
-title: "Bias lab"
-author: "Libby Callender"
-date: "2022-10-16"
-output: html_document
+title: "Lab: Bias"
+output: html_notebook
 ---
 
-## Instructions
-Please complete the following lab assignment. You may work on the assignment in groups or on your own. However, to get credit, you must submit your own answers in Canvas. This lab is open note and open book. You may also ask the instructor and the TA questions. Please note that in most cases we will try to guide you towards answering your own question rather than directly providing you with an answer. 
-<br><br>
 
-## Q1
-[Multiple Choice]<br>
+# Instructions
+
+Please complete the following lab assignment. You may work on the assignment in groups or on your own. However, to get credit, you must submit your own answers in Canvas. This lab is open note and open book. You may also ask the instructor and the TA questions. Please note that in most cases we will try to guide you towards answering your own question rather than directly providing you with an answer.
+
+
+# Question 1
 
 In a case-control study, recall bias is most likely to result in what type of misclassification?
-<br>
 
 * **Differential**
 * Non-differential
 * Neither
-<br>
 
 ### Q1. Feedback
 In a case-control study, recall bias is most likely to result in differential misclassification?
@@ -76,6 +73,7 @@ Using the table provided, calculate the risk ratio. Round your answer to 3 decim
 <br>
 
 #### Task 1. Load packages
+
 ```{r}
 library(dplyr, warn.conflicts = FALSE)
 library(freqtables)
