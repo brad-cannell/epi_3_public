@@ -6,3 +6,6 @@
 ^project\.Rcheck$
 ^project.*\.tar\.gz$
 ^project.*\.tgz$
+^epi_3_public\.Rcheck$
+^epi_3_public.*\.tar\.gz$
+^epi_3_public.*\.tgz$
