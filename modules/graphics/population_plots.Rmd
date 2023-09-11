@@ -389,6 +389,7 @@ ggplot(aes(x = week_stop, y = id, group = id)) +
 ```
 
 
+
 # 🗑Clean up
 
 ```{r}

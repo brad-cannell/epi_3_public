@@ -197,7 +197,7 @@ pop %>%
 
 # Print for PowerPoint
 # ggsave("/users/bradcannell/Desktop/title_slide.png", width = 7.29, height = 4.51)
-ggsave("/users/bradcannell/Desktop/title_slide.png", width = 6.5, height = 7.5)
+# ggsave("/users/bradcannell/Desktop/title_slide.png", width = 6.5, height = 7.5)
 ```
 
 ## Population without exposure or outcome
@@ -220,19 +220,9 @@ ggplot(pop, aes(x, y)) +
 
 # Print for PowerPoint
 # ggsave("/users/bradcannell/Desktop/title_slide.png", width = 7.29, height = 4.51)
-ggsave("/users/bradcannell/Desktop/population.png", width = 6.5, height = 7.5)
+# ggsave("/users/bradcannell/Desktop/population.png", width = 6.5, height = 7.5)
 ```
 
-
-
-<!-- I would like to add counts to the facet ribbons -->
-
-```{r echo=FALSE}
-# Plot it with facets
-pop %>% 
-  plot_pop(p_size = 3) +
-  facet_wrap(vars(e_o_f)) 
-```
 
 # Measures of occurence
 
@@ -254,7 +244,7 @@ ggplot(pop, aes(x, y)) +
   )
 
 # Print for PowerPoint
-ggsave("/users/bradcannell/Desktop/count_plot.png", width = 7.29, height = 4.51)
+# ggsave("/users/bradcannell/Desktop/count_plot.png", width = 7.29, height = 4.51)
 ```
 
 ```{r echo=FALSE}
@@ -281,7 +271,7 @@ ggplot(aes(x, y)) +
   )
 
 # Print for PowerPoint
-ggsave("/users/bradcannell/Desktop/count_plot_arranged.png", width = 7.29, height = 4.51)
+# ggsave("/users/bradcannell/Desktop/count_plot_arranged.png", width = 7.29, height = 4.51)
 ```
 
 ```{r echo=FALSE}
@@ -316,13 +306,161 @@ ggplot(aes(x, y)) +
   )
 
 # Print for PowerPoint
-ggsave("/users/bradcannell/Desktop/count_plot_arranged_numbered.png", width = 7.29, height = 4.51)
+# ggsave("/users/bradcannell/Desktop/count_plot_arranged_numbered.png", width = 7.29, height = 4.51)
 ```
 
+```{r}
+# Try numbering the people in the plot
+set.seed(123)
+
+# Create a 10x10 group of people
+pop <- expand_grid(x = 1:10, y = 1:10)
+pop$outcome <- sample_ny() |> sort()
+n_no <- filter(pop, outcome == "No") |> nrow()
+n_yes <- filter(pop, outcome == "Yes") |> nrow()
+count <- c(seq(1, n_no), seq(1, n_yes))
+
+# Rearrange the count number so that it displays in the order we want.
+pop <- pop |> 
+  mutate(count = count) |> 
+  group_by(x, outcome) |> 
+  mutate(count = rev(count))
+
+# Create the plot
+ggplot(pop, aes(x, y)) + 
+  geom_point(size = 10, aes(color = outcome)) +
+  geom_text(aes(label = count), color = "white") +
+  scale_color_manual("Event", values = c(u_blue, u_orange)) +
+  theme(
+    panel.background = element_blank(),
+    axis.title = element_blank(),
+    axis.text = element_blank(),
+    axis.ticks = element_blank()
+  )
+
+# Print for PowerPoint
+# ggsave("/users/bradcannell/Desktop/count_plot_arranged_numbered.png", width = 7.29, height = 4.51)
+```
 
 ```{r eval=FALSE, echo=FALSE}
 # For PowerPoint
 table(pop$outcome)
+```
+
+## Plot person-time
+
+Trying to recreate Figure 4-1 in Modern Epidemiology 4th edition.
+
+I think I want to do this as a [stacked bar chart](https://r-graph-gallery.com/48-grouped-barplot-with-ggplot2). I also thought about trying to do this as a [grid](https://stackoverflow.com/questions/51771416/plotting-a-grid-and-filling-in-cells-according-to-conditions-in-r). 
+
+```{r}
+people <- 1:10
+months <- -1:12
+pt_df <- expand_grid(person = people, month = months)
+rows_per_person <- length(months)
+
+# Count from the beginning of each month.
+# So, person 2 is pre-follow-up at the beginning of time 1 (month -01), at risk 
+# at the beginning of time 2 (month 00), at risk at the beginning of time 3 
+# (month 01), diseased at the beginning of time 4 (month 02), etc.
+p01 <- rep("Diseased", rows_per_person)
+p02 <- c(rep("Pre-follow-up", 1), rep("At Risk", 2), rep("Diseased", 3), rep("Deceased", 8))
+p03 <- c(rep("Pre-follow-up", 1), rep("At Risk", 4), rep("Diseased", 9), rep("Deceased", 0))
+p04 <- c(rep("Pre-follow-up", 1), rep("At Risk", 5), rep("Diseased", 8), rep("Deceased", 0))
+p05 <- c(rep("Pre-follow-up", 1), rep("At Risk", 7), rep("Diseased", 6), rep("Deceased", 0))
+p06 <- c(rep("Pre-follow-up", 1), rep("At Risk", 8), rep("Diseased", 3), rep("Deceased", 2))
+p07 <- c(rep("Pre-follow-up", 1), rep("At Risk", 9), rep("Diseased", 0), rep("Deceased", 4))
+p08 <- c(rep("Pre-follow-up", 1), rep("At Risk", 5), rep("Diseased", 0), rep("Deceased", 8))
+p09 <- c(rep("Pre-follow-up", 1), rep("At Risk", 13), rep("Diseased", 0), rep("Deceased", 0))
+p10 <- c(rep("Pre-follow-up", 1), rep("At Risk", 13), rep("Diseased", 0), rep("Deceased", 0))
+status <- c(p01, p02, p03, p04, p05, p06, p07, p08, p09, p10)
+
+pt_df$status <- status
+
+pt_df <- pt_df |> 
+  mutate(
+    person_f = factor(person, labels = c(paste0(0, 1:9), "10")),
+    status_f = factor(status, levels = c("Pre-follow-up", "At Risk", "Diseased", "Deceased"))
+  )
+
+# Make a reverse order version of person and status
+# Status: For bar stacking order
+# Person: For displaying person 1 at the top of the y-axis after coord_flip
+pt_df <- pt_df |> 
+  mutate(
+    status_f_rev = forcats::fct_rev(status_f),
+    person_f_rev = forcats::fct_rev(person_f)
+  )
+```
+
+### Stacked bar
+
+To see all the steps I tried to get this to work see: https://stackoverflow.com/questions/77060918/how-to-control-the-z-axis-depth-of-bars-in-ggplot
+
+```{r}
+# This part makes the bars stack in the correct order.
+pt_df_arrange <- arrange(pt_df, status_f_rev)
+
+# Plot it
+ggplot(pt_df_arrange, aes(person_f_rev, month, fill = status_f)) +
+  geom_col(width = 1, position = position_dodge(0), color = "black") +
+  # Add a line marking the start of follow up
+  geom_hline(yintercept = 0, color = "blue") +
+  # Add vertical lines to mark the start of each month
+  geom_hline(yintercept = 1:12, color = "#f9f9f9") +
+  # Show all months on the axis
+  scale_y_continuous("Month Follow-up", breaks = months) +
+  # Change fill colors
+  scale_fill_manual("Status", values = c("white", "orange", "red", "black")) +
+  # Change x-axis label
+  xlab("Person") +
+  # Flip the axes
+  coord_flip() +
+  # Change other theme elements
+  theme(
+    # Remove gray background
+    panel.background = element_blank(),
+    # Move legend
+    legend.position = "bottom",
+    # Change the color and style of the "months" axis 
+    axis.line.x = element_line(
+      color = "blue", arrow = grid::arrow(length = unit(0.1, "inches"), type = "closed")
+    )
+  )
+
+# Print for PowerPoint
+# ggsave("/users/bradcannell/Desktop/person_time_plot.png", width = 7.29, height = 4.51)
+```
+
+Or do I prefer the look of geom_tile()?
+
+I need to figure out how to outline the tiles: https://stackoverflow.com/questions/56380132/is-there-a-way-to-create-borders-around-rectangles-in-ggplot2-with-geom-raster
+
+```{r}
+ggplot(pt_df, aes(month, "p", fill = status_f)) + 
+  geom_raster(hjust = 1) +
+  # Create a bar marking the start of follow up
+  geom_vline(xintercept = 0, color = "blue") +
+  # Show all months
+  scale_x_continuous("Month Follow-up", breaks = months) +
+  facet_wrap(vars(person_f), nrow = 10, strip.position = "left") +
+  # Change fill colors
+  scale_fill_manual("Status", values = c("white", "orange", "red", "black")) +
+  # Change x-axis label
+  xlab("Person") +
+  theme(
+    # Remove gray background
+    panel.background = element_blank(),
+    # Move legend
+    legend.position = "bottom",
+    # Change the color and style of the "months" axis 
+    axis.line.x = element_line(
+      color = "blue", arrow = grid::arrow(length = unit(0.1, "inches"), type = "closed")
+    )
+  )
+
+# Print for PowerPoint
+# ggsave("/users/bradcannell/Desktop/person_time_plot.png", width = 7.29, height = 4.51)
 ```
 
 
