@@ -631,7 +631,7 @@ prevalence_prop <- n_condition / n_population
 prevalence_prop
 ```
 
-## Question 9 
+## Question 10
 
 What is the prevalence proportion of disease in the simulated population during the 24 months of follow-up (rounded to the nearest hundredths place)?
 
@@ -647,7 +647,7 @@ Please calculate the prevalence odds of disease in the simulated population show
 plot_lab_measures_of_occurrence
 ```
 
-## Question 10
+## Question 11
 
 ```{r}
 # Calculate the prevalence odds and assign it to an object called 
@@ -688,7 +688,7 @@ pop |>
 
 1. I used the code above to have R calculate the incidence count for us. We could have also simply counted the number of people who developed new disease during follow-up by hand.
 
-## Question 11
+## Question 12
 
 What is the incidence count of disease in the simulated population during the 24 months of follow-up?
 
@@ -717,7 +717,7 @@ incidence_prop <- incidence_count / population_at_risk
 incidence_prop
 ```
 
-## Question 12
+## Question 13
 
 What is the incidence proportion of disease in the simulated population during the 24 months of follow-up (rounded to the nearest hundredths place)?
 
@@ -741,7 +741,7 @@ incidence_odds <- incidence_prop / (1 - incidence_prop) # Don't forget parenthes
 incidence_odds
 ```
 
-## Question 13
+## Question 14
 
 What is the incidence proportion of disease in the simulated population during the 24 months of follow-up (rounded to the nearest tenths place)?
 
@@ -764,7 +764,7 @@ person_months_at_risk <- 3 + 6 + 4 + 24 + 24 + 12 + 24 + 23 + 1 + 14 + 11 + 1
 person_months_at_risk
 ```
 
-## Question 14
+## Question 15
 
 What is the total person-months at risk in the simulated population during the 24 months of follow-up?
 
@@ -792,7 +792,7 @@ incidence_rate <- incidence_count / person_months_at_risk
 incidence_rate
 ```
 
-## Question 15
+## Question 16
 
 What is the incidence rate of disease in the simulated population during the 24 months of follow-up (rounded to the nearest hundredths place)?
 
