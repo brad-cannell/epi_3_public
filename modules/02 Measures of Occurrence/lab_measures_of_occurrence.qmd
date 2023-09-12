@@ -19,7 +19,7 @@ library(ggplot2)
 
 # Overview
 
-In today’s lab we will practice performing an interpreting descriptive analysis on categorical and numerical variables using R. Examples 2 and 3 are taken from the Daniels Biostatistics textbook. Sometimes calculating statistics by hand, and then checking them with statistical software, can help you develop a better intuition for interpreting output.
+In today’s lab we will practice performing an interpreting descriptive analysis on categorical and numerical variables using R. We will also practice calculating common measures of prevalence and incidence. Sometimes calculating statistics by hand, and then checking them with statistical software, can help you develop a better intuition for interpreting output.
 
 
 # Task 1
@@ -465,3 +465,335 @@ Which numeric vectors in this data frame (i.e., **height**, **weight**, and **gp
 How many non-missing values are there for the variable **gpa**?
 
 * The variable **gpa** has 2 missing values. One at id = 5 and one at id = 13. Therefore, there are 18 non-missing values.
+
+
+# Task 11
+
+Please calculate the prevalence count of disease in the simulated population shown below during the 24 months of follow-up.
+
+```{r}
+# Simulate data for 20 hypothetical people
+people <- 1:15
+months <- -1:24
+pop <- tidyr::expand_grid(person = people, month = months)
+rows_per_person <- length(months)
+```
+
+```{r}
+# Create a function that will allow us to more easily simulate data
+person_status <- function(pfu, ar, dis, dec, time_check) {
+  total_time <- pfu + ar + dis + dec
+  if (total_time != time_check) {
+    stop("The total time adds up to ", total_time, " it should add up to ", time_check)
+  }
+  status <- c(rep("Pre-follow-up", pfu), rep("At Risk", ar), rep("Diseased", dis), rep("Deceased", dec))
+}
+
+# For testing
+# person_status(1, 2, 3, 8, rows_per_person)
+```
+
+```{r}
+# Create people
+status <- c(
+  p01 = person_status(0, 0, 26, 0, rows_per_person),
+  p02 = person_status(0, 0, 26, 0, rows_per_person),
+  p03 = person_status(1, 1, 24, 0, rows_per_person),
+  p04 = person_status(1, 4, 21, 0, rows_per_person),
+  p05 = person_status(1, 7, 18, 0, rows_per_person),
+  p06 = person_status(1, 5, 3, 17, rows_per_person),
+  p07 = person_status(1, 25, 0, 0, rows_per_person),
+  p08 = person_status(1, 25, 0, 0, rows_per_person),
+  p09 = person_status(1, 13, 7, 5, rows_per_person),
+  p10 = person_status(1, 25, 0, 0, rows_per_person),
+  p11 = person_status(1, 24, 1, 0, rows_per_person),
+  p12 = person_status(1, 2, 0, 23, rows_per_person),
+  p13 = person_status(1, 15, 0, 10, rows_per_person),
+  p14 = person_status(1, 12, 13, 0, rows_per_person),
+  p15 = person_status(1, 2, 23, 0, rows_per_person)
+)
+```
+
+```{r}
+# Add status to pop
+pop$status <- status
+
+# Create factor versions of person and status
+pop <- pop |> 
+  mutate(
+    person_f = factor(person, labels = c(paste0(0, 1:9), 10:15)),
+    status_f = factor(status, levels = c("Pre-follow-up", "At Risk", "Diseased", "Deceased"))
+  )
+
+# Make a reverse order version of person and status
+# Status: For bar stacking order
+# Person: For displaying person 1 at the top of the y-axis after coord_flip
+pop <- pop |> 
+  mutate(
+    status_f_rev = forcats::fct_rev(status_f),
+    person_f_rev = forcats::fct_rev(person_f)
+  )
+
+# Print pop to the screen
+# pop
+```
+
+Next, let's create a figure from our simulated data to make it easier to visualize.
+
+```{r}
+# This part makes the bars stack in the correct order.
+pop_arranged <-  arrange(pop, status_f_rev)
+
+# Create the figure
+plot_lab_measures_of_occurrence <- ggplot(pop_arranged, aes(person_f_rev, month, fill = status_f)) +
+  geom_col(width = 1, position = position_dodge(0), color = "black") +
+  # Add a line marking the start of follow up
+  geom_hline(yintercept = 0, color = "blue") +
+  # Add vertical lines to mark the start of each month
+  geom_hline(yintercept = 1:24, color = "#f9f9f9") +
+  # Show all months on the axis
+  scale_y_continuous("Month Follow-up", breaks = months) +
+  # Change fill colors
+  scale_fill_manual("Status", values = c("white", "orange", "red", "black")) +
+  # Change x-axis label
+  xlab("Person") +
+  # Flip the axes
+  coord_flip() +
+  # Change other theme elements
+  theme(
+    # Remove gray background
+    panel.background = element_blank(),
+    # Move legend
+    legend.position = "bottom",
+    # Change the color and style of the "months" axis 
+    axis.line.x = element_line(
+      color = "blue", arrow = grid::arrow(length = unit(0.1, "inches"), type = "closed")
+    )
+  )
+```
+
+```{r}
+# Save the plot above and reuse the image below.
+ggsave(
+  "plot_lab_measures_of_occurrence.png", 
+  width = 7.29, height = 4.51
+)
+```
+
+### Notes for students
+
+1. You do not need to understand or even be able to use any of the code above. I'm simply including in case you are interested. If not, please feel free to ignore it.
+
+```{r}
+# Print the plot to the screen
+plot_lab_measures_of_occurrence
+```
+
+```{r}
+# Have R calculate the prevalence count for us
+pop |> 
+  # Keep only the rows for people who ever have a value of "Diseased" for their
+  # status.
+  filter(status_f == "Diseased") |> 
+  # Calculate how many unique people are left in the data.
+  summarise(prevalence_count = length(unique(person)))
+```
+
+### Notes for students
+
+1. I used the code above to have R calculate the prevalence count for us. We could have also simply counted the number of people who had disease during follow-up by hand.
+
+## Question 9 
+
+What is the prevalence count of disease in the simulated population during the 24 months of follow-up?
+
+* The prevalence count of disease in the simulated population during the 24 months of follow-up is 10.
+
+
+# Task 12 
+
+Please calculate the prevalence proportion of disease in the simulated population shown below during the 24 months of follow-up.
+
+```{r}
+# Print the plot to the screen
+plot_lab_measures_of_occurrence
+```
+
+```{r}
+# Create a vector containing the number of people with disease
+n_condition <- 10
+# Create a vector containing the number of people in the population of interest
+n_population <- 15
+# Calculate the prevalence proportion and assign it to an object called 
+# prevalence_prop
+prevalence_prop <- n_condition / n_population
+# Print the value stored in prevalence_prop to the screen
+prevalence_prop
+```
+
+## Question 9 
+
+What is the prevalence proportion of disease in the simulated population during the 24 months of follow-up (rounded to the nearest hundredths place)?
+
+* The prevalence proportion of disease in the simulated population during the 24 months of follow-up (rounded to the nearest hundredths place) is 0.67.
+
+
+# Task 13
+
+Please calculate the prevalence odds of disease in the simulated population shown below during the 24 months of follow-up.
+
+```{r}
+# Print the plot to the screen
+plot_lab_measures_of_occurrence
+```
+
+## Question 10
+
+```{r}
+# Calculate the prevalence odds and assign it to an object called 
+# prevalence_odds
+prevalence_odds <- prevalence_prop / (1 - prevalence_prop) # Don't forget parentheses
+# Print the value stored in prevalence_odds to the screen
+prevalence_odds
+```
+
+What is the prevalence odds of disease in the simulated population during the 24 months of follow-up?
+
+* The prevalence odds of disease in the simulated population during the 24 months of follow-up is 2.
+
+
+# Task 14
+
+Please calculate the incidence count of disease in the simulated population shown below during the 24 months of follow-up.
+
+```{r}
+# Print the plot to the screen
+plot_lab_measures_of_occurrence
+```
+
+```{r}
+# Have R calculate the incidence count for us
+pop |> 
+  # Remove person 1 and person 2. They were not at risk at the start of 
+  # follow-up
+  filter(person != 1 & person != 2) |> 
+  # Keep only the rows for people who ever have a value of "Diseased" for their
+  # status.
+  filter(status_f == "Diseased") |> 
+  # Calculate how many unique people are left in the data.
+  summarise(incidence_count = length(unique(person)))
+```
+
+### Notes for students
+
+1. I used the code above to have R calculate the incidence count for us. We could have also simply counted the number of people who developed new disease during follow-up by hand.
+
+## Question 11
+
+What is the incidence count of disease in the simulated population during the 24 months of follow-up?
+
+* The incidence count of disease in the simulated population during the 24 months of follow-up is 8.
+
+
+# Task 15
+
+Please calculate the incidence proportion of disease in the simulated population shown below during the 24 months of follow-up.
+
+```{r}
+# Print the plot to the screen
+plot_lab_measures_of_occurrence
+```
+
+```{r}
+# Create a vector containing the number of people with incident disease
+incidence_count <- 8
+# Create a vector containing the number of people in the population of interest
+# who were at risk at the start of follow-up
+population_at_risk <- 13
+# Calculate the incidence proportion and assign it to an object called 
+# incidence_prop
+incidence_prop <- incidence_count / population_at_risk
+# Print the value stored in prevalence_prop to the screen
+incidence_prop
+```
+
+## Question 12
+
+What is the incidence proportion of disease in the simulated population during the 24 months of follow-up (rounded to the nearest hundredths place)?
+
+* The incidence proportion of disease in the simulated population during the 24 months of follow-up (rounded to the nearest hundredths place) is 0.62.
+
+
+# Task 16
+
+Please calculate the incidence odds of disease in the simulated population shown below during the 24 months of follow-up.
+
+```{r}
+# Print the plot to the screen
+plot_lab_measures_of_occurrence
+```
+
+```{r}
+# Calculate the incidence odds and assign it to an object called 
+# incidence_odds
+incidence_odds <- incidence_prop / (1 - incidence_prop) # Don't forget parentheses
+# Print the value stored in incidence_odds to the screen
+incidence_odds
+```
+
+## Question 13
+
+What is the incidence proportion of disease in the simulated population during the 24 months of follow-up (rounded to the nearest tenths place)?
+
+* The incidence proportion of disease in the simulated population during the 24 months of follow-up (rounded to the nearest tenths place) is 1.6.
+
+
+# Task 17
+
+Please calculate the total person-months at risk in the simulated population shown below during the 24 months of follow-up.
+
+```{r}
+# Print the plot to the screen
+plot_lab_measures_of_occurrence
+```
+
+```{r}
+# Calculate person-months at risk
+person_months_at_risk <- 3 + 6 + 4 + 24 + 24 + 12 + 24 + 23 + 1 + 14 + 11 + 1
+# Print person-months at risk to the screen
+person_months_at_risk
+```
+
+## Question 14
+
+What is the total person-months at risk in the simulated population during the 24 months of follow-up?
+
+* The total person-months at risk in the simulated population during the 24 months of follow-up is 147.
+
+
+# Task 18
+
+Please calculate the incidence rate of disease in the simulated population shown below during the 24 months of follow-up.
+
+```{r}
+# Print the plot to the screen
+plot_lab_measures_of_occurrence
+```
+
+```{r}
+# Create a vector containing the number of people with incident disease
+incidence_count <- 8
+# Create a vector containing the person months at risk
+person_months_at_risk <- 147
+# Calculate the incidence rate and assign it to an object called 
+# incidence_rate
+incidence_rate <- incidence_count / person_months_at_risk
+# Print the value stored in incidence_rate to the screen
+incidence_rate
+```
+
+## Question 15
+
+What is the incidence rate of disease in the simulated population during the 24 months of follow-up (rounded to the nearest hundredths place)?
+
+* The incidence rate of disease in the simulated population during the 24 months of follow-up (rounded to the nearest hundredths place) is 0.05.
