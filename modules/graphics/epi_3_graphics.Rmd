@@ -538,7 +538,7 @@ I need to figure out how to outline the tiles: https://stackoverflow.com/questio
 #### Without censored data
 
 ```{r}
-ggplot(pt_df, aes(month, "p", fill = status_f, color = "black")) + 
+ggplot(pt_df, aes(month, "p", fill = status_f)) + 
   geom_raster(hjust = 1) +
   # Create a bar marking the start of follow up
   geom_vline(xintercept = 0, color = "blue") +
@@ -562,7 +562,9 @@ ggplot(pt_df, aes(month, "p", fill = status_f, color = "black")) +
     # Change the color and style of the "months" axis 
     axis.line.x = element_line(
       color = "blue", arrow = grid::arrow(length = unit(0.1, "inches"), type = "closed")
-    )
+    ),
+    # Rotate the facet label to the right
+    strip.text.y.left = element_text(angle = 0)
   )
 
 # Print for PowerPoint

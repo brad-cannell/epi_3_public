@@ -472,7 +472,7 @@ How many non-missing values are there for the variable **gpa**?
 Please calculate the prevalence count of disease in the simulated population shown below during the 24 months of follow-up.
 
 ```{r}
-# Simulate data for 20 hypothetical people
+# Simulate data for hypothetical people
 people <- 1:15
 months <- -1:24
 pop <- tidyr::expand_grid(person = people, month = months)
@@ -541,36 +541,36 @@ pop <- pop |>
 Next, let's create a figure from our simulated data to make it easier to visualize.
 
 ```{r}
-# This part makes the bars stack in the correct order.
-pop_arranged <-  arrange(pop, status_f_rev)
-
-# Create the figure
-plot_lab_measures_of_occurrence <- ggplot(pop_arranged, aes(person_f_rev, month, fill = status_f)) +
-  geom_col(width = 1, position = position_dodge(0), color = "black") +
-  # Add a line marking the start of follow up
-  geom_hline(yintercept = 0, color = "blue") +
+plot_lab_measures_of_occurrence <- ggplot(pop, aes(month, "p", fill = status_f)) + 
+  geom_raster(hjust = 1) +
+  # Create a bar marking the start of follow up
+  geom_vline(xintercept = 0, color = "blue") +
   # Add vertical lines to mark the start of each month
-  geom_hline(yintercept = 1:24, color = "#f9f9f9") +
-  # Show all months on the axis
-  scale_y_continuous("Month Follow-up", breaks = months) +
+  geom_vline(xintercept = 1:24, color = "#f9f9f9") +
+  # Show all months
+  scale_x_continuous("Month Follow-up", breaks = months) +
+  facet_wrap(vars(person_f), nrow = 15, strip.position = "left") +
   # Change fill colors
-  scale_fill_manual("Status", values = c("white", "orange", "red", "black")) +
+  scale_fill_manual("Status", values = c("gray", "orange", "red", "black")) +
   # Change x-axis label
-  xlab("Person") +
-  # Flip the axes
-  coord_flip() +
-  # Change other theme elements
+  ylab("Person") +
   theme(
     # Remove gray background
     panel.background = element_blank(),
+    # Remove the "p" from the x axis
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank(),
     # Move legend
     legend.position = "bottom",
     # Change the color and style of the "months" axis 
     axis.line.x = element_line(
       color = "blue", arrow = grid::arrow(length = unit(0.1, "inches"), type = "closed")
-    )
+    ),
+    # Rotate the facet label to the right
+    strip.text.y.left = element_text(angle = 0)
   )
 ```
+
 
 ```{r}
 # Save the plot above and reuse the image below.
@@ -607,7 +607,7 @@ pop |>
 
 What is the prevalence count of disease in the simulated population during the 24 months of follow-up?
 
-* The prevalence count of disease in the simulated population during the 24 months of follow-up is 10.
+* The prevalence count of disease in the simulated population during the 24 months of follow-up is 10. The prevalent cases were among persons 01, 02, 03, 04, 05, 06, 09, 11, 14, and 15.
 
 
 # Task 12 
@@ -692,7 +692,7 @@ pop |>
 
 What is the incidence count of disease in the simulated population during the 24 months of follow-up?
 
-* The incidence count of disease in the simulated population during the 24 months of follow-up is 8.
+* The incidence count of disease in the simulated population during the 24 months of follow-up is 8. The incident cases were among persons 03, 04, 05, 06, 09, 11, 14, and 15.
 
 
 # Task 15
@@ -757,18 +757,63 @@ Please calculate the total person-months at risk in the simulated population sho
 plot_lab_measures_of_occurrence
 ```
 
+### Notes for students
+
+1. We can count the number of person-months at risk by counting them in the figure above.
+
 ```{r}
-# Calculate person-months at risk
-person_months_at_risk <- 3 + 6 + 4 + 24 + 24 + 12 + 24 + 23 + 1 + 14 + 11 + 1
+# Calculate person-months at risk manually
+person_months_at_risk <- 1 + 4 + 7 + 5 + 25 + 25 + 13 + 25 + 24 + 2 + 15 + 12 + 2
 # Print person-months at risk to the screen
 person_months_at_risk
+```
+
+2. We can also have R do the calculation for us, as shown below.
+
+```{r}
+# Have R calculate the total person-months at risk
+pop |> 
+  # Count the number of rows with each value of status_f.
+  # Each row is a person-month, so the total number of rows with each value 
+  # is also the total person-months with each value.
+  count(status_f)
+```
+
+3. We can even have R calculate the person-months at risk by person, as shown below.
+
+```{r}
+# Have R calculate the total person-months at risk by person
+pop |>
+  # Use group_by() to repeat the calculation below for each person
+  group_by(person_f) |> 
+  # Count the number of rows with each value of status_f.
+  # Each row is a person-month, so the total number of rows with each value 
+  # is also the total person-months with each value.
+  count(status_f) |> 
+  # Keep only the "At Risk" result to make the results easier to read.
+  filter(status_f == "At Risk")
 ```
 
 ## Question 15
 
 What is the total person-months at risk in the simulated population during the 24 months of follow-up?
 
-* The total person-months at risk in the simulated population during the 24 months of follow-up is 147.
+* The total person-months at risk in the simulated population during the 24 months of follow-up is 147. Each person contributed the following amounts of person-months at risk:
+- Person 01: 0
+- Person 02: 0
+- Person 03: 1
+- Person 04: 4
+- Person 05: 7
+- Person 06: 5
+- Person 07: 25
+- Person 08: 25
+- Person 09: 13
+- Person 10: 25
+- Person 11: 24
+- Person 12: 2
+- Person 13: 15
+- Person 14: 12
+- Person 15: 2
 
 
 # Task 18
@@ -784,7 +829,7 @@ plot_lab_measures_of_occurrence
 # Create a vector containing the number of people with incident disease
 incidence_count <- 8
 # Create a vector containing the person months at risk
-person_months_at_risk <- 147
+person_months_at_risk <- 160
 # Calculate the incidence rate and assign it to an object called 
 # incidence_rate
 incidence_rate <- incidence_count / person_months_at_risk
