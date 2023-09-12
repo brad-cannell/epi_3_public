@@ -86,7 +86,7 @@ Please create a data frame in R using the following data from the [United States
 "WY", "West", 563626, 70090, 36.8   
 
 ```{r}
-census <- tibble::tribble(
+census <- tribble(
   ~state, ~region,  ~pop,     ~pop65,  ~medage,
   "AL",   "South",  4779736,  657792,  37.9,
   "AK",   "West",   710231,   54938,   33.8,
