@@ -488,9 +488,6 @@ person_status <- function(pfu, ar, dis, dec, time_check) {
   }
   status <- c(rep("Pre-follow-up", pfu), rep("At Risk", ar), rep("Diseased", dis), rep("Deceased", dec))
 }
-
-# For testing
-# person_status(1, 2, 3, 8, rows_per_person)
 ```
 
 ```{r}
@@ -525,34 +522,43 @@ pop <- pop |>
     status_f = factor(status, levels = c("Pre-follow-up", "At Risk", "Diseased", "Deceased"))
   )
 
-# Make a reverse order version of person and status
-# Status: For bar stacking order
-# Person: For displaying person 1 at the top of the y-axis after coord_flip
-pop <- pop |> 
+# Add coordinates for line segments in the plot
+pop_segments <- pop |> 
+  group_by(person_f, status_f) |> 
   mutate(
-    status_f_rev = forcats::fct_rev(status_f),
-    person_f_rev = forcats::fct_rev(person_f)
-  )
-
-# Print pop to the screen
-# pop
+    x    = min(month),
+    xend = max(month),
+    y    = person,
+    yend = person
+  ) |> 
+  ungroup() |> 
+  # Keep distinct values only
+  distinct(person, status, .keep_all = TRUE) |> 
+  # Make the line ends touch
+  group_by(person) |> 
+  mutate(
+    xend_adjusted = lead(x),
+    xend_adjusted = if_else(is.na(xend_adjusted), xend, xend_adjusted)
+  ) |> 
+  relocate(xend_adjusted, .after = xend) |> 
+  ungroup()
 ```
 
 Next, let's create a figure from our simulated data to make it easier to visualize.
 
 ```{r}
-plot_lab_measures_of_occurrence <- ggplot(pop, aes(month, "p", fill = status_f)) + 
-  geom_raster(hjust = 1) +
-  # Create a bar marking the start of follow up
+plot_lab_measures_of_occurrence <- ggplot(pop_segments) +
+  geom_segment(aes(x = x, xend = xend_adjusted, y = 1, yend = 1, color = status_f), size = 5) +
+  # Show all months
+  scale_x_continuous("Month Follow-up", breaks = -1:24) +
+  facet_wrap(vars(person_f), nrow = 15, strip.position = "left") +
+  # Add a line marking the start of follow up
   geom_vline(xintercept = 0, color = "blue") +
   # Add vertical lines to mark the start of each month
   geom_vline(xintercept = 1:24, color = "#f9f9f9") +
-  # Show all months
-  scale_x_continuous("Month Follow-up", breaks = months) +
-  facet_wrap(vars(person_f), nrow = 15, strip.position = "left") +
   # Change fill colors
-  scale_fill_manual("Status", values = c("gray", "orange", "red", "black")) +
-  # Change x-axis label
+  scale_color_manual("Status", values = c("gray", "orange", "red", "black", "#4682B4")) +
+  # Change y-axis label
   ylab("Person") +
   theme(
     # Remove gray background
@@ -591,7 +597,7 @@ plot_lab_measures_of_occurrence
 
 ```{r}
 # Have R calculate the prevalence count for us
-pop |> 
+pop_segments |> 
   # Keep only the rows for people who ever have a value of "Diseased" for their
   # status.
   filter(status_f == "Diseased") |> 
@@ -673,7 +679,7 @@ plot_lab_measures_of_occurrence
 
 ```{r}
 # Have R calculate the incidence count for us
-pop |> 
+pop_segments |> 
   # Remove person 1 and person 2. They were not at risk at the start of 
   # follow-up
   filter(person != 1 & person != 2) |> 
@@ -763,7 +769,7 @@ plot_lab_measures_of_occurrence
 
 ```{r}
 # Calculate person-months at risk manually
-person_months_at_risk <- 1 + 4 + 7 + 5 + 25 + 25 + 13 + 25 + 24 + 2 + 15 + 12 + 2
+person_months_at_risk <- 1 + 4 + 7 + 5 + 24 + 24 + 13 + 24 + 24 + 2 + 15 + 12 + 2
 # Print person-months at risk to the screen
 person_months_at_risk
 ```
@@ -772,43 +778,30 @@ person_months_at_risk
 
 ```{r}
 # Have R calculate the total person-months at risk
-pop |> 
-  # Count the number of rows with each value of status_f.
-  # Each row is a person-month, so the total number of rows with each value 
-  # is also the total person-months with each value.
-  count(status_f)
-```
-
-3. We can even have R calculate the person-months at risk by person, as shown below.
-
-```{r}
-# Have R calculate the total person-months at risk by person
-pop |>
-  # Use group_by() to repeat the calculation below for each person
-  group_by(person_f) |> 
-  # Count the number of rows with each value of status_f.
-  # Each row is a person-month, so the total number of rows with each value 
-  # is also the total person-months with each value.
-  count(status_f) |> 
-  # Keep only the "At Risk" result to make the results easier to read.
-  filter(status_f == "At Risk")
+pop_segments |> 
+  # Keep only the rows with a status of At Risk
+  filter(status == "At Risk") |> 
+  # Calculate the time between follow-up months for each person
+  mutate(time_at_risk = xend_adjusted - x) |> 
+  # Total all of the individual person-months at risk
+  summarise(time_at_risk = sum(time_at_risk))
 ```
 
 ## Question 15
 
 What is the total person-months at risk in the simulated population during the 24 months of follow-up?
 
-* The total person-months at risk in the simulated population during the 24 months of follow-up is 147. Each person contributed the following amounts of person-months at risk:
+* The total person-months at risk in the simulated population during the 24 months of follow-up is 160. Each person contributed the following amounts of person-months at risk:
 - Person 01: 0
 - Person 02: 0
 - Person 03: 1
 - Person 04: 4
 - Person 05: 7
 - Person 06: 5
-- Person 07: 25
-- Person 08: 25
+- Person 07: 24
+- Person 08: 24
 - Person 09: 13
-- Person 10: 25
+- Person 10: 24
 - Person 11: 24
 - Person 12: 2
 - Person 13: 15
@@ -829,7 +822,7 @@ plot_lab_measures_of_occurrence
 # Create a vector containing the number of people with incident disease
 incidence_count <- 8
 # Create a vector containing the person months at risk
-person_months_at_risk <- 160
+person_months_at_risk <- 157
 # Calculate the incidence rate and assign it to an object called 
 # incidence_rate
 incidence_rate <- incidence_count / person_months_at_risk

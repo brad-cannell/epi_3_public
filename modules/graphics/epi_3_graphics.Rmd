@@ -391,12 +391,6 @@ pt_df <- pt_df |>
     status_f_rev = forcats::fct_rev(status_f),
     person_f_rev = forcats::fct_rev(person_f)
   )
-
-# For testing adding more levels that don't always fall in order.
-p02_diff <- c(rep("Pre-follow-up", 1), rep("consored", 2), rep("At Risk", 0), rep("Diseased", 3), rep("Deceased", 8))
-p010_diff <- c(rep("Pre-follow-up", 1), rep("At Risk", 13), rep("Diseased", 3), rep("censored", 8))
-status_diff <- c(p01, p02_dff, p03, p04, p05, p06, p07, p08, p09, p10_diff)
-pt_df$status <- status
 ```
 
 When I tried to add immigration, emigration, and loss to follow-up to the plot, I ran into problems with the bars overlapping in such a way that the status is sometimes hidden. I'm creating a second data frame below that has loss to follow-up for testing.
@@ -443,8 +437,175 @@ pt_df_loss <- pt_df_loss |>
   )
 ```
 
+### Function: Simulate data for person-time plots
+
+```{r}
+# For testing
+# I want to be able to enter this directly into the .status argument of 
+# sim_person_time_data below
+test_status_list <- list(
+  "Diseased",
+  # "At Risk"
+  c("At Risk" = 2, "Diseased" = 3, "Deceased" = 8)
+)
+```
+
+```{r}
+# Given the abbreviated list of lengths above, I want this function to return a 
+# vector of number of reps for each status that I can use in the function below.
+# This should only be used for named vectors of numbers. Not for a character 
+# vector with one value (e.g., "Diseased" only).
+list_to_reps <- function(.list, 
+                         .statuses = c(
+                           "Pre-follow-up", "At Risk", "Diseased", "Deceased", 
+                           "Censored"
+                         )) {
+  v <- purrr::map_int(
+    .statuses,
+    function(x) {
+      # If Pre-follow-up isn't specifically enumerated, then set it to 1
+      if (x == "Pre-follow-up") {
+        v <- if_else(x %in% names(.list), .list[x], 1)
+      # If any other status isn't specifically enumerated, then set it to 0
+      } else {
+        v <- if_else(x %in% names(.list), .list[x],0)
+      }
+      v
+    }
+  )
+  
+  names(v) <- .statuses
+  v
+}
+
+# Fort testing
+# list_to_reps(test_status_list[[2]])["Pre-follow-up"]
+```
+
+```{r}
+# Given the abbreviated list of lengths above, I want this function to return a 
+# character vector of statuses that I can use in the sim_person_time_data 
+# function below.
+list_to_statuses <- function(.list, .rows) {
+  statuses <- purrr::map(
+    .list,
+    function(x) {
+      if (length(x) == 1) {
+        v <- rep(x, .rows)
+      } else {
+        reps <- list_to_reps(x)
+        v <- c(
+          rep("Pre-follow-up", reps["Pre-follow-up"]),
+          rep("At Risk", reps["At Risk"]),
+          rep("Diseased", reps["Diseased"]),
+          rep("Deceased", reps["Deceased"]),
+          rep("Censored", reps["Censored"])
+        )
+      }
+      # Return vector of statuses for each person
+      v
+    }
+  )
+  # Return vector of statuses for all people
+  unlist(statuses)
+}
+
+# For testing
+# list_to_statuses(test_status_list, .rows = 13)
+```
+
+```{r}
+# Used for data checks in sim_person_time_data
+get_status_names <- function(.list) {
+  statuses <- purrr::map(
+    .list,
+    function(x) {
+      if (length(x) == 1) {
+        v <- x
+      } else {
+        v <- names(x)
+      }
+      v
+    }
+  )
+  statuses <- unlist(statuses)
+  statuses <- unique(statuses)
+  statuses
+}
+
+# For testing
+# get_status_names(test_status_list)
+```
+
+
+```{r}
+sim_person_time_data <- function(.people, 
+                                 .time,
+                                 .status_levels = c("Pre-follow-up", "At Risk", "Diseased", "Deceased", "Censored"),
+                                 .status_list) {
+  # Checks
+  # Check to make sure that the number of people being simulated matches the 
+  # number of statuses provided.
+  len_status <- length(.status_list)
+  if (.people != len_status) {
+    stop(".people = ", .people, ", but .status_list has a status for ", len_status, 
+         " people. They should be the same.")
+  }
+  # Check to make sure there aren't any status levels provided to the .status_list
+  # parameter that don't appear in the .status_levels parameter.
+  unique_statuses <- get_status_names(.status_list)
+  in_status_list_not_status_levels <- setdiff(unique_statuses, .status_levels)
+  if (length(in_status_list_not_status_levels) > 0) {
+    stop(
+      in_status_list_not_status_levels, " is in .status_list, but not ",
+      ".status_levels. Is there a typo?"
+    )
+  }
+  
+  # Set values
+  people <- seq(.people)
+  time <- -1:.time
+  df <- tidyr::expand_grid(person = people, time = time)
+  rows_per_person <- length(time)
+  
+  # Set stats for each person-period of time
+  # Possible values are Pre-follow-up, At Risk, Diseased, Deceased, and Censored
+  df$status <- list_to_statuses(.status_list, .rows = rows_per_person)
+  
+  # Create character versions of person number with leading zeros. They will be
+  # used when we create factors below.
+  if (.people < 9) {
+    person_labs <- paste0(0, people)
+  } else {
+    person_labs <- c(paste0(0, 1:9), as.character(10:.people))
+  }
+  
+  # Create factor versions of person and status
+  df <- df |> 
+    mutate(
+      person_f = factor(person, labels = person_labs),
+      status_f = factor(status, levels = .status_levels)
+    )
+  
+  # Return data frame
+  df
+}
+
+# For testing
+# sim_person_time_data(
+#   .people = 2,
+#   .time = 12,
+#   .status_list = list(
+#     "Diseased",
+#     c("At Risk" = 2, "Diseased" = 3, "Deceased" = 8)
+#   )
+# )
+```
+
 
 ### Stacked bar
+
+**Note**: Don't use this method. Just here for posterity.
 
 To see all the steps I tried to get this to work see: https://stackoverflow.com/questions/77060918/how-to-control-the-z-axis-depth-of-bars-in-ggplot
 
@@ -531,7 +692,7 @@ The downsides to `geom_col()` are:
 
 Instead of sliding bars on top of each other, I could also use `geom_tile()` or `geom_raster()`. 
 - `geom_raster`() is faster and the bars are easier to align.
-- With `geom_tile()`, I can outline the bars.
+- With `geom_tile()`, I can outline the bars. This seems like less of a problem when I color pre-follow-up gray instead of white.
 
 I need to figure out how to outline the tiles: https://stackoverflow.com/questions/56380132/is-there-a-way-to-create-borders-around-rectangles-in-ggplot2-with-geom-raster
 
@@ -574,7 +735,7 @@ ggplot(pt_df, aes(month, "p", fill = status_f)) +
 #### With censored data
 
 ```{r}
-ggplot(pt_df_loss, aes(month, "p", fill = status_f, color = "black")) + 
+ggplot(pt_df_loss, aes(month, "p", fill = status_f)) + 
   geom_raster(hjust = 1) +
   # Create a bar marking the start of follow up
   geom_vline(xintercept = 0, color = "blue") +
@@ -605,6 +766,260 @@ ggplot(pt_df_loss, aes(month, "p", fill = status_f, color = "black")) +
 # ggsave("/users/bradcannell/Desktop/person_time_plot.png", width = 7.29, height = 4.51)
 ```
 
+Using this method, we are counting past the end of follow-up. In other words, the last point on the x-axis should be 12 (in this data). We don't know what happens after their 12-month follow-up visit. Practically, it prevents us being able to calculate time at risk directly from the data.
+
+Let's make a smaller toy data set 
+
+```{r}
+test_pop <- sim_person_time_data(
+  .people = 2,
+  .time = 4,
+  .status_list = list(
+    "Diseased",
+    c("At Risk" = 5, "Diseased" = 0, "Deceased" = 0)
+  )
+)
+```
+
+```{r}
+ggplot(test_pop, aes(time, "p", fill = status_f)) + 
+  # By default, the tile is centered over the x-axis value.
+  # we want it flush
+  geom_raster(hjust = 1) +
+  # Create a bar marking the start of follow up
+  geom_vline(xintercept = 0, color = "blue") +
+  # Add vertical lines to mark the start of each month
+  geom_vline(xintercept = 1:4, color = "#f9f9f9") +
+  # Show all months
+  scale_x_continuous("Month Follow-up", breaks = 1:4) +
+  facet_wrap(vars(person_f), nrow = 2, strip.position = "left") +
+  # Change fill colors
+  scale_fill_manual("Status", values = c("gray", "orange", "red", "black", "yellow")) +
+  # Change x-axis label
+  ylab("Person") +
+  theme(
+    # Remove gray background
+    panel.background = element_blank(),
+    # Remove the "p" from the x axis
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank(),
+    # Move legend
+    legend.position = "bottom",
+    # Change the color and style of the "months" axis 
+    axis.line.x = element_line(
+      color = "blue", arrow = grid::arrow(length = unit(0.1, "inches"), type = "closed")
+    )
+  )
+```
+
+```{r}
+ggplot(test_pop, aes(time, person_f, fill = status_f)) + 
+  geom_tile(color = "black") +
+  scale_x_continuous("Month Follow-up", breaks = -1:4)
+```
+
+
+Maybe it isn't a problem actually. Give this some thought. We do a baseline assessment (time 0). Do we do another one at the 12th month? Look at the figure. We get their status at baseline, etc. AT the fourth month, we know they are at risk. We don't know what happens at 4 months + one day. Having said that, do we care? That is outside the study period. What would happen if they had disease at the 12 month follow-up visit (so, sometime between month 11 and month 12)? Would we say that they developed disease during the 12 months of follow-up? Yes. I think so.
+
+Having said that, we don't want to count the time between month 12 and month 13 as person-time at risk. I think that is the main issue here. They may be at risk, but they are at risk outside of our observation. We don't count it towards their person-time. 
+
+We need to handle diseased and at risk differently.
+
+
+#### Make it a function
+
+```{r}
+person_time_plot <- function(.data, 
+                             .x, 
+                             .y,
+                             .status, 
+                             .censored = "No",
+                             .x_lab,
+                             .y_lab = "Person",
+                             .status_lab) {
+  
+  # Set colors depending on if there is a censored status value or not
+  if (.censored == "No") {
+    colors <- c("gray", "orange", "red", "black")
+  } else if (.censored == "Yes") {
+    colors <- c("gray", "orange", "red", "black", "yellow")
+  } else {
+    stop("The value of .censored must be 'No' or 'Yes'.")
+  }
+  
+  # Calculate the number of time periods in the data
+  # This is used to label the x-axis in scale_x_continuous below
+  time_periods <- pull(.data, {{ .x }}) |> unique()
+  # Keep only the values higher than zero
+  # This is used in geom_vline to create the light gray vertical line 
+  # at each time period after baseline
+  time_periods_positive <- time_periods[time_periods > 0]
+  # Calculate the number of unique people in the data
+  # This is used for facet_wrap below
+  n_facets <- pull(.data, {{ .y }}) |> unique() |> length()
+  
+  ggplot(.data, aes({{ .x }}, "person", fill = {{ .status }})) + 
+    geom_raster(hjust = 1) +
+    # Create a bar marking the start of follow up
+    geom_vline(xintercept = 0, color = "blue") +
+    # Add vertical lines to mark the start of each month
+    geom_vline(xintercept = time_periods_positive, color = "#f9f9f9") +
+    # Show all months
+    scale_x_continuous(.x_lab, breaks = time_periods) +
+    facet_wrap(vars({{ .y }}), nrow = n_facets, strip.position = "left") +
+    # Change fill colors
+    scale_fill_manual(.status_lab, values = colors) +
+    # Change x-axis label
+    ylab(.y_lab) +
+    theme(
+      # Remove gray background
+      panel.background = element_blank(),
+      # Remove the "p" from the x axis
+      axis.text.y = element_blank(),
+      axis.ticks.y = element_blank(),
+      # Move legend
+      legend.position = "bottom",
+      # Change the color and style of the "months" axis 
+      axis.line.x = element_line(
+        color = "blue", arrow = grid::arrow(length = unit(0.1, "inches"), type = "closed")
+      )
+    )
+}
+
+# For testing
+person_time_plot(
+  .data = pt_df_loss, 
+  .x = month, 
+  .y = person_f,
+  .status = status_f, 
+  .censored = "Yes",
+  .x_lab = "Month Follow-up",
+  .y_lab = "Person",
+  .status_lab = "Status"
+)
+```
+
+### Geom_segment
+
+```{r}
+# Rearrange data for geom_segment
+test_pop_segment <- tribble(
+  ~person_f, ~status_f,       ~x, ~xend, ~y, ~yend,
+  "01",      "Diseased",      -1, 4,     1,  1,
+  "02",      "Pre-follow-up", -1, 0,     2,  2,
+  "02",      "At Risk",        0, 4,     2,  2,
+  "03",      "Censored",      -1, 1,     3,  3,
+  "03",      "At Risk",        1, 2,     3,  3,
+  "03",      "Diseased",       2, 4,     3,  3,
+  "04",      "Pre-follow-up", -1, 0,     4,  4,
+  "04",      "At Risk",        0, 2,     4,  4,
+  "04",      "Censored",       2, 4,     4,  4,
+) |> 
+  mutate(
+    person_f = factor(person_f),
+    status_f = factor(status_f)
+  )
+```
+
+
+```{r}
+ggplot(test_pop_segment) +
+  geom_segment(aes(x = x, xend = xend, y = 1, yend = 1, color = status_f), size = 3) +
+  facet_wrap(vars(person_f), nrow = 4)
+```
+
+How do we convert the other data to this format?
+
+```{r}
+test_pop |> 
+  group_by(person_f, status_f) |> 
+  mutate(
+    x    = min(time),
+    xend = max(time),
+    y    = person,
+    yend = person
+  ) |> 
+  ungroup() |> 
+  # Keep distinct values only
+  distinct(person, status, .keep_all = TRUE) |> 
+  # Make the line ends touch
+  group_by(person) |> 
+  mutate(
+    xend_adjusted = lead(x),
+    xend_adjusted = if_else(is.na(xend_adjusted), xend, xend_adjusted)
+  ) |> 
+  ungroup() |> 
+  ggplot() +
+    geom_segment(aes(x = x, xend = xend_adjusted, y = 1, yend = 1, color = status_f), size = 3) +
+    facet_wrap(vars(person_f), nrow = 4)
+```
+
+
+```{r}
+pt_df_loss_segment <- pt_df_loss |> 
+  group_by(person_f, status_f) |> 
+  mutate(
+    x    = min(month),
+    xend = max(month),
+    y    = person,
+    yend = person
+  ) |> 
+  ungroup() |> 
+  # Keep distinct values only
+  distinct(person, status, .keep_all = TRUE) |> 
+  # Make the line ends touch
+  group_by(person) |> 
+  mutate(
+    xend_adjusted = lead(x),
+    xend_adjusted = if_else(is.na(xend_adjusted), xend, xend_adjusted)
+  ) |> 
+  relocate(xend_adjusted, .after = xend) |> 
+  ungroup()
+```
+
+```{r}
+ggplot(pt_df_loss_segment) +
+  geom_segment(aes(x = x, xend = xend_adjusted, y = 1, yend = 1, color = status_f), size = 5) +
+  # Show all months
+  scale_x_continuous("Month Follow-up", breaks = -1:12) +
+  facet_wrap(vars(person_f), nrow = 10, strip.position = "left") +
+  # Add a line marking the start of follow up
+  geom_vline(xintercept = 0, color = "blue") +
+  # Add vertical lines to mark the start of each month
+  geom_vline(xintercept = 1:12, color = "#f9f9f9") +
+  # Change fill colors
+  scale_color_manual("Status", values = c("gray", "orange", "red", "black", "#4682B4")) +
+  # Change y-axis label
+  ylab("Person") +
+  theme(
+    # Remove gray background
+    panel.background = element_blank(),
+    # Remove the "p" from the x axis
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank(),
+    # Move legend
+    legend.position = "bottom",
+    # Change the color and style of the "months" axis 
+    axis.line.x = element_line(
+      color = "blue", arrow = grid::arrow(length = unit(0.1, "inches"), type = "closed")
+    ),
+    # Rotate the facet label to the right
+    strip.text.y.left = element_text(angle = 0)
+  )
+```
+
+#### Count time at risk
+
+Can I get an accurate count of time at risk? It should be 58.
+
+```{r}
+pt_df_loss_segment |> 
+  filter(status == "At Risk") |> 
+  mutate(time_at_risk = xend_adjusted - x) |> 
+  summarise(time_at_risk = sum(time_at_risk))
+```
+
+So, this should work!!
 
 # Measures of association
 
