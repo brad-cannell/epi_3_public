@@ -1021,6 +1021,160 @@ pt_df_loss_segment |>
 
 So, this should work!!
 
+
+# Random error
+
+## Example: Error
+
+There are valid philosophical debates to have regarding whether “truth” is an absolute thing or a moving target, whether it is knowable or unknowable, and whether it exists at all. 
+
+For the moment, however, we will put those philosophical discussions aside and say that our goal for any measure, be it descriptive, predictive, or explanatory, is the true underlying population value. 
+
+For example, if the average age of our population of interest is 55, then any estimate of the average age that differs from 55 differs from the truth. 
+
+To demonstrate, let's create a numeric vector of ages that will have a mean value, on average of 55.
+
+```{r}
+# Set the seed for the random number generator so that we can reproduce our results
+set.seed(123)
+# Create a numeric vector of ages
+# It includes 10,000,000 values
+# The mean of those values will be, on average, 55
+# The standard deviation of those values will be, on average, 5
+age <- rnorm(
+  n    = 10000000,
+  mean = 55,
+  sd   = 5
+)
+```
+
+```{r}
+# Print the mean of the values stored in age to the screen
+mean(age)
+```
+
+```{r}
+## use of replicate() with parameters:
+foo <- function(x = 1, y = 2) c(x, y)
+# foo()
+# foo(x = 3)
+# does not work: bar <- function(n, ...) replicate(n, foo(...))
+# replicate(5, foo(x = 3))
+bar <- function(n, x) replicate(n, foo(x = x))
+bar(5, x = 3)
+```
+
+
+```{r}
+# Using this code to find random seeds that produce estimates that are far from the true value
+n <- 1:2000
+df <- data.frame(seed = vector("numeric", 2000), mean = vector("numeric", 2000))
+for (i in n) {
+  set.seed(i)
+  df$seed[i] <- i
+  df$mean[i] <- mean(sample(age, 10))
+}
+```
+
+```{r}
+# Using this code to find random seeds that produce estimates that are far from the true value
+df |> 
+  arrange(desc(mean))
+```
+
+Now, let's select 10 of the age values at random and save them to a new numeric vector.
+
+```{r}
+# Set the seed for the random number generator so that we can reproduce our results
+set.seed(1318)
+# Sample 10 ages at random
+age_sample_01 <- sample(age, 10)
+# Print the value stored in age_sample_01 to the screen
+age_sample_01
+```
+
+🔴 Come back and improve explanations
+
+```{r}
+# Print the mean of the values stored in age_sample_01 to the screen
+mean_age_sample_01 <- mean(age_sample_01)
+mean_age_sample_01
+```
+
+```{r}
+# Set the seed for the random number generator so that we can reproduce our results
+set.seed(435)
+# Sample 10 ages at random
+age_sample_02 <- sample(age, 10)
+# Print the value stored in age_sample_01 to the screen
+age_sample_02
+```
+
+```{r}
+# Print the mean of the values stored in age_sample_01 to the screen
+mean_age_sample_02 <- mean(age_sample_02)
+mean_age_sample_02
+```
+
+🔴 Create the graphic on slide 5?
+
+🔴 Create the graphic on slide 6?
+
+## P-value curve
+
+Vignette: https://cran.r-project.org/web/packages/pvaluefunctions/vignettes/pvaluefun.html
+
+```{r}
+mean_age_sample_01 - mean_age_sample_02
+```
+
+```{r}
+t.test(age_sample_01, age_sample_02)
+```
+
+```{r}
+res <- pvaluefunctions::conf_dist(
+  estimate = c(-10.46871)
+  , df = c(15.87)
+  , tstat = c(-3.5052)
+  , type = "ttest"
+  , plot_type = "p_val"
+  , n_values = 1e4L
+  , conf_level = c(0.95, 0.90, 0.80)
+  , null_values = c(0)
+  , trans = "identity"
+  , alternative = "two_sided"
+  , log_yaxis = FALSE
+  , cut_logyaxis = 0.05
+  , xlab = "Mean difference (sample 01 - sample 02)"
+  , together = FALSE
+  , plot_p_limit = 1 - 0.999
+  , plot_counternull = TRUE
+  , x_scale = "line"
+  , plot = TRUE
+)
+```
+
+Ok, but I really want to learn how to do this by hand -- and using a measure from measures of occurrence. For example, using the population plot we created above, calculate the prevalence proportion, then calculate p-values and confidence intervals for the prevalence proportion. 
+
+```{r}
+# Create a vector containing the number of people with disease
+n_condition <- 10
+# Create a vector containing the number of people in the population of interest
+n_population <- 15
+# Calculate the prevalence proportion and assign it to an object called 
+# prevalence_prop
+prevalence_prop <- n_condition / n_population
+# Print the value stored in prevalence_prop to the screen
+prevalence_prop
+```
+
+What is the confidence interval for that prevalence proportion?
+
+
+
+
+
 # Measures of association
 
 ## Population vs a sample
