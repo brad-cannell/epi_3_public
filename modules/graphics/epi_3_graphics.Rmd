@@ -611,7 +611,7 @@ To see all the steps I tried to get this to work see: https://stackoverflow.com/
 
 #### Without censored data
 
-```{r}
+```{r eval=FALSE}
 # This part makes the bars stack in the correct order.
 pt_df_arrange <- arrange(pt_df, status_f_rev)
 
@@ -648,7 +648,7 @@ ggplot(pt_df_arrange, aes(person_f_rev, month, fill = status_f)) +
 
 #### With censored data
 
-```{r}
+```{r eval=FALSE}
 # This part makes the bars stack in the correct order.
 pt_df_loss_arrange <- arrange(pt_df_loss, status_f_rev)
 
@@ -690,6 +690,8 @@ The downsides to `geom_col()` are:
 
 ### Tile plot
 
+**Note**: Don't use this method. Just here for posterity.
+
 Instead of sliding bars on top of each other, I could also use `geom_tile()` or `geom_raster()`. 
 - `geom_raster`() is faster and the bars are easier to align.
 - With `geom_tile()`, I can outline the bars. This seems like less of a problem when I color pre-follow-up gray instead of white.
@@ -698,7 +700,7 @@ I need to figure out how to outline the tiles: https://stackoverflow.com/questio
 
 #### Without censored data
 
-```{r}
+```{r eval=FALSE}
 ggplot(pt_df, aes(month, "p", fill = status_f)) + 
   geom_raster(hjust = 1) +
   # Create a bar marking the start of follow up
@@ -734,7 +736,7 @@ ggplot(pt_df, aes(month, "p", fill = status_f)) +
 
 #### With censored data
 
-```{r}
+```{r eval=FALSE}
 ggplot(pt_df_loss, aes(month, "p", fill = status_f)) + 
   geom_raster(hjust = 1) +
   # Create a bar marking the start of follow up
@@ -770,7 +772,7 @@ Using this method, we are counting past the end of follow-up. In other words, th
 
 Let's make a smaller toy data set 
 
-```{r}
+```{r  eval=FALSE}
 test_pop <- sim_person_time_data(
   .people = 2,
   .time = 4,
@@ -781,7 +783,7 @@ test_pop <- sim_person_time_data(
 )
 ```
 
-```{r}
+```{r  eval=FALSE}
 ggplot(test_pop, aes(time, "p", fill = status_f)) + 
   # By default, the tile is centered over the x-axis value.
   # we want it flush
@@ -812,7 +814,7 @@ ggplot(test_pop, aes(time, "p", fill = status_f)) +
   )
 ```
 
-```{r}
+```{r  eval=FALSE}
 ggplot(test_pop, aes(time, person_f, fill = status_f)) + 
   geom_tile(color = "black") +
   scale_x_continuous("Month Follow-up", breaks = -1:4)
@@ -825,107 +827,19 @@ Having said that, we don't want to count the time between month 12 and month 13 
 
 We need to handle diseased and at risk differently.
 
-
-#### Make it a function
-
-```{r}
-person_time_plot <- function(.data, 
-                             .x, 
-                             .y,
-                             .status, 
-                             .censored = "No",
-                             .x_lab,
-                             .y_lab = "Person",
-                             .status_lab) {
-  
-  # Set colors depending on if there is a censored status value or not
-  if (.censored == "No") {
-    colors <- c("gray", "orange", "red", "black")
-  } else if (.censored == "Yes") {
-    colors <- c("gray", "orange", "red", "black", "yellow")
-  } else {
-    stop("The value of .censored must be 'No' or 'Yes'.")
-  }
-  
-  # Calculate the number of time periods in the data
-  # This is used to label the x-axis in scale_x_continuous below
-  time_periods <- pull(.data, {{ .x }}) |> unique()
-  # Keep only the values higher than zero
-  # This is used in geom_vline to create the light gray vertical line 
-  # at each time period after baseline
-  time_periods_positive <- time_periods[time_periods > 0]
-  # Calculate the number of unique people in the data
-  # This is used for facet_wrap below
-  n_facets <- pull(.data, {{ .y }}) |> unique() |> length()
-  
-  ggplot(.data, aes({{ .x }}, "person", fill = {{ .status }})) + 
-    geom_raster(hjust = 1) +
-    # Create a bar marking the start of follow up
-    geom_vline(xintercept = 0, color = "blue") +
-    # Add vertical lines to mark the start of each month
-    geom_vline(xintercept = time_periods_positive, color = "#f9f9f9") +
-    # Show all months
-    scale_x_continuous(.x_lab, breaks = time_periods) +
-    facet_wrap(vars({{ .y }}), nrow = n_facets, strip.position = "left") +
-    # Change fill colors
-    scale_fill_manual(.status_lab, values = colors) +
-    # Change x-axis label
-    ylab(.y_lab) +
-    theme(
-      # Remove gray background
-      panel.background = element_blank(),
-      # Remove the "p" from the x axis
-      axis.text.y = element_blank(),
-      axis.ticks.y = element_blank(),
-      # Move legend
-      legend.position = "bottom",
-      # Change the color and style of the "months" axis 
-      axis.line.x = element_line(
-        color = "blue", arrow = grid::arrow(length = unit(0.1, "inches"), type = "closed")
-      )
-    )
-}
-
-# For testing
-person_time_plot(
-  .data = pt_df_loss, 
-  .x = month, 
-  .y = person_f,
-  .status = status_f, 
-  .censored = "Yes",
-  .x_lab = "Month Follow-up",
-  .y_lab = "Person",
-  .status_lab = "Status"
-)
-```
-
 ### Geom_segment
 
-```{r}
-# Rearrange data for geom_segment
-test_pop_segment <- tribble(
-  ~person_f, ~status_f,       ~x, ~xend, ~y, ~yend,
-  "01",      "Diseased",      -1, 4,     1,  1,
-  "02",      "Pre-follow-up", -1, 0,     2,  2,
-  "02",      "At Risk",        0, 4,     2,  2,
-  "03",      "Censored",      -1, 1,     3,  3,
-  "03",      "At Risk",        1, 2,     3,  3,
-  "03",      "Diseased",       2, 4,     3,  3,
-  "04",      "Pre-follow-up", -1, 0,     4,  4,
-  "04",      "At Risk",        0, 2,     4,  4,
-  "04",      "Censored",       2, 4,     4,  4,
-) |> 
-  mutate(
-    person_f = factor(person_f),
-    status_f = factor(status_f)
+Use this method!
+
+```{r  eval=FALSE}
+test_pop <- sim_person_time_data(
+  .people = 2,
+  .time = 4,
+  .status_list = list(
+    "Diseased",
+    c("At Risk" = 5, "Diseased" = 0, "Deceased" = 0)
   )
-```
-
-
-```{r}
-ggplot(test_pop_segment) +
-  geom_segment(aes(x = x, xend = xend, y = 1, yend = 1, color = status_f), size = 3) +
-  facet_wrap(vars(person_f), nrow = 4)
+)
 ```
 
 How do we convert the other data to this format?
@@ -953,7 +867,6 @@ test_pop |>
     geom_segment(aes(x = x, xend = xend_adjusted, y = 1, yend = 1, color = status_f), size = 3) +
     facet_wrap(vars(person_f), nrow = 4)
 ```
-
 
 ```{r}
 pt_df_loss_segment <- pt_df_loss |> 
@@ -1020,6 +933,77 @@ pt_df_loss_segment |>
 ```
 
 So, this should work!!
+
+
+# Person-time plot with exposure status
+
+```{r}
+pt_df_exposed <- pt_df |> 
+  mutate(
+    exposed   = if_else(person %% 2 == 0, 1, 0),
+    exposed_f = factor(exposed, 0:1, c("No", "Yes"))
+  )
+
+pt_df_exposed_wide <- pt_df_exposed |> 
+  group_by(person_f, status_f) |> 
+  mutate(
+    x    = min(month),
+    xend = max(month),
+    y    = person,
+    yend = person
+  ) |> 
+  ungroup() |> 
+  # Keep distinct values only
+  distinct(person, status, .keep_all = TRUE) |> 
+  # Make the line ends touch
+  group_by(person) |> 
+  mutate(
+    xend_adjusted = lead(x),
+    xend_adjusted = if_else(is.na(xend_adjusted), xend, xend_adjusted)
+  ) |> 
+  relocate(xend_adjusted, .after = xend) |> 
+  ungroup()
+```
+
+```{r}
+# To color the facet strip panels
+stip_colors <- pt_df_exposed_wide |> 
+  # Keep one row for each person
+  distinct(person, .keep_all = TRUE) |> 
+  # Add color to use by exposed status
+  mutate(color = if_else(exposed == 1, "#817190", "#D9D9D9")) |> 
+  pull(color)
+strips <- ggh4x::strip_themed(background_y = ggh4x::elem_list_rect(fill = stip_colors))
+
+ggplot(pt_df_exposed_wide, aes(group = exposed_f)) +
+  geom_segment(aes(x = x, xend = xend_adjusted, y = 1, yend = 1, color = status_f), size = 5) +
+  # Show all months
+  scale_x_continuous("Month Follow-up", breaks = -1:12) +
+  ggh4x::facet_wrap2(vars(person_f), nrow = 10, strip.position = "left", strip = strips) +
+  # Add a line marking the start of follow up
+  geom_vline(xintercept = 0, color = "blue") +
+  # Add vertical lines to mark the start of each month
+  geom_vline(xintercept = 1:12, color = "#f9f9f9") +
+  # Change fill colors
+  scale_color_manual("Status", values = c("gray", "orange", "red", "black", "#4682B4")) +
+  # Change y-axis label
+  ylab("Person") +
+  theme(
+    # Remove gray background
+    panel.background = element_blank(),
+    # Remove the "p" from the x axis
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank(),
+    # Move legend
+    legend.position = "bottom",
+    # Change the color and style of the "months" axis 
+    axis.line.x = element_line(
+      color = "blue", arrow = grid::arrow(length = unit(0.1, "inches"), type = "closed")
+    ),
+    # Rotate the facet label to the right
+    strip.text.y.left = element_text(angle = 0)
+  )
+```
 
 
 # Random error
@@ -1297,6 +1281,37 @@ ggsave("/Users/bradcannell/Desktop/normal_curve.png")
 
 rm(mean, sd, limits, my_breaks, peak, shaded, y_labels)
 ```
+
+
+# Tables with equations
+
+I can't get equations to print properly in kable tables. This was the best I could do.
+
+```{r echo=FALSE}
+prob_def <- "If some process is repeated a large number of time, n, the relative frequency of occurrence of E, m/n, will be approximately equal to the probability of E."
+conditional_prob_def <- "The probability that some event occurs given that we know that some other event has already occurred."
+```
+
+| Our Term                | Definition               | Equation                            |
+|:------------------------|:------------------------:|:-----------------------------------:|
+| Probability             | `r prob_def`             | $P(E) = \frac{m}{n}$                |
+| Conditional probability | `r conditional_prob_def` | $P(Y|X) = \frac{P(Y \cap X)}{P(X)}$ |
+
+
+# Contingency tables
+
+I think the best way to create them my be with flextable
+
+```{r}
+crosstab <- tibble(
+  `1` = c("", "Outcome +", "Outcome -"),
+  `2` = c("Exposure +", "a", "b"),
+  `3` = c("Exposure -", "c", "d")
+)
+```
+
+Just adding the slide for now. Come back to this later.
+
 
 
 # DAGS
