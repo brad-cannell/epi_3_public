@@ -55,12 +55,18 @@ df <- read_function("path")
 2. The notes should be written as a numbered list and should follow the formatting rules written at the top of this Rmd document. 
 
 
-# Question 1
+## Question 1
 
 Question 1 often asks students to list the number of rows and columns in the data. It's easy and helps make sure they are starting with the correct data. Typically, the question text will be bulleted and written twice. The first bullet will contain the question text as it is written in the Word document. The second bullet will contain the correct answer. 
 
 * The **study_data** data frame contains ____ rows and ____ columns.
 
 * The **study_data** data frame contains 189 rows and 15 columns.
+
+## Question 2
+
+Here is another question.
+
+* Here is the answer to question 2.
 
 

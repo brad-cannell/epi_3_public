@@ -36,5 +36,13 @@ whas500 <- read_table("modules/04 Measures of Association/whas500.txt",
   )
 )
 
+# Coerce select categorical variables to factors
+whas500 <- whas500 |>
+  mutate(
+    gender_f = factor(gender, 0:1, c("Male", "Female")),
+    cvd_f = factor(cvd, 0:1, c("No", "Yes")),
+    year_f = factor(year, 1:3, c("1997", "1999", "2001"))
+  )
+
 # Export to Rds
 write_rds(whas500, "modules/04 Measures of Association/whas500.Rds")

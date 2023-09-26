@@ -12,7 +12,6 @@ Remember, it's considered a best practice to load all the packages that your fil
 ```{r}
 #| label: load-packages
 library(dplyr, warn.conflicts = FALSE) # The "warn.conflicts" part is optional
-library(readr)
 library(ggplot2)
 library(meantables)
 library(freqtables)
@@ -21,170 +20,45 @@ library(freqtables)
 
 # Overview
 
-In this week’s lab, we will practice describing relationships between variables. Specifically, we will practice basic descriptive techniques appropriate for analysis of a continuous predictor variable and a continuous outcome variable, a categorical predictor variable and a continuous outcome variable, or a categorical predictor variable and a categorical outcome variable. We will also practice calculating several common epidemiologic measures of association using R. 
+In this week’s lab, we will practice describing relationships between variables. Specifically, we will practice basic descriptive techniques appropriate for the analysis of a continuous predictor variable and a continuous outcome variable, a categorical predictor variable and a continuous outcome variable, or a categorical predictor variable and a categorical outcome variable. We will also practice calculating several common epidemiologic measures of association using R. 
 
 # Task 1 
 
-Please use the following links to download the WHAS 500 data to your computer and view the codebook:
+Open the WHAS 500 data and view the codebook.
 
-* [Click here to view/download the WHAS 500 data codebook](https://www.dropbox.com/s/hx37w38ruytjwi9/WHAS%20500%20Description.pdf?dl=0). Look over the codebook to learn a little bit about the data you will be working with.
+## If you are using a Posit Cloud paid student account
 
-* [Click here to view/download the WHAS 500 data](https://www.dropbox.com/s/c14gqhjbny0mlra/whas500.txt?dl=0).
+1. After logging into Posit Cloud, please navigate to the “UTHealth – Epidemiology III” workspace. Once in the workspace, please click on the Measures of Association Lab to open it.
+
+2. In the RStudio files pane, you should see a file named **WHAS 500 Description.pdf**. Click on it to view the WHAS 500 codebook in your browser. Look over the codebook to learn a little bit about the data you will be working with. **Note**: We created factor versions of some of the categorical variables and added them to this dataset. They are not in the codebook, but they all use the **_f** naming convention.
+
+3. In the RStudio files pane, you should see a file named **whas500.Rds**. Click on it to load it into your global environment as **whas500**.
+
+## If you are using a Posit Cloud free account
+
+1. Please use the following links to download the WHAS 500 data to your computer and view the codebook:
+
+* [Click here to view/download the WHAS 500 data codebook](https://uthtmc.sharepoint.com/:b:/s/SPHCannellEpiIII/EdVJxEu3KJZCp3eGEsNbb_sBjB-UVWS6xy4Zp_zOQjPWEA?e=IpNp7k). Look over the codebook to learn a little bit about the data you will be working with. **Note**: We created factor versions of some of the categorical variables and added them to this dataset. They are not in the codebook, but they all use the **_f** naming convention.
+
+* [Click here to download the WHAS 500 data](https://uthtmc.sharepoint.com/:u:/s/SPHCannellEpiIII/EQr4PTmm5qRBtuWDRiCBmFwBNW1unowIqQe2MK6ePkybrg?e=8qxC5s).
+
+2. After logging into Posit Cloud, please create a new RStudio project for this lab.
+
+3. In the files pane of the new project, click the `upload` button. Upload the **whas500.Rds** file you downloaded earlier.
+
+4. In the RStudio files pane, you should see a file named **whas500.Rds**. Click on it to load it into your global environment as **whas500**.
+
+## If you are using R/RStudio on your computer
+
+1. Please use the following links to download the WHAS 500 data to your computer and view the codebook:
+
+* [Click here to view/download the WHAS 500 data codebook](https://uthtmc.sharepoint.com/:b:/s/SPHCannellEpiIII/EdVJxEu3KJZCp3eGEsNbb_sBjB-UVWS6xy4Zp_zOQjPWEA?e=IpNp7k). Look over the codebook to learn a little bit about the data you will be working with. **Note**: We created factor versions of some of the categorical variables and added them to this dataset. They are not in the codebook, but they all use the **_f** naming convention.
+
+* [Click here to download the WHAS 500 data](https://uthtmc.sharepoint.com/:u:/s/SPHCannellEpiIII/EQr4PTmm5qRBtuWDRiCBmFwBNW1unowIqQe2MK6ePkybrg?e=8qxC5s).
+
+2. Double-click the **whas500.Rds** file you just downloaded to your computer. It should open RStudio and prompt you to load it into your global environment as **whas500**.
 
 # Task 2
-
-Import `whas500.txt` into your R global environment as `whas500`.
-
-# 🔴 Left off here... move over just the variables we need for the code below. Then, add stuff from other quiz on Canvas.
-
-```{r}
-test <- tibble(
-  id = c(
-    "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", 
-    "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", 
-    "27", "28", "29", "30", "31", "32", "33", "34", "35", "36", "37", "38", 
-    "39", "40", "41", "42", "43", "44", "45", "46", "47", "48", "49", "50", 
-    "51", "52", "53", "54", "55", "56", "57", "58", "59", "60", "61", "62", 
-    "63", "64", "65", "66", "67", "68", "69", "70", "71", "72", "73", "74", 
-    "75", "76", "77", "78", "79", "80", "81", "82", "83", "84", "85", "86", 
-    "87", "88", "89", "90", "91", "92", "93", "94", "95", "96", "97", "98", 
-    "99", "100", "101", "102", "103", "104", "105", "106", "107", "108", "109", 
-    "110", "111", "112", "113", "114", "115", "116", "117", 
-         "118", "119", "120", "121", "122", "123", "124", "125", "126", "127", 
-         "128", "129", "130", "131", "132", "133", "134", "135", "136", "137", 
-         "138", "139", "140", "141", "142", "143", "144", "145", "146", "147", 
-         "148", "149", "150", "151", "152", "153", "154", "155", "156", "157", 
-        "158", "159", "160", "161", "162", "163", "164", "165", "166", "167", 
-        "168", "169", "170", "171", "172", "173", "174", "175", "176", "177", 
-        "178", "179", "180", "181", "182", "183", "184", "185", "186", "187", 
-        "188", "189", "190", "191", "192", "193", "194", "195", "196", "197", 
-        "198", "199", "200", "201", "202", "203", "204", "205", "206", "207", 
-        "208", "209", "210", "211", "212", "213", "214", "215", "216", "217", 
-        "218", "219", "220", "221", "222", "223", "224", "225", "226", "227", 
-        "228", "229", "230", "231", "232", "233", "234", "235", "236", "237", 
-        "238", "239", "240", "241", "242", "243", "244", "245", "246", "247", 
-        "248", "249", "250", "251", "252", "253", "254", "255", "256", "257", 
-        "258", "259", "260", "261", "262", "263", "264", "265", "266", "267", 
-        "268", "269", "270", "271", "272", "273", "274", "275", "276", "277", 
-        "278", "279", "280", "281", "282", "283", "284", "285", "286", "287", 
-        "288", "289", "290", "291", "292", "293", "294", "295", "296", "297", 
-        "298", "299", "300", "301", "302", "303", "304", "305", "306", "307", 
-        "308", "309", "310", "311", "312", "313", "314", "315", "316", "317", 
-        "318", "319", "320", "321", "322", "323", "324", "325", "326", "327", 
-        "328", "329", "330", "331", "332", "333", "334", "335", "336", "337", 
-        "338", "339", "340", "341", "342", "343", "344", "345", "346", "347", 
-        "348", "349", "350", "351", "352", "353", "354", "355", "356", "357", 
-        "358", "359", "360", "361", "362", "363", "364", "365", "366", "367", 
-        "368", "369", "370", "371", "372", "373", "374", "375", "376", "377", 
-        "378", "379", "380", "381", "382", "383", "384", "385", "386", "387", 
-        "388", "389", "390", "391", "392", "393", "394", "395", "396", "397", 
-        "398", "399", "400", "401", "402", "403", "404", "405", "406", "407", 
-        "408", "409", "410", "411", "412", "413", "414", "415", "416", "417", 
-        "418", "419", "420", "421", "422", "423", "424", "425", "426", "427", 
-        "428", "429", "430", "431", "432", "433", "434", "435", "436", "437", 
-        "438", "439", "440", "441", "442", "443", "444", "445", "446", "447", 
-        "448", "449", "450", "451", "452", "453", "454", "455", "456", "457", 
-        "458", "459", "460", "461", "462", "463", "464", "465", "466", "467", 
-        "468", "469", "470", "471", "472", "473", "474", "475", "476", "477", 
-        "478", "479", "480", "481", "482", "483", "484", "485", "486", "487", 
-        "488", "489", "490", "491", "492", "493", "494", "495", "496", "497", 
-        "498", "499", "500"),
-  age = c(83, 49, 70, 70, 70, 70, 57, 55, 88, 54, 48, 75, 48, 54, 67, 61, 70, 
-          51, 56, 73, 49, 82, 85, 48, 69, 37, 88, 77, 86, 84, 83, 61, 58, 90, 
-          84, 52, 92, 88, 74, 65, 63, 75, 82, 62, 87, 72, 75, 48, 83, 52, 80, 
-          50, 80, 83, 87, 80, 65, 69, 84, 80, 74, 63, 80, 86, 69, 85, 76, 71, 
-          69, 52, 76, 46, 35, 77, 84, 80, 53, 74, 71, 86, 73, 57, 88, 41, 73, 
-          73, 53, 90, 95, 82, 82, 91, 81, 73, 79, 69, 57, 89, 74, 60, 79, 79, 
-          56, 82, 91, 48, 67, 78, 69, 63, 30, 87, 81, 57, 81, 46, 81, 68, 65, 
-          67, 54, 84, 55, 59, 76, 71, 71, 59, 72, 81, 86, 59, 83, 64, 87, 59, 
-          80, 58, 73, 76, 48, 53, 84, 54, 50, 74, 68, 74, 68, 85, 74, 63, 32, 
-          39, 73, 57, 76, 67, 83, 74, 75, 56, 84, 86, 52, 70, 49, 59, 70, 88, 
-          65, 79, 72, 72, 79, 62, 90, 91, 75, 79, 79, 52, 54, 85, 53, 64, 48, 
-          80, 80, 65, 70, 69, 56, 43, 54, 80, 73, 33, 81, 45, 68, 52, 80, 50, 
-          56, 85, 89, 69, 73, 83, 76, 64, 47, 93, 88, 77, 62, 89, 89, 72, 84, 
-          90, 81, 73, 91, 68, 58, 71, 82, 84, 37, 61, 58, 69, 92, 75, 81, 50, 
-          78, 90, 85, 78, 78, 66, 97, 89, 76, 79, 80, 75, 102, 76, 73, 77, 72, 
-          53, 46, 55, 70, 55, 87, 83, 85, 83, 46, 88, 60, 68, 68, 90, 77, 76, 
-          76, 63, 89, 76, 52, 65, 57, 71, 64, 87, 57, 46, 66, 88, 39, 90, 62, 
-          63, 81, 86, 83, 48, 83, 73, 85, 54, 93, 75, 61, 36, 36, 58, 57, 82, 
-          68, 83, 59, 90, 64, 59, 71, 58, 48, 80, 58, 81, 44, 68, 71, 90, 81, 
-          86, 61, 85, 66, 80, 77, 81, 47, 74, 67, 45, 56, 72, 63, 85, 79, 86, 
-          79, 59, 66, 84, 43, 61, 76, 53, 57, 69, 76, 88, 76, 78, 95, 50, 68, 
-          57, 65, 78, 81, 51, 72, 41, 68, 82, 58, 50, 85, 50, 62, 40, 85, 58, 
-          44, 67, 66, 60, 40, 65, 84, 84, 73, 82, 81, 75, 65, 75, 104, 87, 75, 
-          59, 82, 59, 72, 82, 84, 70, 42, 71, 65, 87, 88, 66, 53, 66, 48, 59, 
-          47, 88, 65, 68, 62, 82, 66, 80, 86, 81, 87, 74, 58, 85, 46, 73, 87, 
-          61, 46, 48, 65, 62, 85, 81, 89, 75, 72, 55, 72, 32, 58, 87, 63, 84, 
-          46, 46, 49, 80, 83, 64, 52, 80, 82, 85, 65, 59, 84, 59, 61, 83, 72, 
-          75, 63, 45, 92, 47, 56, 82, 74, 73, 55, 67, 58, 72, 59, 90, 82, 66, 
-          73, 85, 93, 71, 46, 51, 82, 52, 77, 79, 51, 53, 45, 64, 76, 93, 93, 
-          83, 92, 76, 76, 57, 67, 98),
-  hr = c(89, 84, 83, 65, 63, 76, 73, 91, 63, 104, 95, 154, 85, 95, 93, 63, 95, 133, 105, 42, 119, 97, 104, 57, 74, 93, 100, 98, 58, 82, 135, 111, 86, 97, 69, 69, 70, 100, 128, 68, 115, 114, 62, 50, 110, 64, 106, 113, 70, 69, 105, 93, 42, 107, 118, 74, 81, 58, 135, 77, 78, 76, 92, 98, 97, 64, 73, 66, 86, 112, 112, 60, 83, 97, 92, 87, 90, 47, 53, 100, 83, 129, 83, 64, 91, 72, 59, 46, 62, 83, 73, 60, 149, 38, 100, 92, 120, 62, 157, 84, 107, 117, 107, 113, 100, 101, 56, 82, 88, 76, 90, 105, 78, 44, 118, 114, 110, 73, 106, 112, 128, 62, 74, 63, 94, 83, 98, 70, 100, 97, 88, 71, 67, 77, 118, 117, 83, 90, 83, 69, 59, 84, 67, 100, 72, 100, 74, 86, 150, 95, 85, 71, 102, 52, 64, 100, 100, 86, 80, 82, 107, 66, 104, 93, 46, 68, 115, 69, 97, 90, 42, 69, 83, 89, 87, 108, 119, 101, 88, 75, 104, 78, 112, 76, 70, 68, 76, 60, 64, 59, 63, 45, 74, 47, 115, 89, 64, 54, 150, 110, 85, 90, 58, 76, 64, 54, 104, 57, 86, 90, 150, 76, 101, 63, 105, 73, 67, 130, 116, 83, 71, 100, 131, 87, 76, 126, 89, 72, 66, 89, 64, 45, 63, 88, 72, 64, 52, 76, 108, 60, 124, 97, 80, 70, 69, 89, 99, 79, 91, 87, 89, 81, 116, 80, 73, 96, 82, 70, 72, 54, 103, 77, 73, 56, 58, 98, 76, 104, 92, 95, 104, 100, 120, 94, 98, 58, 74, 62, 76, 80, 94, 106, 93, 94, 114, 140, 78, 58, 88, 54, 76, 80, 68, 65, 94, 142, 68, 83, 61, 56, 76, 98, 98, 73, 81, 92, 114, 117, 72, 84, 93, 45, 82, 68, 78, 84, 108, 36, 75, 103, 80, 96, 48, 84, 88, 97, 160, 75, 92, 60, 62, 60, 66, 68, 80, 66, 100, 120, 68, 107, 99, 109, 74, 123, 75, 56, 107, 115, 80, 65, 114, 97, 85, 57, 80, 56, 59, 58, 144, 88, 96, 86, 148, 92, 85, 80, 55, 63, 137, 89, 74, 95, 115, 79, 66, 50, 84, 114, 84, 85, 113, 130, 102, 60, 110, 89, 92, 80, 92, 120, 71, 104, 68, 78, 104, 67, 100, 89, 55, 128, 61, 127, 92, 110, 67, 91, 53, 130, 83, 74, 80, 108, 80, 87, 125, 64, 108, 84, 88, 66, 110, 116, 60, 104, 69, 85, 92, 64, 62, 138, 55, 128, 90, 106, 60, 65, 120, 90, 68, 109, 82, 64, 97, 80, 60, 78, 100, 91, 79, 99, 91, 96, 144, 88, 116, 36, 105, 60, 100, 72, 121, 77, 104, 74, 98, 139, 58, 92, 85, 120, 70, 186, 69, 114, 35, 88, 121, 146, 88, 70, 92, 56, 88, 95, 106, 80, 63, 76, 64, 72, 118, 116, 110, 92, 92, 68, 88, 123, 59, 99)
-)
-```
-
-```{r}
-whas500$id |> as.character() |> paste(collapse = ", ") |> stringr::str_replace_all('(\\d+),', '"\\1",') |> cat()
-```
-
-```{r}
-whas500$hr |> paste(collapse = ", ")
-```
-
-
-
-
-```{r}
-whas500 <- read_table("/Users/bradcannell/Library/CloudStorage/Dropbox/Datasets/WHAS/whas500.txt", 
-  col_types = cols(
-    id        = col_character(), 
-    age       = col_integer(), 
-    gender    = col_integer(), 
-    hr        = col_integer(), 
-    sysbp     = col_integer(), 
-    diasbp    = col_integer(), 
-    cvd       = col_integer(), 
-    afb       = col_integer(), 
-    sho       = col_integer(), 
-    chf       = col_integer(), 
-    av3       = col_integer(), 
-    miord     = col_integer(), 
-    mitype    = col_integer(), 
-    year      = col_integer(), 
-    admitdate = col_date(format = "%m/%d/%y"), 
-    disdate   = col_date(format = "%m/%d/%y"), 
-    fdate     = col_date(format = "%m/%d/%y"), 
-    los       = col_integer(), 
-    dstat     = col_integer(), 
-    lenfol    = col_integer(), 
-    fstat     = col_integer()
-  )
-)
-```
-
-## Notes to students
-
-1. The integer column type just tells R that the numbers in these columns don't have any fractional parts. For example, `1` instead of `1.4`. Numbers with fractional parts, like `1.4`, have to be stored as doubles. If you try to store them as an integer, the fractional part will be dropped. For example: 
-
-```{r}
-as.integer(1.4)
-```
-
-However, it doesn't really matter if you store an integer as an integer or a double. For example: 
-
-```{r}
-as.integer(1)
-```
-
-```{r}
-as.double(1)
-```
-
-The only advantage to storing it as a double is that it requires slightly less memory.
-
-2. Notice that I had to tell R what format the dates variables were stored in. Later, in the module on working with non-standard data, we will learn all about date formats. For this lab, it doesn't matter if you imported `admitdate`, `disdate`, `fdate` as date columns or character columns. If you want to read ahead, you can view the [chapter in R4Epi on working with dates](https://www.r4epi.com/working-with-dates.html).
-
-# Task 3
 
 View the structure of whas500 using the `str()` function or the `glimpse()` function.
 
@@ -192,33 +66,33 @@ View the structure of whas500 using the `str()` function or the `glimpse()` func
 glimpse(whas500)
 ```
 
-## Question:
+## Question 1
 
-1. The `whas500` data frame contains ____ rows and ____ columns.
+The **whas500** data frame contains ____ rows and ____ columns.
 
-* The `whas500` data frame contains 500 rows and 22 columns.
+* The **whas500** data frame contains 500 rows and 25 columns.
 
-# Task 4
+# Task 3
 
-Use the cor.test() function to explore the relationship between age and initial heart rate
-
-Examine the correlation coefficient and p-value.
+Use the cor.test() function to explore the relationship between age and initial heart rate. Examine the correlation coefficient and p-value.
 
 ```{r}
 cor.test(whas500$age, whas500$hr)
 ```
 
-## Questions:
+## Question 2
 
-2. Is there a positive, negative, or no correlation between age and initial heart rate?
+Is there a positive, negative, or no correlation between age and initial heart rate?
 
 * The correlation coefficient is 0.1491366, which indicates a weak positive correlation. 
 
-3. The p-value returned by the cor.text() function is ________ . Please copy and paste the entire value.
+## Question 3
+
+The p-value returned by the cor.text() function is ________ . Please copy and paste the entire value.
 
 * The p-value is 0.0008223. We can interpret this p-value as an indication that we would be pretty unlikely to calculate a correlation coefficient of 0.1491366 or larger (in absolute terms) in our sample if there is truly no relationship between age and initial heart rate in the population from which this sample was drawn. This conclusion is valid if all the assumptions implied in the analysis we chose apply to the population we are studying (e.g. a linear relationship), and the sample was collected without bias.   
 
-# Task 5
+# Task 4
 
 Explore the relationship between age and initial heart rate by creating a scatter plot. Make sure to add an OLS regression line. View this scatter plot again by gender.
 
@@ -237,121 +111,113 @@ ggplot(whas500, aes(age, hr)) +
   theme_classic()
 ```
 
-## Question:
+## Question 4
 
-4. Based on the scatter plot, is there an apparent relationship between age and initial heart rate? 
+Based on the scatter plot, is there an apparent relationship between age and initial heart rate? 
 
 * Based on the scatter plot, it appears as though there may be a weak relationship between age and initial heart rate. 
 
-# Task 6 
+# Task 5
 
-Calculate mean bmi within levels of gender.
+Calculate mean BMI within levels of gender. We suggest that you use the **gender_f** variable instead of the **gender** variable.
 
-```{r message=FALSE}
+```{r}
 ## Using dplyr
 whas500 %>% 
-  group_by(gender) %>% 
+  group_by(gender_f) %>% 
   summarise(mean_bmi = mean(bmi))
 ```
 
-```{r message=FALSE}
+```{r}
 ## Using meantables
 whas500 %>% 
-  group_by(gender) %>% 
+  group_by(gender_f) %>% 
   mean_table(bmi)
 ```
 
-## Note to students
+## Question 5
 
-* Notice that I use the `message=FALSE` option in my R code chunk above. I do this because dplyr version 1.0 gives you a message that says "`summarise()` ungrouping output (override with `.groups` argument)" when you use `group_by()` with `summarise()`. I don't find that message useful or informative, so I suppress it with the `message=FALSE` option.
+Is the mean BMI for females lower than the mean BMI for males? 
 
-## Question:
+* The mean BMI for females (gender == 1) is 27.27. The mean BMI for males (gender == 0) is 25.63. Therefore, the mean BMI for females is not lower than the mean BMI for males.    
 
-5. Is the mean bmi for females lower than the mean bmi for males? 
+# Task 6
 
-* The mean bmi for females (gender == 1) is 27.2689. The mean bmi for males (gender == 0) is 25.6311. Therefore, the mean bmi for females is not lower than the mean bmi for males.    
-
-# Task 7 
-
-Produce side-by-side histograms of sysbp comparing gender.
+Produce side-by-side histograms of sysbp comparing gender. We suggest that you use the **gender_f** variable instead of the **gender** variable.
 
 ```{r}
 ggplot(whas500, aes(sysbp)) +
   geom_histogram(bins = 20) +
-  facet_wrap(vars(gender)) +
+  facet_wrap(vars(gender_f)) +
   theme_classic()
 ```
 
-## Question:
+## Question 6
 
-6. Is the systolic blood pressure normally distributed in both genders?
+Is the systolic blood pressure normally distributed in both genders?
 
-* Systolic blood pressure values do not look perfectly normally distributed in either of these histograms. However, real data generally never looks perfectly normally distributed. I think most people who spend a lot of time working with data would agree that these values are "close enough" to normally distributed for most purposes. 
+* Systolic blood pressure values do not look perfectly normally distributed in either of these histograms. However, real data generally never looks perfectly normally distributed. We think most people who spend a lot of time working with data would agree that these values are "close enough" to normally distributed for most purposes. 
 
-* Students often ask me how close to perfectly normally distributed is "close enough". Unfortunately, I'm not going to be able to give you a satisfying answer. There is no specific rule or criteria that I'm aware of. Rather, whether this data is "close enough" will depend on what you want to do with it next. Are you going to model this data in a way that assumes the data is normally distributed? How tolerant is that particular model to data that isn't quite perfectly normally distributed? How large is your sample size? How precise do your conclusions need to be? All of these things will affect whether or not "close enough" is close enough. In practice, most models that we use in epidemiology (e.g., linear regression) are pretty tolerant of "normally distributed" data that isn't perfectly normally distributed. 
+* Students often ask us how close to perfectly normally distributed is "close enough". Unfortunately, we're not going to be able to give you a satisfying answer. There is no specific rule or criteria that we're aware of. Rather, whether this data is "close enough" will depend on what you want to do with it next. Are you going to model this data in a way that assumes the data is normally distributed? How tolerant is that particular model to data that isn't quite perfectly normally distributed? How large is your sample size? How precise do your conclusions need to be? All of these things will affect whether or not "close enough" is close enough. In practice, most models that we use in epidemiology (e.g., linear regression) are pretty tolerant of "normally distributed" data that isn't perfectly normally distributed. 
 	
-# Task 8 
+# Task 7
 
-Produce a boxplot of bmi comparing gender.
+Produce a boxplot of BMI comparing gender. We suggest that you use the **gender_f** variable instead of the **gender** variable.
 
 ```{r}
 ggplot(whas500) +
-  geom_boxplot(aes(x = gender, y = bmi, group = gender)) +
+  geom_boxplot(aes(x = gender_f, y = bmi)) +
   theme_classic()
 ```
 
-## Note to students
+## Question 7
 
-* Notice that we had to add `group = gender` to the `aes()` function nested inside the `geom_boxplot()` function. Alternatively, we could have gotten the same result by moving the complete `aes()` function up to be nested inside of the `ggplot()` function (`ggplot(whas500, aes(x = gender, y = bmi, group = gender))`). My choice to put it nest it in the `geom_boxplot()` function is purely personal preference.
-
-* We had to do this because the gender variable currently has a type of double. Meaning it can take on any real number. Therefore, `ggplot()` won't assume that `0` and `1` are categories by default. Therefore, if we don't include `group = gender` we get a message that says, "`Continuous x aesthetic -- did you forget aes(group=...)?`". More importantly, we get a single boxplot instead of two boxplots side-by-side. 
-
-* Later, we will learn how to recode this variable so that R automatically knows it is a categorical variable.   
-
-## Question:
-
-7. Based on the boxplots, what can we conclude about the relationship between bmi and gender in our sample?
+Based on the boxplots, what can we conclude about the relationship between BMI and gender in our sample?
 
 * Based on the boxplots, we conclude that BMI is higher, on average, in females  (albeit only slightly) than males in our sample.
 
-# Task 9 
+# Task 8
 
-Create a two-way frequency table for cohort year and history of cardiovascular disease.
+Create a two-way frequency table for cohort year and history of cardiovascular disease. We suggest that you use the factor versions of these variables: **cvd_f** and **year_f**.
 
 ```{r}
 # Using gmodels
-gmodels::CrossTable(whas500$year, whas500$cvd)
+gmodels::CrossTable(whas500$year_f, whas500$cvd_f)
 ```
 
 ```{r}
 # Using freqtables
 whas500 %>% 
-  freq_table(year, cvd) %>% 
+  freq_table(year_f, cvd_f) %>% 
   # Make the results easier to read --- 
   # Use select() to keep only the columns I'm interested in
   select(row_var:n_row, percent_row) %>% 
   # Use filter() to see only the rows corresponding to people who had CVD.
-  filter(col_cat == 1)
+  filter(col_cat == "Yes")
 ```
 
 ```{r}
 # Using freqtables
 whas500 %>% 
-  freq_table(cvd, year) %>% 
+  freq_table(cvd_f, year_f) %>% 
   select(row_var:n_row, percent_row) %>% 
-  filter(row_cat == 1)
+  filter(row_cat == "Yes")
 ```
 
-## Questions:
+## Question 8
 
-8. What proportion of people from the cohort year 1999 reported a history of cardiovascular disease?
+What proportion of people from the cohort year 1999 reported a history of cardiovascular disease?
 
 * 138 out of 188 (0.734) people from the cohort year 1999 reported a history of cardiovascular disease.
 
-9. Which cohort year had the highest percentage of people reporting cardiovascular disease?
+## Question 9
 
-* 73.8% of people from cohort year 1997 reported a history of cardiovascular disease. 73.4% of people from cohort year 1999 reported a history of cardiovascular disease. 78.3% of people from cohort year 2001 reported a history of cardiovascular disease. Therefore, cohort year 2001 had the highest percentage of people reporting cardiovascular disease. 
+Which cohort year had the highest percentage of people reporting cardiovascular disease?
 
-10. Of those reporting a history of cardiovascular disease, what percentage was in the cohort year 1997?
+* 73.8% of people from cohort year 1997 reported a history of cardiovascular disease. 73.4% of people from cohort year 1999 reported a history of cardiovascular disease. 78.3% of people from cohort year 2001 reported a history of cardiovascular disease. Therefore, cohort year 2001 had the highest percentage of people reporting cardiovascular disease.
+
+## Question 10
+
+Of those reporting a history of cardiovascular disease, what percentage was in the cohort year 1997?
 
 * Of the 375 people who reported a history of cardiovascular disease, 118 (31.5%) were in cohort year 1997.

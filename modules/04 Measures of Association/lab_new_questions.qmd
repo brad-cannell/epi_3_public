@@ -1,0 +1,172 @@
+---
+title: "Lab: Measures of Association"
+format:
+  html:
+    embed-resources: true
+---
+
+2023-09-26: I'm trying to add more measures of association questions to make this lab different than the intro to epi lab. There is a lab in Canvas called, "Lab: Measures of Association - Old - Save". I'm trying to create code to accompany that lab. Not sure if I'll have time to get it installed today or not.
+
+# Load packages
+
+```{r}
+#| label: load-packages
+library(dplyr, warn.conflicts = FALSE) # The "warn.conflicts" part is optional
+library(ggplot2)
+library(meantables)
+library(freqtables)
+```
+
+## Question 1
+
+Assume we followed an entire population of 300,000,000 people for one year and were able to categorize every person at the end of the year based on their diet and whether or not they developed heart disease. The data from this population is in the table below.
+
+|                |                     |                     |             |
+|----------------|---------------------|---------------------|-------------|
+|                | **Heart Disease +** | **Heart Disease -** |             |
+| **Bad Diet +** | 36,000,000          | 144,000,000         | 180,000,000 |
+| **Bad Diet -** | 6,000,000           | 114,000,000         | 120,000,000 |
+|                | 42,000,000          | 258,000,000         | 300,000,000 |
+
+Where 20% with a bad diet get heart disease in 1 year vs. 5% without a bad diet.
+
+What is the incidence proportion ratio between heart disease and a bad diet in this population over the period of follow-up?
+
+```{r}
+# Create a contingency table called diet_heart_disease
+diet_heart_disease <- matrix(
+  c(a = 36000000, b = 144000000, c = 6000000, d = 114000000),
+  ncol = 2,
+  byrow = TRUE
+)
+
+# Add marginal totals to diet_heart_disease
+diet_heart_disease <- addmargins(diet_heart_disease)
+
+# Assign row and column labels to diet_heart_disease
+dimnames(diet_heart_disease) <- list(
+  Exposure = c("Yes", "No", "col_sum"), # Row names
+  Disease  = c("Yes", "No", "row_sum")  # Then column names
+)
+
+# Print the value stored in diet_heart_disease to the screen
+diet_heart_disease
+```
+
+```{r}
+# Add the incidence proportions to diet_heart_disease
+incidence_prop <- diet_heart_disease[, "Yes"] / diet_heart_disease[, "row_sum"]
+diet_heart_disease <- cbind(diet_heart_disease, incidence_prop)
+# Print the value stored in diet_heart_disease to the screen
+diet_heart_disease
+```
+
+```{r}
+# Calculate the incidence proportion ratio and store it as a numeric vector 
+# called ipr
+ipr <- diet_heart_disease["Yes", "incidence_prop"] / diet_heart_disease["No", "incidence_prop"]
+# Print the value stored in ipr to the screen
+ipr
+```
+
+- The incidence proportion ratio between heart disease and a bad diet in this population over the period of follow-up was 4.
+
+## Question 2
+
+We previously found that the incidence proportion ratio between heart disease and a bad diet in this population over the period of follow-up was 4. Which of the following is the best interpretation of this incidence proportion ratio?
+
+- Among the members of our population, those who were exposed to bad diet had 4 times the incidence of heart disease compared to those who were not exposed to bad diet over one year of follow-up.
+
+## Question 3
+
+What is the difference in the incidence proportion of heart disease among people in this population with a bad diet compared to people in this population with a good diet over the one year of follow-up (the 2x2 table is once again given below)?
+
+|                |                     |                     |             |
+|----------------|---------------------|---------------------|-------------|
+|                | **Heart Disease +** | **Heart Disease -** |             |
+| **Bad Diet +** | 36,000,000          | 144,000,000         | 180,000,000 |
+| **Bad Diet -** | 6,000,000           | 114,000,000         | 120,000,000 |
+|                | 42,000,000          | 258,000,000         | 300,000,000 |
+
+```{r}
+# Calculate the incidence proportion difference and store it as a numeric vector 
+# called ipd
+ipd <- diet_heart_disease["Yes", "incidence_prop"] - diet_heart_disease["No", "incidence_prop"]
+# Print the value stored in ipd to the screen
+ipd
+```
+
+- The difference in the incidence proportion of heart disease among people in this population with a bad diet compared to people in this population with a good diet over the one year of follow-up is 0.15.
+
+## Question 4
+
+```{r}
+# Multiply the ipd by 100 to make the units 100 people
+ipd * 100
+```
+
+We previously found that the difference in the incidence proportion of heart disease among people in this population with a bad diet compared to people in this population with a good diet over the one year of follow-up is 0.15. Which of the following is the best interpretation of this incidence proportion difference?
+
+- Among the members of our population, those who were exposed to bad diet had 15 additional cases of disease per 100 people compared to those who were not exposed over the one year of follow-up.
+
+## Question 5
+
+But, we can rarely, if ever, collect data on our entire population. Now suppose that we took a simple random sample of 1% of this population instead. What would you expect the results of our study to look like now (the population contingency table is included for reference)?
+
+
+|                |                     |                     |             |
+|----------------|---------------------|---------------------|-------------|
+|                | **Heart Disease +** | **Heart Disease -** |             |
+| **Bad Diet +** | 36,000,000          | 144,000,000         | 180,000,000 |
+| **Bad Diet -** | 6,000,000           | 114,000,000         | 120,000,000 |
+|                | 42,000,000          | 258,000,000         | 300,000,000 |
+
+
+
+|                |                     |                     |             |
+|----------------|---------------------|---------------------|-------------|
+|                | **Heart Disease +** | **Heart Disease -** |             |
+| **Bad Diet +** | 360,000             | 1,440,000           | 1,800,000   |
+| **Bad Diet -** | 60,000              | 1,140,000           | 1,200,000   |
+|                | 420,000             | 2,580,000           | 3,000,000   |
+
+## Question 6
+
+What is the incidence proportion ratio between heart disease and a bad diet in this simple random sample from our population of interest over the period of follow-up?
+
+```{r}
+# Create a contingency table called diet_heart_disease_srs
+diet_heart_disease_srs <- matrix(
+  c(a = 360000, b = 1440000, c = 60000, d = 1140000),
+  ncol = 2,
+  byrow = TRUE
+)
+
+# Add marginal totals to diet_heart_disease_srs
+diet_heart_disease_srs <- addmargins(diet_heart_disease_srs)
+
+# Assign row and column labels to diet_heart_disease_srs
+dimnames(diet_heart_disease_srs) <- list(
+  Exposure = c("Yes", "No", "col_sum"), # Row names
+  Disease  = c("Yes", "No", "row_sum")  # Then column names
+)
+
+# Print the value stored in diet_heart_disease_srs to the screen
+diet_heart_disease_srs
+```
+
+```{r}
+# Add the incidence proportions to diet_heart_disease_srs
+incidence_prop <- diet_heart_disease_srs[, "Yes"] / diet_heart_disease_srs[, "row_sum"]
+diet_heart_disease_srs <- cbind(diet_heart_disease_srs, incidence_prop)
+# Print the value stored in diet_heart_disease_srs to the screen
+diet_heart_disease_srs
+```
+
+```{r}
+# Calculate the incidence proportion ratio and store it as a numeric vector 
+# called ipr
+ipr <- diet_heart_disease_srs["Yes", "incidence_prop"] / diet_heart_disease_srs["No", "incidence_prop"]
+# Print the value stored in ipr to the screen
+ipr
+```
