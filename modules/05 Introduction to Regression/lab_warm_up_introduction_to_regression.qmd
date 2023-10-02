@@ -1,6 +1,8 @@
 ---
 title: "Lab Warm-up: Introduction to Regression"
-output: html_notebook
+format:
+  html:
+    embed-resources: true
 ---
 
 # Overview
