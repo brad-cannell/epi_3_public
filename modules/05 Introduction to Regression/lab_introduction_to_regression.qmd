@@ -5,18 +5,6 @@ format:
     embed-resources: true
 ---
 
-# 🛑 Formatting (delete this section before posting to Canvas) 🛑
-
-* Please name this file `lab_module_name.qmd`.
-* The Overview section, each task number, and each question number should be written as a level-one headers (e.g., `# Task 1`).
-* All R code being run, should be put into R code chunks.
-* All R code being discussed in the text should be placed inside backticks (e.g., `install.packages("dplyr")`).
-* R package names being discussed in the text should be formatted as code (e.g., "...the `dplyr` package...). 
-* When functions are discussed in the text, they should be formatted as code and empty parentheses added to the end of the function name (e.g., "The `tibble()` function can be used to create data frames…").
-* Data set/frame names, variable names, and other key words should be written with **bold** text (e.g., "Please download **chocolate study 1.xls**".
-* There should be 2 line breaks (returns) immediately above level-one headers. There should be 1 line break (return) immediately above all other headers.
-* There should be one line break (return) immediately above each code chunk. There should be at least 1 line break immediately below each code chunk. If the the code chunk is immediately followed by a level-one header, then there will be two line breaks.
-
 
 # Load packages
 
@@ -25,11 +13,7 @@ Remember, it's considered a best practice to load all the packages that your fil
 ```{r}
 #| label: load-packages
 library(dplyr, warn.conflicts = FALSE) # The "warn.conflicts" part is optional
-library(readr)
 library(broom)
-library(ggplot2)
-library(meantables)
-library(freqtables)
 ```
 
 
@@ -37,37 +21,67 @@ library(freqtables)
 
 In this lab, we will practice fitting and interpreting regression models. The data we will use was collected from mothers and babies for the purpose of investigating the occurrence of low birth weight. 
 
-# Task 1
 
-Please use the following links to download the low birth weight data to your computer and view the codebook:
- * [Click here to view/download the codebook](https://www.dropbox.com/s/n6za9yhtw44bh7f/Codebook lowbwt.pdf?dl=0). Look over the codebook to learn a little bit about the data you will be working with.
- * [Click here to view/download the data](https://www.dropbox.com/s/whel3kfsjswu2yy/lowbwt.rds?dl=0).
- 
-# Task 2
+# Task 1 
 
-Import `lowbwt.rds` into your R global environment as `lowbwt`.
+Download the low birth weight data and view the codebook.
+
+## If you are using a Posit Cloud paid student account
+
+1. After logging into Posit Cloud, please navigate to the “UTHealth – Epidemiology III” workspace. Once in the workspace, please click on the Introduction to Regression Lab to open it.
+
+2. In the RStudio files pane, you should see a file named **Codebook lowbwt.pdf**. Click on it to view the low birthweight codebook in your browser. Look over the codebook to learn a little bit about the data you will be working with. 
+
+3. In the RStudio files pane, you should see a file named **lowbwt.rds**. Click on it to load it into your global environment as **lowbwt**. If you want to render your Quarto file to another format (e.g., HTML) at the end of the lab, then you will need to import **lowbwt.rds** with code instead of just double-clicking the file. The code to import this data will look like this: `lowbwt <- readr::read_rds("lowbwt.rds")`.
+
+## If you are using a Posit Cloud free account
+
+1. Please use the following links to download the low birthweight data to your computer and view the codebook:
+
+* [Click here to view/download the low birthweight data codebook](https://uthtmc.sharepoint.com/:b:/s/SPHCannellEpiIII/ERzB34AO5ytIgRJHwf3Yws8B8DGdoMprUATFu391nt0KjQ?e=zGF9RY). Look over the codebook to learn a little bit about the data you will be working with.
+
+* [Click here to download the low birthweight data](https://uthtmc.sharepoint.com/:u:/s/SPHCannellEpiIII/EeaY22_gFWZIo6PYh3V2P6wB90hNBQDfnLl4BtYwf0ilbw?e=stX4Wo).
+
+2. After logging into Posit Cloud, please create a new RStudio project for this lab.
+
+3. In the files pane of the new project, click the `upload` button. Upload the **lowbwt.rds** file you downloaded earlier.
+
+4. In the RStudio files pane, you should see a file named **lowbwt.rds**. Click on it to load it into your global environment as **lowbwt**. If you want to render your Quarto file to another format (e.g., HTML) at the end of the lab, then you will need to import **lowbwt.rds** with code instead of just double-clicking the file. The code to import this data will look like this: `lowbwt <- readr::read_rds("lowbwt.rds")`.
+
+## If you are using R/RStudio on your computer
+
+1. Please use the following links to download the low birthweight data to your computer and view the codebook:
+
+* [Click here to view/download the low birthweight data codebook](https://uthtmc.sharepoint.com/:b:/s/SPHCannellEpiIII/ERzB34AO5ytIgRJHwf3Yws8B8DGdoMprUATFu391nt0KjQ?e=zGF9RY). Look over the codebook to learn a little bit about the data you will be working with.
+
+* [Click here to download the low birthweight data](https://uthtmc.sharepoint.com/:u:/s/SPHCannellEpiIII/EeaY22_gFWZIo6PYh3V2P6wB90hNBQDfnLl4BtYwf0ilbw?e=stX4Wo).
+
+2. Double-click the **lowbwt.rds** file you just downloaded to your computer. It should open RStudio and prompt you to load it into your global environment as **lowbwt**. If you want to render your Quarto file to another format (e.g., HTML) at the end of the lab, then you will need to import **lowbwt.rds** with code instead of just double-clicking the file. The code to import this data will look like this: `lowbwt <- readr::read_rds("lowbwt.rds")`. You will need to change the file path inside the `readr::read_rds()` function to the location where you have **lowbwt.rds** saved on your computer for this code to work. Please see the [file paths chatper of R4Epi](https://www.r4epi.com/file-paths) for more information.
+
 
 ```{r}
-lowbwt <- read_rds("/Users/bradcannell/Dropbox/Datasets/Low Birth Weight/lowbwt.rds")
+lowbwt <- readr::read_rds("lowbwt.rds")
 ```
 
-# Task 3
 
-Please view the structure of `lowbwt` using the `str()` function or the `glimpse()` function.
+# Task 2
+
+Please view the structure of **lowbwt** using the `str()` function or the `glimpse()` function.
 
 ```{r}
 glimpse(lowbwt)
 ```
 
-# Question 1
+## Question 1
 
-* The `lowbwt` data frame contains ____ rows and ____ columns.
+The **lowbwt** data frame contains ____ rows and ____ columns.
 
-* The `lowbwt` data frame contains 189 rows and 15 columns.
+* The **lowbwt** data frame contains 189 rows and 15 columns.
 
-# Task 4
 
-Please fit a linear regression model to the `lowbwt` data frame using `weight of mother at last menstrual period in pounds` as the regressand and the `age of the mother in years` as the regressor.
+# Task 3
+
+Please fit a linear regression model to the **lowbwt** data frame using **weight of mother at last menstrual period in pounds** as the regressand and the **age of the mother in years** as the regressor.
 
 ```{r}
 glm(
@@ -77,15 +91,16 @@ glm(
 )
 ```
 
-# Question 2
+## Question 2
 
-What is the mean value of the `weight of mother at last menstrual period in pounds` when the `mother’s age` is 0? (round to the nearest integer – no decimal places)
+What is the mean value of the **weight of mother at last menstrual period in pounds** when the **mother’s age** is 0? (round to the nearest integer – no decimal places)
 
-The mean value of the weight of mother at last menstrual period in pounds when the mother’s age is 0 is 106.
+* The mean value of the weight of mother at last menstrual period in pounds when the mother’s age is 0 is 106.
 
-# Task 5
 
-Please fit a linear regression model to the `lowbwt` data frame using `weight of mother at last menstrual period in pound`s as the regressand and `mother’s smoking status` during pregnancy as the regressor.
+# Task 4
+
+Please fit a linear regression model to the **lowbwt** data frame using **weight of mother at last menstrual period in pounds** as the regressand and **mother’s smoking status** during pregnancy as the regressor.
 
 ```{r}
 glm(
@@ -95,19 +110,20 @@ glm(
 )
 ```
 
-# Question 3
+## Question 3
 
-* What is the mean value of the `weight of mother at last menstrual period in pounds` when the `mother smoked during pregnancy`? (round to the nearest integer – no decimal places)
+What is the mean value of the **weight of mother at last menstrual period in pounds** when the **mother smoked during pregnancy**? (round to the nearest integer – no decimal places)
 
 ```{r}
 130.896 - 2.761
 ```
 
-* The mean value of the `weight of mother at last menstrual period in pounds` when the `mother smoked during pregnancy` was 128. (rounded to the nearest integer – no decimal places)
+* The mean value of the **weight of mother at last menstrual period in pounds** when the **mother smoked during pregnancy** was 128. (rounded to the nearest integer – no decimal places)
 
-# Task 6
 
-Please fit a logistic regression model to the `lowbwt` data frame using `low birth weight` as the regressand and `age of mother in years` as the regressor.
+# Task 5
+
+Please fit a logistic regression model to the **lowbwt** data frame using **low birth weight** as the regressand and **age of mother in years** as the regressor.
 
 ```{r}
 glm(
@@ -118,15 +134,16 @@ glm(
   tidy(exp = TRUE)
 ```
 
-# Question 4
+## Question 4
 
-* On average, babies had _____ times the odds of `low birth weight` for each one-year increase in mother's age.(round to the hundredths place – two decimals)
+On average, babies had _____ times the odds of **low birth weight** for each one-year increase in mother's age.(round to the hundredths place – two decimals)
 
-* On average, babies had 0.95 times the odds of `low birth weight` for each one-year increase in mother's age.
+* On average, babies had 0.95 times the odds of **low birth weight** for each one-year increase in mother's age.
 
-# Task 7
 
-Please fit a logistic regression model to the `lowbwt` data frame using `low birth weight` as the regressand and `mother’s smoking status during pregnancy` as the regressor.
+# Task 6
+
+Please fit a logistic regression model to the **lowbwt** data frame using **low birth weight** as the regressand and **mother’s smoking status during pregnancy** as the regressor.
 
 ```{r}
 glm(
@@ -137,15 +154,16 @@ glm(
   tidy(exp = TRUE)
 ```
 
-# Question 5
+## Question 5
 
-* On average, `low birth weight` babies had _____ times the odds of having a `mother who smoked` compared to babies that were not born with a `low birth weight`. (round to the hundredths place – two decimals)
+On average, **low birth weight** babies had _____ times the odds of having a **mother who smoked** compared to babies that were not born with a **low birth weight**. (round to the hundredths place – two decimals)
 
-* On average, `low birth weight` babies had 2.02 times the odds of having a `mother who smoked` compared to babies that were not born with a `low birth weight`. (rounded to the hundredths place – two decimals)
+* On average, **low birth weight** babies had 2.02 times the odds of having a **mother who smoked** compared to babies that were not born with a **low birth weight**. (rounded to the hundredths place – two decimals)
 
-# Task 8
 
-Please fit a Poisson regression model to the `lowbwt` data frame using `history of premature labor` as the regressand and `age of mother in years` as the regressor.
+# Task 7
+
+Please fit a Poisson regression model to the **lowbwt** data frame using **history of premature labor** as the regressand and **age of mother in years** as the regressor.
 
 ```{r}
 glm(
@@ -156,15 +174,16 @@ glm(
   tidy(exp = TRUE)
 ```
 
-# Question 6
+## Question 6
 
-* Mother's reported _____ times the number of `premature deliveries`, on average, for each one-year increase in `age`. (rounded to the hundredths place – two decimals)
+Mother's reported _____ times the number of **premature deliveries**, on average, for each one-year increase in **age**. (rounded to the hundredths place – two decimals)
 
-* Mother's reported 1.03 times the number of `premature deliveries` for each one-year increase in `age`. (rounded to the hundredths place – two decimals)
+* Mother's reported 1.03 times the number of **premature deliveries** for each one-year increase in **age**. (rounded to the hundredths place – two decimals)
 
-# Task 9
 
-Please fit a Poisson regression model to the `lowbwt` data frame using `history of premature labor` as the regressand and `mother’s smoking status during pregnancy` as the regressor.
+# Task 8
+
+Please fit a Poisson regression model to the **lowbwt** data frame using **history of premature labor** as the regressand and **mother’s smoking status during pregnancy** as the regressor.
 
 ```{r}
 glm(
@@ -175,8 +194,8 @@ glm(
   tidy(exp = TRUE)
 ```
 
-# Question 7
+## Question 7
 
-* Mother's who `smoked during pregnancy` reported an average of _____ times the number of `premature deliveries` compared to mothers who did not smoke during pregnancy. (round to the hundredths place – two decimals)
+Mother's who **smoked during pregnancy** reported an average of _____ times the number of **premature deliveries** compared to mothers who did not smoke during pregnancy. (round to the hundredths place – two decimals)
 
-* Mother's who `smoked during pregnancy` reported an average of 2.55 times the number of `premature deliveries` compared to mothers who did not smoke during pregnancy. (rounded to the hundredths place – two decimals)
+* Mother's who **smoked during pregnancy** reported an average of 2.55 times the number of **premature deliveries** compared to mothers who did not smoke during pregnancy. (rounded to the hundredths place – two decimals)
