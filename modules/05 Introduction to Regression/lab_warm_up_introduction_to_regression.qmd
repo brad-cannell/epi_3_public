@@ -358,9 +358,9 @@ glm(
 
 #### Interpretation
 
-1. Intercept: The mean value of deep abdominal adipose tissue among people who are not tall is equal to 98.228. 
+1. Intercept: The mean value of deep abdominal adipose tissue among people who are not large waisted is equal to 98.228. 
 
-2. large_waist_fYes: The average change in deep abdominal adipose tissue for people with a large waste circumference compared to people with a small waste circumference is 8.854.
+2. large_waist_fYes: The average change in deep abdominal adipose tissue for people with a large waist circumference compared to people with a small waste circumference is 8.854.
 
 98.228 + 8.854
 
@@ -416,12 +416,12 @@ glm(
 
 ```{r}
 tibble(
-  intercpet   = exp(-2.1734),
+  intercpet   = exp(-2.734),
   dementia_or = exp(2.282)
 )
 ```
 
-3. dementia_fYes: People with dementia have 9.8 times the odds of `elder mistreatment` among compared to people without dementia.
+3. dementia_fYes: People with dementia have 9.8 times the odds of `elder mistreatment` compared to people without dementia.
 
 ```{r}
 em_dementia_ct <- matrix(
