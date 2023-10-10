@@ -1316,6 +1316,317 @@ Just adding the slide for now. Come back to this later.
 
 # DAGS
 
+## ggdag documentation
+
+Following along with the ggdag documentation to make sure I understand how it works (https://cran.r-project.org/web/packages/ggdag/vignettes/intro-to-ggdag.html).
+
+```{r}
+library(dagitty)
+library(ggdag)
+library(ggplot2)
+```
+
+**Important**: Without either using set.seed or entering coordinates, the graph will look different every time.
+
+```{r}
+dag <- dagitty("dag{y <- z -> x}")
+tidy_dagitty(dag)
+```
+
+```{r}
+ggdag(dag)
+```
+
+
+`dagify()` creates dagitty DAGs using a more R-like syntax. It currently accepts formulas in the usual R style, e.g. y ~ x + z, which gets translated to ⁠y <- {x z}⁠, as well as using a double tilde (⁠~~⁠) to graph bidirected variables, e.g. x1 ~~ x2 is translated to ⁠x1 <-> x2⁠.
+
+```{r}
+dagified <- dagify(
+  x ~ z,
+  y ~ z,
+  exposure = "x",
+  outcome = "y"
+)
+
+tidy_dagitty(dagified)
+```
+
+```{r}
+ggdag(dagified)
+```
+
+```{r}
+tidy_dag <- tidy_dagitty(dagified)
+str(tidy_dag)
+```
+
+```{r}
+tidy_dag$data
+```
+
+```{r}
+tidy_dag$dag
+```
+
+```{r}
+ggdag(tidy_dag)
+```
+Most of the analytic functions in dagitty have extensions in ggdag and are named dag_\*() or node_\*(), depending on if they are working with specific nodes or the entire DAG. A simple example is `node_parents()`, which adds a column to the to the tidy_dagitty object about the parents of a given variable:
+
+```{r}
+node_parents(tidy_dag, "x")
+```
+
+Or working with the entire DAG to produce a tidy_dagitty that has all pathways between two variables:
+
+```{r}
+bigger_dag <- dagify(
+  y ~ x + a + b,
+  x ~ a + b,
+  exposure = "x",
+  outcome = "y"
+)
+```
+
+```{r}
+ggdag(bigger_dag)
+```
+
+```{r}
+dag_paths(bigger_dag)
+```
+
+ggdag also supports piping of functions and includes the pipe internally (so you don’t need to load dplyr or magrittr). Basic dplyr verbs are also supported (and anything more complex can be done directly on the data object).
+
+```{r}
+# View open paths only
+bigger_dag |> 
+  dag_paths() |> 
+  group_by(set) |> 
+  filter(!is.na(path))
+```
+
+It looks like y to itself is always has a value of "open path" for the path column.
+
+```{r}
+# Find how many variables are in between x and y in each path
+bigger_dag |> 
+  dag_paths() |> 
+  group_by(set) |> 
+  filter(!is.na(path) & !is.na(name)) |> 
+  summarize(n_vars_between = n() - 1L)
+```
+
+It looks like a "set" is a particular path. 
+Set 1 = x -> y. There is only one variable on the path, x
+Set 2 = a -> y and a -> x -> y. There are... hmm, this doesn't make sense either. I'm not sure how to make sense of the "3" above.
+
+```{r}
+ggdag_paths(bigger_dag)
+```
+
+This should be useful as a quiz question.
+
+```{r}
+ggdag_parents(bigger_dag, "x")
+```
+
+```{r}
+#  quickly get the miniminally sufficient adjustment sets to adjust for when
+#  analyzing the effect of x on y
+ggdag_adjustment_set(bigger_dag) 
+```
+
+Examples from the `dagify()` help page.
+
+```{r}
+d <- dagify(y ~ x + z, x~ z)
+d
+```
+
+```{r}
+ggdag(d)
+```
+
+Add coordinate list
+
+```{r}
+coords <- list(
+  x = c(A = 1, B = 2, D = 3, C = 3, F = 3,  E = 4, G = 5, H = 5, I = 5),
+  y = c(A = 0, B = 0, D = 1, C = 0, F = -1, E = 0, G = 1, H = 0, I = -1)
+)
+```
+
+```{r}
+dag <- dagify(
+  G ~~ H,
+  G ~~ I,
+  I ~~ G,
+  H ~~ I,
+  D ~ B,
+  C ~ B,
+  I ~ C + F,
+  F ~ B,
+  B ~ A,
+  H ~ E,
+  C ~ E + G,
+  G ~ D, 
+  coords = coords
+)
+
+dag
+```
+
+```{r}
+ggdag(dag)
+```
+
+```{r}
+dagitty::is.dagitty(dag)
+```
+
+Without either using set.seed or entering coordinates, the graph will look different every time.
+
+```{r}
+# Without either using set.seed or entering coordinates, the graph will look different every time.
+set.seed(123)
+dag2 <- dagify(
+  y ~ x + z2 + w2 + w1,
+  x ~ z1 + w1,
+  z1 ~ w1 + v,
+  z2 ~ w2 + v,
+  w1 ~~ w2,
+  exposure = "x",
+  outcome = "y"
+)
+```
+
+```{r}
+ggdag(dag2)
+```
+
+## From: An Introduction to Directed Acyclic Graphs (https://cran.r-project.org/web/packages/ggdag/vignettes/intro-to-dags.html)
+
+```{r}
+#  set theme of all DAGs to `theme_dag()`
+library(ggdag)
+library(ggplot2)
+theme_set(theme_dag())
+```
+
+A DAG displays assumptions about the relationship between variables (often called nodes in the context of graphs). The assumptions we make take the form of lines (or edges) going from one node to another. These edges are directed, which means to say that they have a single arrowhead indicating their effect. Here’s a simple DAG where we assume that x affects y:
+
+```{r}
+dagify(y ~ x) |> 
+  ggdag()
+```
+
+```{r}
+# This is my amendment because I like them to be on a straight line
+dagify(
+  y ~ x,
+  coords = list(
+    x = c(x = 1, y = 2),
+    y = c(x = 0, y = 0)
+  )
+) |> 
+  ggdag()
+```
+
+You also sometimes see edges that look bi-directed, like this:
+
+```{r}
+dagify(y ~~ x) %>%
+  ggdag()
+```
+
+But this is actually shorthand for an unmeasured cause of the two variables (in other words, unmeasured confounding):
+
+```{r}
+#  canonicalize the DAG: Add the latent variable in to the graph
+dagify(y ~~ x) %>%
+  ggdag_canonical()
+```
+
+Let’s say we’re looking at the relationship between smoking and cardiac arrest. We might assume that smoking causes changes in cholesterol, which causes cardiac arrest:
+
+**Note**: We can teach how to use labels and the exposure and outcome variables.
+
+```{r}
+set.seed(123)
+smoking_ca_dag <- dagify(cardiacarrest ~ cholesterol,
+  cholesterol ~ smoking + weight,
+  smoking ~ unhealthy,
+  weight ~ unhealthy,
+  labels = c(
+    "cardiacarrest" = "Cardiac\n Arrest",
+    "smoking" = "Smoking",
+    "cholesterol" = "Cholesterol",
+    "unhealthy" = "Unhealthy\n Lifestyle",
+    "weight" = "Weight"
+  ),
+  latent = "unhealthy",
+  exposure = "smoking",
+  outcome = "cardiacarrest"
+)
+
+ggdag(smoking_ca_dag, text = FALSE, use_labels = "label")
+```
+
+```{r}
+set.seed(6)
+ggdag_paths(smoking_ca_dag, text = FALSE, use_labels = "label", shadow = TRUE)
+```
+
+```{r}
+ggdag_adjustment_set(smoking_ca_dag, text = FALSE, use_labels = "label", shadow = TRUE)
+```
+
+```{r}
+fever_dag <- collider_triangle(
+  x = "Influenza",
+  y = "Chicken Pox",
+  m = "Fever"
+)
+
+ggdag(fever_dag, text = FALSE, use_labels = "label")
+```
+
+```{r}
+ggdag_dseparated(fever_dag, text = FALSE, use_labels = "label")
+```
+
+```{r}
+ggdag_dseparated(fever_dag,
+  controlling_for = "m",
+  text = FALSE, use_labels = "label"
+)
+```
+
+```{r}
+dagify(fever ~ flu + pox,
+  acetaminophen ~ fever,
+  labels = c(
+    "flu" = "Influenza",
+    "pox" = "Chicken Pox",
+    "fever" = "Fever",
+    "acetaminophen" = "Acetaminophen"
+  )
+) %>%
+  ggdag_dseparated(
+    from = "flu", to = "pox", controlling_for = "acetaminophen",
+    text = FALSE, use_labels = "label"
+  )
+```
+
+```{r}
+ggdag_dseparated(smoking_ca_dag,
+  controlling_for = c("weight", "cholesterol"),
+  text = FALSE, use_labels = "label", collider_lines = FALSE
+)
+```
+
+
 ## For confounding
 
 ### DAG - Ice cream and murder
@@ -1379,8 +1690,115 @@ ggsave("/Users/bradcannell/Desktop/dag_ice_cream_2.png", width = 3.5, height = 4
 
 So far, I haven't been able to get the labels moved out of the way enough to see the arrows. I need to play around with this more when I have more time. 
 
- 
 
+## Shorten DAG distance
+
+From: https://stackoverflow.com/questions/65420136/how-do-you-adjust-the-arrows-in-a-ggplot-of-a-ggdag
+
+```{r}
+#Create a tidy DAG
+DAG <- dagify(y ~ x)
+DAG <- tidy_dagitty(DAG)
+DAG
+```
+
+```{r}
+#Plot the DAG with default nodes
+PLOT1 <- ggplot(ggplot2::aes(x = x, y = y, xend = xend, yend = yend), data = DAG) +
+         geom_dag_point(colour = 'LightBlue') +
+         geom_dag_edges() +
+         geom_dag_text(colour = 'white') +
+         theme_dag()
+PLOT1
+```
+
+```{r}
+#Plot the DAG with bigger nodes
+PLOT2 <- ggplot(ggplot2::aes(x = x, y = y, xend = xend, yend = yend), data = DAG) +
+         geom_dag_point(colour = 'LightBlue', size = 40) +
+         geom_dag_edges() +
+         geom_dag_text(colour = 'white') +
+         theme_dag()
+PLOT2
+```
+
+```{r}
+shorten_dag_arrows <- function(tidy_dag, proportion){
+# Update underlying ggdag object
+tidy_dag$data <- dplyr::mutate(tidy_dag$data, 
+                             xend = (1-proportion/2)*(xend - x) + x, 
+                             yend = (1-proportion/2)*(yend - y) + y,
+                             xstart = (1-proportion/2)*(x - xend) + xend,
+                             ystart = (1-proportion/2)*(y-yend) + yend)
+return(tidy_dag)
+}
+```
+
+```{r}
+DAG <- shorten_dag_arrows(DAG, 0.06)
+DAG
+```
+
+```{r}
+PLOT3 <- ggplot(ggplot2::aes(x = x, y = y, xend = xend, yend = yend), data = DAG) +
+  geom_dag_point(colour = 'LightBlue', size = 40) +
+  geom_dag_edges() +
+  geom_dag_text(colour = 'white') +
+  theme_dag()
+PLOT3
+```
+
+## Make my custom simple dag
+
+```{r dags-first-simple-dag, echo=FALSE, warning=FALSE}
+# Create the DAG
+simple_dag <- dagify(
+  y ~ x,
+  exposure = "x",
+  outcome = "y",
+  labels = c("x" = "Exposure", "y" = "Outcome"),
+  coords = list(
+    x = c(x = 1, y = 2),
+    y = c(x = 0, y = 0)
+  )
+) 
+
+# Make it a tidy_dagitty object to make it easier to modify some of the visual 
+# characteristics of the DAG (e.g, add color).
+simple_dag <- tidy_dagitty(simple_dag) |> 
+  # Change x and xend so that the arrows are visible after increasing the 
+  # size of the nodes below
+  mutate(xstart = 1.03, xend = 1.97) |> 
+  # Add custom colors to the nodes
+  mutate(color = if_else(name == "x", "#ae6042", "#4e738a"))
+
+# Basic ggdag  
+# ggdag(simple_dag) +
+#   theme_dag()
+
+# For geom_dag_label_repel
+set.seed(1)
+
+# Create DAG with ggplot2 so that I can modify some of the visual 
+# characteristics of the DAG (e.g, add color).
+ggplot(simple_dag, aes(x = x, y = y, xend = xend, yend = yend)) +
+  geom_dag_point(size = 30, color = simple_dag$data$color) +
+  geom_dag_edges(
+    # Move the tail of the arrow away from the middle of the x node
+    aes(x = xstart),
+    # Make the arrowhead larger. Default is 5 pts.
+    arrow_directed = grid::arrow(length = grid::unit(20, "pt"), type = "closed")) +
+  geom_dag_text(size = 10) +
+  geom_dag_label_repel(
+    aes(label = label), 
+    # Move the labels further from the center of the node
+    box.padding = grid::unit(1, "lines"),
+    # Erase the little line that "connects" the label box to the center of 
+    # the node
+    segment.size = 0
+  ) +
+  theme_dag()
+```
 
 # 🗑Clean up
 
