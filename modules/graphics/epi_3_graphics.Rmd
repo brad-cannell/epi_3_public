@@ -1690,8 +1690,87 @@ ggsave("/Users/bradcannell/Desktop/dag_ice_cream_2.png", width = 3.5, height = 4
 
 So far, I haven't been able to get the labels moved out of the way enough to see the arrows. I need to play around with this more when I have more time. 
 
+## Adjust DAG labels
 
-## Shorten DAG distance
+```{r confounding-traditional-criteria-dag-02, echo=FALSE, fig.cap="Is positive pap test a confounder?"}
+# Create a DAG called traditional_criteria_dag_02
+traditional_criteria_dag_02 <- dagify(
+  cc ~ pa, # The form is effect ~ cause
+  pa ~ u1,
+  pp ~ u1,
+  pp ~ u2,
+  cc ~ u2,
+  # Optionally add coordinates to control the placement of the nodes on the DAG
+  coords = list( 
+    x = c(pa = 1, u1 = 1, pp = 2, u2 = 3, cc = 3),
+    y = c(pa = 0, u1 = 2, pp = 1, u2 = 2, cc = 0)
+  )
+)
+
+# Set seed to reproduce label locations
+set.seed(4)
+
+# Plot the dag called traditional_criteria_dag_02
+ggdag(traditional_criteria_dag_02, text = FALSE) +
+  # Manually add labels so that they don't cover up the arrows
+  expand_limits(y = 2.2) +
+  geom_label(label = "Physical Activity", x = 1.25, y = 0.15) +
+  geom_label(label = "Cervical Cancer", x = 2.75, y = 0.15) +
+  geom_label(label = "Health Conscious \n Personality", x = 1.25, y = 2.25) +
+  geom_label(label = "Positive PAP \n Test", x = 2, y = 1.35) +
+  geom_label(label = "pre-cancerous \n Lesion", x = 2.75, y = 2.25) +
+  # Comment out theme_dag() to adjust label positions
+  theme_dag() +
+  ggplot2::labs(caption = "Source: Causal Diagrams: Draw Your Assumptions Before Your Conclusions (Hernán, 2017)")
+```
+
+## Color DAG edge
+
+First, create a simple DAG.
+
+```{r confounding-structural-criteria-dag-01, echo=FALSE, fig.cap="Backdoor paths."}
+# Create a DAG called structural_criteria_dag_01
+structural_criteria_dag_01 <- dagify(
+  y ~ x, # The form is effect ~ cause
+  y ~ z,
+  x ~ z,
+  # Optionally add coordinates to control the placement of the nodes on the DAG
+  coords = list( 
+    x = c(x = 1, z = 2, y = 3),
+    y = c(x = 0, z = 1, y = 0)
+  )
+)
+
+# Plot the dag called structural_criteria_dag_01
+p <- ggdag(structural_criteria_dag_01)
+```
+
+Get the line coordinates
+
+```{r}
+tidy_dagitty(structural_criteria_dag_01)
+```
+
+Next, we want to add segments over the top of the current edges and color them red. Howver, it's really hard to guess the correct coordinates for the segments. For example...
+
+```{r}
+adjust <- 0.067
+p + 
+  # geom_segment(aes(x = 2, xend = 1, y = 1, yend = 0, color = "red"))
+  geom_segment(
+    aes(x = (2 - adjust), xend = (1 + adjust), y = (1 - adjust), yend = (0 + adjust), color = "red"),
+    arrow = arrow(length = unit(0.2,"cm"), type = "closed")
+  ) +
+  # geom_segment(aes(x = 2, xend = 3, y = 1, yend = 0, color = "red"))
+  geom_segment(
+    aes(x = (2 + adjust), xend = (3 - adjust), y = (1 - adjust), yend = (0 + adjust), color = "red"),
+    arrow = arrow(length = unit(0.2,"cm"), type = "closed")
+  ) +
+  theme_dag() +
+  theme(legend.position = "none")
+```
+
+## Shorten DAG edge distance
 
 From: https://stackoverflow.com/questions/65420136/how-do-you-adjust-the-arrows-in-a-ggplot-of-a-ggdag
 
