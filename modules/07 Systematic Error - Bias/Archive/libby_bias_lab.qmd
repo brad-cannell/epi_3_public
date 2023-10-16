@@ -1,13 +1,9 @@
 ---
-title: "Lab: Bias"
-output: html_notebook
+title: "Libby's Bias Lab"
+format:
+  html:
+    embed-resources: true
 ---
-
-
-# Instructions
-
-Please complete the following lab assignment. You may work on the assignment in groups or on your own. However, to get credit, you must submit your own answers in Canvas. This lab is open note and open book. You may also ask the instructor and the TA questions. Please note that in most cases we will try to guide you towards answering your own question rather than directly providing you with an answer.
-
 
 # Question 1
 
@@ -84,8 +80,8 @@ library(fmsb)
 ```{r}
 # Input values into a matrix
 matrix_obj <- matrix(
-  c(a = 40, b = 960, c = 15, d = 985), 
-  ncol = 2, 
+  c(a = 40, b = 960, c = 15, d = 985),
+  ncol = 2,
   byrow = TRUE
 )
 
@@ -176,7 +172,7 @@ Please make sure you understand why this is the correct answer. You may use the 
 ## Q4
 [Fill in Multiple Blanks]<br>
 
-Suppose that many of the old records had been lost or discarded, but given the suspicion about the effects of the solvent, the records of employees who had worked with the solvent and subsequently had health problems were more likely to be retained. Record retention was **95%** among workers who were **exposed and developed health problems**, but record retention was only **80%** for **all other workers**. Create a new contingency table to match the data. Assume no confounding effects and no information bias. 
+Suppose that many of the old records had been lost or discarded, but given the suspicion about the effects of the solvent, the records of employees who had worked with the solvent and subsequently had health problems were more likely to be retained. Record retention was **95%** among workers who were **exposed and developed health problems**, but record retention was only **80%** for **all other workers**. Create a new contingency table to match the data. Assume no confounding effects and no information bias.
 <br>
 For this answer, round to the nearest integer, if necessary.
 <br>
@@ -387,7 +383,3 @@ Please make sure you understand why this is the correct answer. You may use the 
 ## Q13 Optional Feedback
 [Essay Question]<br>
 **Optional:** Please feel free to leave any comments below about the usefulness of this lab. Which parts were helpful? What could I do to improve it? What is still unclear?
-
-
-
-

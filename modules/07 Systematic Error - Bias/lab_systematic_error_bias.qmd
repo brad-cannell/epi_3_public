@@ -1,0 +1,252 @@
+---
+title: "Lab: Systematic Error - Bias"
+format:
+  html:
+    embed-resources: true
+---
+
+# 🛑 Formatting (delete this section before posting to Canvas) 🛑
+
+* Please name this file `lab_module_name.qmd`.
+* The Overview section, each task number, and each question number should be written as a level-one headers (e.g., `# Task 1`).
+* All R code being run, should be put into R code chunks.
+* All R code being discussed in the text should be placed inside backticks (e.g., `install.packages("dplyr")`).
+* R package names being discussed in the text should be formatted as code (e.g., "...the `dplyr` package...). 
+* When functions are discussed in the text, they should be formatted as code and empty parentheses added to the end of the function name (e.g., "The `tibble()` function can be used to create data frames…").
+* Data set/frame names, variable names, and other key words should be written with **bold** text (e.g., "Please download **chocolate study 1.xls**".
+* There should be 2 line breaks (returns) immediately above level-one headers. There should be 1 line break (return) immediately above all other headers.
+* There should be one line break (return) immediately above each code chunk. There should be at least 1 line break immediately below each code chunk. If the the code chunk is immediately followed by a level-one header, then there will be two line breaks.
+
+
+# Load packages
+
+Remember, it's considered a best practice to load all the packages that your file will use up at the top of the file. If you have not yet installed a package, you will need to do so by running `install.packages("package name")` in the R console. For example, to install the `dplyr` package, you would run `install.packages("dplyr")`. However, you typically **do not** want to type the code to install the package here in your Quarto file because you only need to install the package once on a given computer. Not every time you run your R code.
+
+```{r}
+#| label: load-packages
+library(dplyr, warn.conflicts = FALSE) # The "warn.conflicts" part is optional
+```
+
+
+# Overview
+
+In this lab, we will walk through multiple scenarios related to systematic error in our measures. Systematic error refers to the differences between our conclusions and the truth that are caused by the way we collected our data or conducted our analysis. There are many different flavors of systematic error that may affect the difference between our measure and the truth. In this lab, we will focus on two broad categories of systematic error - selection bias and information bias.
+
+# Task 1
+
+In a case-control study of risk factors of colon cancer, 430 cases were compared with 551 controls. The investigators used a questionnaire to obtain information about demographic variables, socioeconomic variables (e.g., education), weight, and height, among other variables. Using the self-reported weight and height information, body mass index values were calculated. Participants with a BMI greater than or equal to 30 kg/m² were considered obese. The association between obesity and colon cancer in this study is shown in the table.
+
+|           | Cases | Controls |
+|:---------:|:-----:|:--------:|
+| Obese     | 162   | 133      |
+| Non-obese | 268   | 418      |
+
+Please create a contingency table in R using the methods described in R4Epi. 
+
+```{r}
+# Create a contingency table called ct
+ct <- matrix(
+  c(a = 162, b = 133, c = 268, d = 418),
+  ncol = 2,
+  byrow = TRUE
+)
+
+# Assign row and column labels to matrix_ct
+dimnames(ct) <- list(
+  Exposure = c("Obese", "Non-obese"), # Row names
+  Outcome  = c("Cases", "Controls")  # Then column names
+)
+
+# Add col_sum to the contingency table
+ct <- addmargins(ct, 1)
+
+# Print the value stored in matrix_ct to the screen
+ct
+```
+
+## Question 1
+
+What is the ratio of the odds of obesity for cases compared to the odds of obesity for controls (rounded to the nearest tenths place)? To help, the original contingency table is shown again below.
+
+|           | Cases | Controls |
+|:---------:|:-----:|:--------:|
+| Obese     | 162   | 133      |
+| Non-obese | 268   | 418      |
+
+```{r}
+# Add the odds to ct
+odds <- ct[, "Cases"] / ct[, "Controls"]
+ct <- cbind(ct, odds)
+# Print the value stored in ct to the screen
+ct
+```
+
+```{r}
+# Calculate the odds ratio and store it as a numeric vector called or
+or <- ct["Obese", "odds"] / ct["Non-obese", "odds"]
+# Print the value stored in or to the screen
+or
+```
+
+```{r}
+# We could also just use R like a calculator to get the same answer
+(162 / 268) / (133 / 418)
+```
+
+* The ratio of the odds of obesity for cases compared to the odds of obesity for controls (rounded to the nearest tenths place) is:
+(a / b) / (c / d)
+(162 / 268) / (133 / 418) = 1.9
+
+# Task 2
+
+Subsequently, the investigators obtained additional funds to conduct a validation study of some of the information obtained from the participants' interviews. For the validation study, 100 participants (50 cases and 50 controls) were randomly selected and invited to attend a clinic, where diverse objective physical measurements and more extensive questionnaires were used in an attempt to estimate the validity of the self-reported information in the study. Despite intensive efforts for recruitment, only 60 of the 100 participants invited for the validation study agreed to the clinic visit. The participants who agreed to attend included a larger proportion of females and individuals of higher educational levels than those who declined. 
+
+Using objectively measured weight and height, BMI was recalculated in the 60 individuals in the validation study. Among the individuals who were classified as obese using measured weight and height, 90% of the cases and 95% of the controls had also been classified as obese by the BMI based on self-reported information; 100% of those classified as non-obese using measured weight and height had been classified as such by the self-reported information.
+
+## Question 2
+
+As previously stated, "Among the individuals who were classified as obese using measured weight and height, 90% of the cases and 95% of the controls had also been classified as obese by the BMI based on self-reported information."
+
+Assuming that weight and height values did not change the time between the interviews and the validation study, calculate the corrected number of cases we would have classified as obese if we had used measured weight and height instead of using self-reported weight and height. To help, the original contingency table is shown again below.
+
+|           | Cases | Controls |
+|:---------:|:-----:|:--------:|
+| Obese     | 162   | 133      |
+| Non-obese | 268   | 418      |
+
+```{r}
+# Calculate the number of cases who were obese
+162 / 0.9
+```
+
+* Assuming that weight and height values did not change the time between the interviews and the validation study, the number of cases we would have classified as obese if we had used measured weight and height instead of using self-reported weight and height is 180.
+
+## Notes for students
+
+1. The scenario tells us that "among the individuals who were classified as obese using measured weight and height, 90% of the cases had also been classified as obese by the BMI based on self-reported information."
+2. If we let x represent the number of cases who were classified as obese using measured weight and height, then 90% of x equals the number of cases who were classified as obese using the BMI based on self-reported information, 162. 
+3. We can rewrite the sentence above as the following equation: $x * 0.9 = 162$.
+4. If we solve for x ($x = 162 / 0.9 = 180$), we get 180, which is the corrected number of cases we would have classified as obese if we had used measured weight and height instead of using self-reported weight and height.
+
+## Question 3
+
+In the previous step, we calculated the corrected number of cases we would have classified as obese if we had used measured weight and height instead of using self-reported weight and height to be 180. Of course, there were still only 430 cases in the study. So, assuming that weight and height values did not change the time between the interviews and the validation study, the corrected number of cases we would have classified as non-obese if we had used measured weight and height instead of using self-reported weight and height. To help, the original contingency table is shown again below.
+
+|           | Cases | Controls |
+|:---------:|:-----:|:--------:|
+| Obese     | 162   | 133      |
+| Non-obese | 268   | 418      |
+
+```{r}
+# Calculate the number of cases in the original study who were misclassified 
+# as non-obese
+180 - 162
+```
+
+```{r}
+# Calculate the number of cases who should have been classified as non-obese in 
+# the original study.
+268 - 18
+```
+
+* Assuming that weight and height values did not change the time between the interviews and the validation study, the number of cases we would have classified as non-obese if we had used measured weight and height instead of using self-reported weight and height is 250.
+
+## Notes for students
+
+1. When measuring BMI with self-reported weight and height, we classified 162 cases as obese. In a previous step, we calculated the corrected number of cases we would have classified as obese if we had used measured weight and height instead of using self-reported weight and height to be 180. That is an additional 18 people. We didn't add an additional 18 people to the study, so where did the additional 18 people come from?
+2. Those 18 people were previously misclassified as non-obese cases. Therefore, we need to reduce the number of non-obese cases by 18. That leaves a total of $268 - 18 = 250$ cases. 
+3. To check our work, we can see that $180 + 250 = 430$, which is the number of cases in the study.
+
+## Question 4
+
+As previously stated, "Among the individuals who were classified as obese using measured weight and height, 90% of the cases and 95% of the controls had also been classified as obese by the BMI based on self-reported information."
+
+Assuming that weight and height values did not change the time between the interviews and the validation study, calculate the corrected number of controls we would have classified as obese and non-obese if we had used measured weight and height instead of using self-reported weight and height. Then, use that information to fill in the corrected contingency table. To help, the original contingency table is shown again below.
+
+The original contingency table:
+
+|           | Cases | Controls |
+|:---------:|:-----:|:--------:|
+| Obese     | 162   | 133      |
+| Non-obese | 268   | 418      |
+
+The corrected contingency table:
+
+|           | Cases | Controls |
+|:---------:|:-----:|:--------:|
+| Obese     | 180   | [c]      |
+| Non-obese | 250   | [d]      |
+
+```{r}
+# Calculate the number of controls who were obese
+133 / 0.95
+```
+
+```{r}
+# Calculate the number of controls in the original study who were misclassified 
+# as non-obese
+140 - 133
+```
+
+```{r}
+# Calculate the number of cases who should have been classified as non-obese in 
+# the original study.
+418 - 7
+```
+
+* The corrected contingency table:
+
+|           | Cases | Controls |
+|:---------:|:-----:|:--------:|
+| Obese     | 180   | 140      |
+| Non-obese | 250   | 411      |
+
+## Notes for students
+
+1. The scenario tells us that "among the individuals who were classified as obese using measured weight and height, 95% of the controls had also been classified as obese by the BMI based on self-reported information."
+2. If we let x represent the number of controls who were classified as obese using measured weight and height, then 95% of x equals the number of controls who were classified as obese using the BMI based on self-reported information, 133. 
+3. We can rewrite the sentence above as the following equation: $x * 0.95 = 133$.
+4. If we solve for x ($x = 133 / 0.95 = 140$), we get 140, the corrected number of controls we would have classified as obese if we had used measured weight and height instead of using self-reported weight and height.
+5. When measuring BMI with self-reported weight and height, we classified 133 controls as obese. We calculated the corrected number of controls we would have classified as obese if we had used measured weight and height instead of using self-reported weight and height to be 140. That is an additional 7 people. We didn't add an additional 7 people to the study, so where did the additional 7 people come from?
+6. Those 7 people were previously misclassified as non-obese controls. Therefore, we need to reduce the number of non-obese controls by 7. That leaves a total of $418 - 7 = 411$ controls. 
+7. To check our work, we can see that $140 + 411 = 551$, which is the number of controls in the study.
+
+## Question 5
+
+Assuming that weight and height values did not change the time between the interviews and the validation study, calculate the corrected odds ratio based on the estimate obtained from the validation study. That is, estimate the odds ratio that would have been obtained if no misclassification of obesity status based on self-reported weight and height information had occurred. Please round your answer to the nearest tenths place. To help, the corrected contingency table is shown again below.
+
+|           | Cases | Controls |
+|:---------:|:-----:|:--------:|
+| Obese     | 180   | 140      |
+| Non-obese | 250   | 411      |
+
+```{r}
+(180 / 140) / (250 / 411)
+```
+
+* The corrected odds ratio based on the estimate obtained from the validation study is (rounded to the nearest tenths place):
+(a / b) / (c / d)
+(180 / 140) / (250 / 411) = 2.1
+
+## Question 6
+
+See Canvas. There are no R calculations for this question.
+
+## Question 7
+
+See Canvas. There are no R calculations for this question.
+
+## Question 8
+
+See Canvas. There are no R calculations for this question.
+
+
+
+
+
+
+
+
+
+
+
