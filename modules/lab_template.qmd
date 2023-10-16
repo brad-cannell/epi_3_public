@@ -30,7 +30,7 @@ library(dplyr, warn.conflicts = FALSE) # The "warn.conflicts" part is optional
 
 # Overview
 
-Here is an overview of what we will cover in this lab warm-up. You will be talking about the purpose of the code below during the live lab warm-up session; however, some written material here will probably be helpful to students who are reviewing the code later, outside of the lab session.  
+Here is an overview of what we will cover in this lab. You will be talking about the purpose of the code below during the live lab warm-up session; however, some written material here will probably be helpful to students who are reviewing the code later, outside of the lab session.  
 
 
 # Task 1
@@ -68,5 +68,11 @@ Question 1 often asks students to list the number of rows and columns in the dat
 Here is another question.
 
 * Here is the answer to question 2.
+
+# Text for question feedback blocks
+
+Please make sure you understand why this is the correct answer. You may use the "Previous" button below to update your answer if your original answer was incorrect. 
+
+Click the "Next" button below to move on to the next question. 
 
 
