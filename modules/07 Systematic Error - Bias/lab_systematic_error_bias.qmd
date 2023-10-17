@@ -29,7 +29,7 @@ In a case-control study of risk factors of colon cancer, 430 cases were compared
 | Obese     | 162   | 133      |
 | Non-obese | 268   | 418      |
 
-Please create a contingency table in R using the methods described in R4Epi. 
+Please recreate this contingency table in R. 
 
 ```{r}
 # Create a contingency table called ct
@@ -39,16 +39,18 @@ ct <- matrix(
   byrow = TRUE
 )
 
-# Assign row and column labels to matrix_ct
+# Assign row and column labels to ct
 dimnames(ct) <- list(
   Exposure = c("Obese", "Non-obese"), # Row names
   Outcome  = c("Cases", "Controls")  # Then column names
 )
 
 # Add col_sum to the contingency table
+# Row totals don't mean much when we are working with data from a case-control 
+# study
 ct <- addmargins(ct, 1)
 
-# Print the value stored in matrix_ct to the screen
+# Print the value stored in ct to the screen
 ct
 ```
 
