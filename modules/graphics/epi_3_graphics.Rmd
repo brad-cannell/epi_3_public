@@ -7,6 +7,8 @@ date: "2022-09-18 <br> Updated: `r Sys.Date()`"
 
 We have a PowerPoint called epi_3_graphics.pptx that I try to keep updated with graphics that can be used in my epi methods slides (and eventually R4EDpi). This Rmd file is for creating the R-based graphics that are found in that PowerPoint. 
 
+**Note**: This file is getting long. You may want to break it up into multiple different files. One for each different type of graphic.
+
 
 # 📦Load packages
 
