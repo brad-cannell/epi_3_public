@@ -10,6 +10,7 @@ format:
 Remember, it's considered a best practice to load all the packages that your file will use up at the top of the file. If you have not yet installed a package, you will need to do so by running `install.packages("package name")` in the R console. For example, to install the `dplyr` package, you would run `install.packages("dplyr")`. However, you typically **do not** want to type the code to install the package here in your Rmd file. That is because you only need to install the package once on a given computer. Not every time you run your R code.
 
 ```{r}
+#| label: load-packages
 library(dplyr, warn.conflicts = FALSE) # The "warn.conflicts" part is optional
 library(ggplot2)
 library(broom)
@@ -106,9 +107,13 @@ Therefore, we might naively expect there to be *NO* correlation between ice crea
 
 ```{r}
 ggplot(df_ice_cream, aes(ice_cream, murder)) + 
-  geom_point() + 
+  geom_point(alpha = 0.2) + 
   geom_smooth(se = FALSE) + 
   theme_classic()
+```
+
+```{r}
+ggsave("ice_cream_murder.png", width = 13.3, height = 7.5)
 ```
 
 However, there is an obvious correlation between in the data when we view it as a scatter plot. As ice cream sales rise, so do the number of murders, on average.
@@ -120,6 +125,89 @@ cor.test(df_ice_cream$ice_cream, df_ice_cream$murder)
 Further, our Pearson's correlation coefficient (0.67) indicates that ice cream sales and murder are highly positively correlated in our population.
 
 Again, the association between ice cream sales and murder is a real, valid association. It just doesn't represent a causal effect. Rather, it's purely due to the fact that ice cream sales and murder share a common cause -- temperature.
+
+## Ice cream and murder DAG
+
+```{r}
+# Create a DAG called ic_cause_murder_dag
+ic_cause_murder_dag <- dagify(
+  m ~ ic, # The form is effect ~ cause
+  m ~ t,
+  ic ~ t,
+  # Optionally add labels to make the DAG easier to read
+  labels = c(
+    "ic" = "Ice Cream",
+    "t" = "Temperature",
+    "m" = "Murder"
+  ),
+  # Optionally add coordinates to control the placement of the nodes on the DAG
+  coords = list( 
+    x = c(ic = 1, t = 2, m = 3),
+    y = c(ic = 0, t = 1, m = 0)
+  )
+)
+
+# Plot the dag called ic_cause_murder_dag
+plot_ic_cause_murder_dag <- ggdag(ic_cause_murder_dag, text = FALSE) +
+  # Manually add labels so that they don't cover up the arrows
+  # Comment out theme_dag() below to adjust label positions
+  # Just use trial and error to position them the way you want
+  geom_label(label = "Ice Cream Sales", x = 1.0, y = -0.11) +
+  geom_label(label = "Murders", x = 3.0, y = -0.11) + 
+  geom_label(label = "Temperature", x = 2.0, y = 1.0) +
+  # Expand the plot limits so that all of the label shows
+  expand_limits(x = c(0.95, 3.05), y = c(-0.2, 1.0)) +
+  # Comment out theme_dag() below to adjust label positions
+  theme_dag()
+```
+
+```{r}
+# Create a DAG called ic_no_cause_murder_dag
+ic_no_cause_murder_dag <- dagify(
+  m ~ t, # The form is effect ~ cause
+  ic ~ t,
+  # Optionally add labels to make the DAG easier to read
+  labels = c(
+    "ic" = "Ice Cream",
+    "t" = "Temperature",
+    "m" = "Murder"
+  ),
+  # Optionally add coordinates to control the placement of the nodes on the DAG
+  coords = list( 
+    x = c(ic = 1, t = 2, m = 3),
+    y = c(ic = 0, t = 1, m = 0)
+  )
+)
+
+# Plot the dag called ic_no_cause_murder_dag
+plot_ic_no_cause_murder_dag <- ggdag(ic_no_cause_murder_dag, text = FALSE) +
+  # Manually add labels so that they don't cover up the arrows
+  # Comment out theme_dag() below to adjust label positions
+  # Just use trial and error to position them the way you want
+  geom_label(label = "Ice Cream Sales", x = 1.0, y = -0.11) +
+  geom_label(label = "Murders", x = 3.0, y = -0.11) + 
+  geom_label(label = "Temperature", x = 2.0, y = 1.0) +
+  # Expand the plot limits so that all of the label shows
+  expand_limits(x = c(0.95, 3.05), y = c(-0.2, 1.0)) +
+  # Comment out theme_dag() below to adjust label positions
+  theme_dag()
+```
+
+Paste the two plots together using `ggarrange()`.
+
+```{r}
+ic_murder_plots <- ggpubr::ggarrange(
+  plot_ic_cause_murder_dag,
+  plot_ic_no_cause_murder_dag,
+  ncol = 2
+)
+
+ic_murder_plots
+```
+
+```{r}
+ggsave("ic_murder_dags.png", width = 13.3, height = 7.5)
+```
 
 
 # Regression adjustment

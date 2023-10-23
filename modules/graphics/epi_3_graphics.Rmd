@@ -1747,7 +1747,7 @@ ic_murder_plots <- ggpubr::ggarrange(
 ic_murder_plots
 ```
 
-```{r}
+```{r eval=FALSE}
 ggsave("/Users/bradcannell/Desktop/ic_murder_plots.png", width = 13.3, height = 7.5)
 ```
 
