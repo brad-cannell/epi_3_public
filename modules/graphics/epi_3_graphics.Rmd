@@ -1633,64 +1633,123 @@ ggdag_dseparated(smoking_ca_dag,
 
 ### DAG - Ice cream and murder
 
+```{r confounding-ice-cream-and-murder-dag-01, echo=FALSE, fig.cap="Two ice cream and murder DAGs."}
+# Create a DAG called ic_cause_murder_dag
+ic_cause_murder_dag <- dagify(
+  m ~ ic, # The form is effect ~ cause
+  m ~ t,
+  ic ~ t,
+  # Optionally add labels to make the DAG easier to read
+  labels = c(
+    "ic" = "Ice Cream",
+    "t" = "Temperature",
+    "m" = "Murder"
+  ),
+  # Optionally add coordinates to control the placement of the nodes on the DAG
+  coords = list( 
+    x = c(ic = 1, t = 2, m = 3),
+    y = c(ic = 0, t = 1, m = 0)
+  )
+)
+
+# Set seed to reproduce label locations
+set.seed(4)
+
+# Plot the dag called ic_cause_murder_dag and print it to the screen
+plot_ic_cause_murder_dag <- ggdag(ic_cause_murder_dag, text = FALSE, use_labels = "label") +
+  theme_dag()
+```
+
+```{r confounding-ice-cream-and-murder-dag-02, echo=FALSE, fig.cap="Two ice cream and murder DAGs."}
+# Create a DAG called ic_no_cause_murder_dag
+ic_no_cause_murder_dag <- dagify(
+  m ~ t, # The form is effect ~ cause
+  ic ~ t,
+  # Optionally add labels to make the DAG easier to read
+  labels = c(
+    "ic" = "Ice Cream",
+    "t" = "Temperature",
+    "m" = "Murder"
+  ),
+  # Optionally add coordinates to control the placement of the nodes on the DAG
+  coords = list( 
+    x = c(ic = 1, t = 2, m = 3),
+    y = c(ic = 0, t = 1, m = 0)
+  )
+)
+
+# Set seed to reproduce label locations
+set.seed(4)
+
+# Plot the dag called ic_no_cause_murder_dag and print it to the screen
+plot_ic_no_cause_murder_dag <- ggdag(ic_no_cause_murder_dag, text = FALSE, use_labels = "label") +
+  theme_dag()
+```
+
+Paste the two plots together using `ggarrange()`.
+
+Issues:
+- When combining side-by-side (the default), the labels still cover the arrows.
+- When stacking, some of the arrows are still covered by labels and some of the nodes are partially cut off the plot. 
+- So manually set label locations
+
 ```{r}
-dag <- dagitty('dag {
-  x [pos="0.000,0.000"]
-  z [pos="1.000,1.000"]
-  y [pos="2.000,0.000"]
-  z -> x
-  z -> y
-}')
+ic_murder_plots <- ggpubr::ggarrange(
+  plot_ic_cause_murder_dag,
+  plot_ic_no_cause_murder_dag,
+  # When combining side-by-side (the default), the labels still cover the arrows.
+  # So, stack vertically instead
+  ncol = 1
+)
 
-dag <- tidy_dagitty(dag) %>% 
-  dag_label(labels = c(
-    "x" = "ice cream", "y" = "murder", "z" = "temperature"
-  ))
+ic_murder_plots
 ```
 
 ```{r}
-ggdag(dag, use_labels = "label") + 
-  theme_dag_blank()
-```
-
-```{r eval=FALSE, echo=FALSE}
-ggsave("/Users/bradcannell/Desktop/dag_ice_cream_1.png", width = 3.5, height = 4)
-```
-
-```{r}
-dag <- dagitty('dag {
-  x [pos="0.000,0.000"]
-  z [pos="1.000,1.000"]
-  y [pos="2.000,0.000"]
-  z -> x
-  z -> y
-  x -> y
-}')
-
-dag <- tidy_dagitty(dag) %>% 
-  dag_label(labels = c(
-    "x" = "ice cream", "y" = "murder", "z" = "temperature"
-  ))
+# Plot the dag called ic_cause_murder_dag
+plot_ic_cause_murder_dag <- ggdag(ic_cause_murder_dag, text = FALSE) +
+  # Manually add labels so that they don't cover up the arrows
+  # Comment out theme_dag() below to adjust label positions
+  # Just use trial and error to position them the way you want
+  geom_label(label = "Ice Cream Sales", x = 1.0, y = -0.11) +
+  geom_label(label = "Murders", x = 3.0, y = -0.11) + 
+  geom_label(label = "Temperature", x = 2.0, y = 1.0) +
+  # Expand the plot limits so that all of the label shows
+  expand_limits(x = c(0.95, 3.05), y = c(-0.2, 1.0)) +
+  # Comment out theme_dag() below to adjust label positions
+  theme_dag()
 ```
 
 ```{r}
-set.seed(123)
-ggdag(dag) + 
-  geom_dag_label_repel(aes(label = label), nudge_x = .2, nudge_y = .5) +
-  theme_dag_blank()
+# Plot the dag called ic_no_cause_murder_dag
+plot_ic_no_cause_murder_dag <- ggdag(ic_no_cause_murder_dag, text = FALSE) +
+  # Manually add labels so that they don't cover up the arrows
+  # Comment out theme_dag() below to adjust label positions
+  # Just use trial and error to position them the way you want
+  geom_label(label = "Ice Cream Sales", x = 1.0, y = -0.11) +
+  geom_label(label = "Murders", x = 3.0, y = -0.11) + 
+  geom_label(label = "Temperature", x = 2.0, y = 1.0) +
+  # Expand the plot limits so that all of the label shows
+  expand_limits(x = c(0.95, 3.05), y = c(-0.2, 1.0)) +
+  # Comment out theme_dag() below to adjust label positions
+  theme_dag()
 ```
 
 ```{r}
-ggdag(dag) +
-  ggrepel::geom_label_repel(aes(label = label))
+ic_murder_plots <- ggpubr::ggarrange(
+  plot_ic_cause_murder_dag,
+  plot_ic_no_cause_murder_dag,
+  # When combining side-by-side (the default), the labels still cover the arrows.
+  # So, stack vertically instead
+  ncol = 2
+)
+
+ic_murder_plots
 ```
 
-
-```{r eval=FALSE, echo=FALSE}
-ggsave("/Users/bradcannell/Desktop/dag_ice_cream_2.png", width = 3.5, height = 4)
+```{r}
+ggsave("/Users/bradcannell/Desktop/ic_murder_plots.png", width = 13.3, height = 7.5)
 ```
-
-So far, I haven't been able to get the labels moved out of the way enough to see the arrows. I need to play around with this more when I have more time. 
 
 ## Adjust DAG labels
 
