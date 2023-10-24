@@ -1,0 +1,83 @@
+---
+title: "Confounding - Questions in Development"
+format:
+  html:
+    embed-resources: true
+---
+
+
+# Load packages
+
+```{r}
+#| label: load-packages
+library(dplyr, warn.conflicts = FALSE) # The "warn.conflicts" part is optional
+library(ggdag, warn.conflicts = FALSE)
+library(ggplot2)
+```
+
+## Change in estimate criteria
+
+<!-- See slide 18 in the lab warm-up -->
+
+A research study seeks to estimate the causal effect of yellow fingers on lung cancer. The true causal DAG for the relationship between yellow fingers and lung cancer is shown below.
+
+<!-- Change the variables -->
+
+```{r}
+yellow_fingers_dag <- dagify(
+  y ~ z, # The form is effect ~ cause
+  x ~ z,
+  # Optionally add labels to make the DAG easier to read
+  labels = c(
+    "x" = "Yellow fingers",
+    "z" = "Smoking",
+    "y" = "Lung cancer"
+  ),
+  # Optionally add coordinates to control the placement of the nodes on the DAG
+  coords = list( 
+    x = c(x = 1, z = 2, y = 3),
+    y = c(x = 0, z = 1, y = 0)
+  )
+)
+
+# Set seed to reproduce label locations
+set.seed(2)
+
+# Plot the dag
+plot_yellow_fingers_dag <- ggdag(yellow_fingers_dag, text = FALSE, use_labels = "label") +
+  theme_dag()
+
+plot_yellow_fingers_dag
+```
+
+```{r}
+#| eval: false
+ggsave("plot_yellow_fingers_dag.png", width = 13.3, height = 7.5)
+```
+
+## Traditional criteria
+
+A research study seeks to estimate the causal effect of education on breast cancer. The true causal DAG for the relationship between education and breast cancer is shown below.
+
+```{r}
+edu_bc_dag <- m_bias(
+  x = "Education", 
+  y = "Breast cancer", 
+  a = "Income during childhood",
+  b = "Genetic risk \nfor breast cancer", 
+  m = "Mother's breast cancer"
+)
+
+# Set seed to reproduce label locations
+set.seed(1)
+
+plot_edu_bc_dag <- ggdag(edu_bc_dag, text = FALSE, use_labels = "label") +
+  theme_dag()
+
+plot_edu_bc_dag
+```
+
+```{r}
+#| eval: false
+ggsave("plot_edu_bc_dag.png", width = 13.3, height = 7.5)
+```
