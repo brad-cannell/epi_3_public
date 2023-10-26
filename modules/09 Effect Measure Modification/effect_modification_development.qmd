@@ -147,6 +147,8 @@ rr
 cbind(a1, rr)
 ```
 
+🔴 I moved on to single matrix before figuring out a good way to add the irr and ird to the array. I did a quick SO search and there doesn't appear to be an easy out of the box solution. This maybe a function to add to freqtables.
+
 ### Using a single matrix instead of an array
 
 The code above works, but I have to teach them a lot of new stuff. It feels a little hacky, but I concatenate the effect modifier and exposure category name together and create a single 2x2 matrix.
