@@ -65,9 +65,8 @@ Question 1 often asks students to list the number of rows and columns in the dat
 
 ## Question 2
 
-Here is another question.
+See Canvas. There are no R calculations for this question.
 
-* Here is the answer to question 2.
 
 # Text for question feedback blocks
 
