@@ -1,0 +1,273 @@
+---
+title: "Effect Modification"
+format:
+  html:
+    embed-resources: true
+---
+
+# Overview
+
+Things I'm working on to try to improve the lab.
+
+
+```{r}
+#| label: load-packages
+library(dplyr, warn.conflicts = FALSE) # The "warn.conflicts" part is optional
+```
+
+
+# Q1 Calculate RR and RD
+
+<!-- This is Libby's version -->
+
+In a prospective study of the relationship of hepatitis C virus (HCV) to newly developed hepatocellular carcinoma, the authors were interested in a potential modifying effect of alcohol consumption. The following table is based on this study's results:
+
+| Alcohol drinking | HCV      | No. of persons | Incidence rates/100,000 |
+|------------------|----------|----------------|-------------------------|
+| Absent           | Negative | 8968           | 78.7                    |
+|                  | Positive | 2352           | 127.1                   |
+| Present          | Negative | 461            | 309.7                   |
+|                  | Positive | 90             | 384.9                   |
+
+Using the category "absent--negative" as the reference, calculate the risk ratios and risk differences (in the exposed) for those with positive antibodies to HCV only, for those who consumed alcohol only, and for those exposed to both. Please round your answers to two decimal places.
+
+| Alcohol drinking | HCV      | No. of persons | Incidence rates/100,000 | RR    | RD    |
+|------------------|----------|----------------|-------------------------|-------|-------|
+| Absent           | Negative | 8968           | 78.7                    | [rr1] | [rd1] |
+|                  | Positive | 2352           | 127.1                   | [rr2] | [rd2] |
+| Present          | Negative | 461            | 309.7                   | [rr3] | [rd3] |
+|                  | Positive | 90             | 384.9                   | [rr4] | [rd4] |
+
+## Create a tibble from the data
+
+```{r}
+tbl <- tibble(
+  alcohol_drinking = c(rep("Absent", 2), rep("Present", 2)),
+  hcv = rep(c("Negative", "Positive"), 2),
+  n_persons = c(8968, 2352, 461, 90),
+  ir = c(78.7, 127.1, 309.7, 384.9)
+)
+
+tbl
+```
+
+```{r}
+tbl <- tbl %>%
+  mutate(
+    rr = round(ir / ir[1], 2),
+    rd = round(ir - ir[1], 2)
+  )
+
+tbl
+```
+
+Where:
+
+* The RR and RD in the second row can be interpreted as the independent effect of HCV only (i.e., in the absence of alcohol) relative to neither alcohol nor HCV.   
+
+* The RR and RD in the third row can be interpreted as the independent effect of alcohol (i.e., in the absence of HCV) relative to neither alcohol nor HCV. 
+
+## My updates to Q1
+
+- I don't like all the mutate stuff we have to do to the tibble above.
+- I think it would be cleaner to do the calculations as a matrix.
+
+### Convert data frame to matrix
+
+First, remove the rr and rd from the data frame.
+
+```{r}
+tbl <- tbl |> select(alcohol_drinking:ir)
+```
+
+I can convert the data frame to a matrix like this:
+
+```{r}
+m1 <- as.matrix(tbl)
+m1
+```
+
+However, everything is a character string now. I don't think I can do calculations on it. Let's see.
+
+```{r}
+# Doesn't work
+m1[, "ir"] / m1[1, "ir"]
+```
+
+```{r}
+# Doesn't work
+m1[, "ir"] / 78.7
+```
+
+```{r}
+# Works, but not better than using mutate
+as.numeric(m1[, "ir"]) / as.numeric(m1[1, "ir"])
+```
+
+So, I don't think this is the best method.
+
+### Create an array
+
+```{r}
+absent <- matrix(
+  c(a = 8968, b = 78.7, c = 2352, d = 127.1),
+  ncol = 2,
+  byrow = TRUE
+)
+
+present <- matrix(
+  c(a = 461, b = 309.7, c = 90, d = 384.9),
+  ncol = 2,
+  byrow = TRUE
+)
+
+a1 <- array(
+  c(absent, present),
+  dim = c(2, 2, 2),
+  dimnames = list(
+    HCV = c("Negative", "Positive"),
+    c("n_people", "ir"),
+    Alcohol = c("Absent", "Present")
+  )
+)
+
+a1
+```
+
+Now, calculate the irr.
+
+```{r}
+# Dimensions: row, column, matrix
+rr <- a1[, "ir", ] / a1[1, "ir", 1]
+rr
+```
+
+```{r}
+# Doesn't work
+cbind(a1, rr)
+```
+
+### Using a single matrix instead of an array
+
+The code above works, but I have to teach them a lot of new stuff. It feels a little hacky, but I concatenate the effect modifier and exposure category name together and create a single 2x2 matrix.
+
+```{r}
+# Create a 4x2 matrix
+m2 <- matrix(
+  c(8968, 78.7, 2352, 127.1, 461, 309.7, 90, 384.9),
+  ncol = 2,
+  byrow = TRUE
+)
+
+# Assign row and column labels to m2
+dimnames(m2) <- list(
+  c("Absent-Negative", "Absent-Positive", "Present-Negative", "Present-Positive"), # Row names
+  c("N People", "IR")  # Then column names
+)
+
+# Print the value stored in m2 to the screen
+m2
+```
+Now, add the irr.
+
+```{r}
+# Calculate the irr
+irr <- m2[, "IR"] / m2["Absent-Negative", "IR"]
+
+# Add irr to m2
+m2 <- cbind(m2, irr)
+
+# Print the value stored in m2 to the screen
+m2
+```
+
+Now, add the ird.
+
+```{r}
+# Calculate the ird
+ird <- m2[, "IR"] - m2["Absent-Negative", "IR"]
+
+# Add ird to m2
+m2 <- cbind(m2, ird)
+
+# Print the value stored in m2 to the screen
+m2
+```
+
+Works, but feels kind of hacky. Maybe I'm overthinking it, though.
+
+### Calculator
+
+Finally, we can always just use R like a calculator...
+
+```{r}
+# Incidence rate ratios
+127.1 / 78.7
+309.7 / 78.7
+384.9 / 78.7
+```
+
+```{r}
+# Incidence differences
+127.1 - 78.7
+309.7 - 78.7
+384.9 - 78.7
+```
+
+### Repeated operations
+
+```{r}
+incidence_rates <- list(
+  Absent_Negative  = 78.7, 
+  Absent_Positive  = 127.1, 
+  Present_Negative = 309.7, 
+  Present_Positive = 384.9
+)
+```
+
+```{r}
+# Doesn't work
+incidence_rates / incidence_rates[["Absent_Negative"]]
+```
+
+```{r}
+# Works, but I'm not sure the extra effort to explain is worth it
+irr <- purrr::map_dbl(incidence_rates, ~ .x / incidence_rates[["Absent_Negative"]])
+irr
+```
+
+### Summary
+
+- For this semester, I think I will just use the "use R like a calculator" method.
+- For next semester, Add to the following structures to the let's get programming chapter:
+ - Add matrices after vectors. They are vectors with 2 dimensions -- rows and columns. However, they can only contain one data type.
+ - Add arrays. We can add a third dimensions with arrays. We won't use them much at all until we get to effect measure modification.
+ - Add lists before data frames. Then, contrast them with data frames. They are less flexible, but make the most common data operations easier.
+ - Then move into data frames.
+- Also, Add arrays to contingency table chapter?
+- Then, add arrays to the EMM chapter.
+- Add the use of arrays to the EMM lab and module quiz.
+- Then, we should definitely show them how to do this with regression.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
