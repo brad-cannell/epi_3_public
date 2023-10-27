@@ -91,7 +91,7 @@ round(1.61 * 3.94, 2)
 
 ## Question 3
 
-Based on your expert knowledge of alcohol consumption, HCV, and hepatocellular carcinoma, a difference of 1 unit or more on the incidence rate ratio scale would constitute a meaningful difference in risk. Assuming there is no random variability, do the results of this study provide evidence that alcohol consumption modifies the relationship between hepatitis C virus exposure and newly developed hepatocellular carcinoma on the multiplicative scale? The table of incidence rate ratios you created in a previous question is provided below.
+Based on your expert knowledge of alcohol consumption, HCV, and hepatocellular carcinoma, a difference of 1 unit or more on the incidence rate ratio scale would constitute a meaningful difference in risk. Assuming there is no random variability, do the results of this study provide evidence that alcohol consumption meaningfully modifies the relationship between hepatitis C virus exposure and newly developed hepatocellular carcinoma on the multiplicative scale? The table of incidence rate ratios you created in a previous question is provided below.
 
 | Alcohol drinking | HCV      | No. of persons | Incidence rates/100,000 PY | Incidence Rate Ratio (IRR) |
 |------------------|----------|----------------|----------------------------|----------------------------|
@@ -105,7 +105,7 @@ Based on your expert knowledge of alcohol consumption, HCV, and hepatocellular c
 6.34 - 4.89
 ```
 
-* Yes, there is evidence of effect-measure modification on the multiplicative scale because the expected joint incidence rate ratio (6.34) is different from the observed joint incidence ratio (4.89) by 1.45 units. Based on your expert knowledge of alcohol consumption, HCV, and hepatocellular carcinoma, you know that a difference of 1 unit or more on the incidence rate ratio scale constitutes a meaningful difference in risk.
+* Yes. There is evidence of meaningful effect-measure modification on the multiplicative scale because the expected joint incidence rate ratio (6.34) is different from the observed joint incidence ratio (4.89) by 1.45 units. Based on your expert knowledge of alcohol consumption, HCV, and hepatocellular carcinoma, you know that a difference of 1 unit or more on the incidence rate ratio scale constitutes a meaningful difference in risk.
 
 ## Question 4
 
@@ -182,7 +182,7 @@ round(48.4 + 231.0, 1)
 
 ## Question 7
 
-Based on your expert knowledge of alcohol consumption, HCV, and hepatocellular carcinoma, a difference of 20 cases or more per 100,000 person-years would constitute a meaningful difference in risk. Assuming there is no random variability, do the results of this study provide evidence that alcohol consumption modifies the relationship between hepatitis C virus exposure and newly developed hepatocellular carcinoma on the additive scale? The table of incidence rate ratios you created in a previous question is provided below.
+Based on your expert knowledge of alcohol consumption, HCV, and hepatocellular carcinoma, a difference of 20 cases or more per 100,000 person-years would constitute a meaningful difference in risk. Assuming there is no random variability, do the results of this study provide evidence that alcohol consumption meaningfully modifies the relationship between hepatitis C virus exposure and newly developed hepatocellular carcinoma on the additive scale? The table of incidence rate ratios you created in a previous question is provided below.
 
 | Alcohol drinking | HCV      | No. of persons | Incidence rates/100,000 PY | Incidence Rate Difference (IRD) |
 |------------------|----------|----------------|----------------------------|---------------------------------|
@@ -196,7 +196,7 @@ Based on your expert knowledge of alcohol consumption, HCV, and hepatocellular c
 306.2 - 279.4
 ```
 
-* Yes, there is evidence of effect-measure modification on the additive scale because the expected joint incidence rate difference (279.4) is different from the observed joint incidence rate difference (306.2) by 26.8 cases per 100,000 person-years. Based on your expert knowledge of alcohol consumption, HCV, and hepatocellular carcinoma, you know that a difference of 20 cases or more per 100,000 person-years constitutes a meaningful difference in risk.
+* Yes. There is evidence of meaningful effect-measure modification on the additive scale because the expected joint incidence rate difference (279.4) is different from the observed joint incidence rate difference (306.2) by 26.8 cases per 100,000 person-years. Based on your expert knowledge of alcohol consumption, HCV, and hepatocellular carcinoma, you know that a difference of 20 cases or more per 100,000 person-years constitutes a meaningful difference in risk.
 
 ## Question 8
 
