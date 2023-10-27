@@ -196,7 +196,7 @@ Based on your expert knowledge of alcohol consumption, HCV, and hepatocellular c
 306.2 - 279.4
 ```
 
-* Yes, there is evidence of effect-measure modification on the additive scale because the expected joint risk ratio (6.34) is different from the observed joint risk ratio (4.89) by 26.8 cases per 100,000 person-years. Based on your expert knowledge of alcohol consumption, HCV, and hepatocellular carcinoma, you know that a difference of 20 cases or more per 100,000 person-years constitutes a meaningful difference in risk.
+* Yes, there is evidence of effect-measure modification on the additive scale because the expected joint incidence rate difference (279.4) is different from the observed joint incidence rate difference (306.2) by 26.8 cases per 100,000 person-years. Based on your expert knowledge of alcohol consumption, HCV, and hepatocellular carcinoma, you know that a difference of 20 cases or more per 100,000 person-years constitutes a meaningful difference in risk.
 
 ## Question 8
 
