@@ -243,8 +243,6 @@ round(384.9 - 309.7, 2)
 | Present          | Negative | 461            | 309.7                      | Reference                  | Reference                       |
 |                  | Positive | 90             | 384.9                      | 1.24                       | 75.20                           |
 
-
-
 ## Notes for students
 
 1. The layout of the table above is different than the layout of the typical 2x2 contingency tables we usually work with. Additionally, we are concerned with two exposures (i.e., alcohol drinking and HCV) in this scenario instead of just one exposure. Even so, we can calculate the incidence rate ratio and incidence rate difference in exactly the same way we always have -- the incidence rate in the exposed divided by the incidence rate in the unexposed (or reference category). We will just need to do the calculation twice -- once for people who did not drink alcohol and once for people who did drink alcohol.
