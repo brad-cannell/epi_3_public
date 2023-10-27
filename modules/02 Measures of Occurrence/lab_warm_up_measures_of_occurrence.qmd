@@ -1,6 +1,8 @@
 ---
 title: "Lab Warm-up: Measures of Occurrence"
-output: html_notebook
+format:
+  html:
+    embed-resources: true
 ---
 
 # Load packages
