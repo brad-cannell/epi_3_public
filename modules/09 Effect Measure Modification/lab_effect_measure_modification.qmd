@@ -105,11 +105,24 @@ Based on your expert knowledge of alcohol consumption, HCV, and hepatocellular c
 6.34 - 4.89
 ```
 
-* Yes. There is evidence of meaningful effect-measure modification on the multiplicative scale because the expected joint incidence rate ratio (6.34) is different from the observed joint incidence ratio (4.89) by 1.45 units. Based on your expert knowledge of alcohol consumption, HCV, and hepatocellular carcinoma, you know that a difference of 1 unit or more on the incidence rate ratio scale constitutes a meaningful difference in risk.
+* Yes 
+
+## Notes for students
+
+1. There is evidence of meaningful effect-measure modification on the multiplicative scale because the expected joint incidence rate ratio (6.34) is different from the observed joint incidence ratio (4.89) by 1.45 units. Based on your expert knowledge of alcohol consumption, HCV, and hepatocellular carcinoma, you know that a difference of 1 unit or more on the incidence rate ratio scale constitutes a meaningful difference in risk.
 
 ## Question 4
 
-See Canvas. There are no R calculations for this question.
+You previously determined that the expected joint incidence rate ratio was 6.34 and the observed joint incidence rate ratio was 4.89. You subsequently determined the difference between the observed and expected joint incidence rate ratios was sufficient to conclude that alcohol consumption modifies the effect of HCV on hepatocellular carcinoma on the multiplicative scale. In this case, is the effect-measure modification positive, negative, or qualitative?
+
+* Negative
+
+## Notes for students
+
+1. “If interaction exists and the presence of the effect modifier strengthens (accentuates) the effect of the exposure of interest, the variable and exposure are said to be synergistic (positive interaction); if the presence of the effect modifier diminishes or eliminates the effect of the exposure of interest, it can be said that the effect modifier and the exposure are antagonistic (negative interaction).”
+- Szklo, Moyses, Nieto, F. Javier. Epidemiology (pg. 209).
+
+2. In this case, the expected joint incidence rate ratio (6.34) is greater than the observed joint incidence rate ratio (4.89), which is consistent with negative effect-measure modification on the multiplicative scale.
 
 ## Question 5
 
@@ -196,11 +209,24 @@ Based on your expert knowledge of alcohol consumption, HCV, and hepatocellular c
 306.2 - 279.4
 ```
 
-* Yes. There is evidence of meaningful effect-measure modification on the additive scale because the expected joint incidence rate difference (279.4) is different from the observed joint incidence rate difference (306.2) by 26.8 cases per 100,000 person-years. Based on your expert knowledge of alcohol consumption, HCV, and hepatocellular carcinoma, you know that a difference of 20 cases or more per 100,000 person-years constitutes a meaningful difference in risk.
+* Yes
+
+## Notes for students
+
+1. There is evidence of meaningful effect-measure modification on the additive scale because the expected joint incidence rate difference (279.4) is different from the observed joint incidence rate difference (306.2) by 26.8 cases per 100,000 person-years. Based on your expert knowledge of alcohol consumption, HCV, and hepatocellular carcinoma, you know that a difference of 20 cases or more per 100,000 person-years constitutes a meaningful difference in risk.
 
 ## Question 8
 
-See Canvas. There are no R calculations for this question.
+We previously determined that the expected joint incidence rate difference was 279.4 and the observed joint incidence rate ratio was 306.2. We subsequently determined the difference between the observed and expected joint incidence rate differences was sufficient to conclude that alcohol consumption modifies the effect of HCV on hepatocellular carcinoma on the additive scale. In this case, is the effect-measure modification positive, negative, or qualitative?
+
+* Positive
+
+## Notes for students
+
+1. “If interaction exists and the presence of the effect modifier strengthens (accentuates) the effect of the exposure of interest, the variable and exposure are said to be synergistic (positive interaction); if the presence of the effect modifier diminishes or eliminates the effect of the exposure of interest, it can be said that the effect modifier and the exposure are antagonistic (negative interaction).”
+- Szklo, Moyses, Nieto, F. Javier. Epidemiology (pg. 209).
+
+2. In this case, the expected joint incidence rate difference (279.4) is less than the observed joint incidence rate difference (306.2), which is consistent with positive effect-measure modification on the additive scale.
 
 ## Question 9
 
@@ -253,4 +279,72 @@ round(384.9 - 309.7, 2)
 
 ## Question 10
 
-See Canvas. There are no R calculations for this question.
+Based on your expert knowledge of alcohol consumption, HCV, and hepatocellular carcinoma, a difference of 1 unit or more on the incidence rate ratio scale would constitute a meaningful difference in risk. Assuming there is no random variability, do the results of your comparison of the stratum-specific effects (i.e., using the homogeneity of effects method) of HCV on hepatocellular carcinoma provide evidence that alcohol consumption meaningfully modifies the relationship between hepatitis C virus exposure and newly developed hepatocellular carcinoma on the multiplicative scale? The table of incidence rate ratios you created in a previous question is provided below.
+
+| Alcohol drinking | HCV      | No. of persons | Incidence rates/100,000 PY | Incidence Rate Ratio (IRR) | Incidence Rate Difference (IRD) |
+|------------------|----------|----------------|----------------------------|----------------------------|---------------------------------|
+| Absent           | Negative | 8968           | 78.7                       | Reference                  | Reference                       |
+|                  | Positive | 2352           | 127.1                      | 1.61                       | 48.40                           |
+| Present          | Negative | 461            | 309.7                      | Reference                  | Reference                       |
+|                  | Positive | 90             | 384.9                      | 1.24                       | 75.20                           |
+
+```{r}
+# Calculate the difference between the stratum-specific effects
+1.61 - 1.24
+```
+
+* No 
+
+## Notes for students
+
+There is a lack of evidence for meaningful effect-measure modification on the multiplicative scale because the difference between the stratum-specific effects was 0.37 units on the incidence rate ratio scale (1.61 - 1.24 = 0.37). Based on your expert knowledge of alcohol consumption, HCV, and hepatocellular carcinoma, you know that a difference of 1 unit or more on the incidence rate ratio scale constitutes a meaningful difference in risk.
+
+## Question 11
+
+Based on your expert knowledge of alcohol consumption, HCV, and hepatocellular carcinoma, a difference of 20 cases or more per 100,000 person-years would constitute a meaningful difference in risk. Assuming there is no random variability, do the results of your comparison of the stratum-specific effects (i.e., using the homogeneity of effects method) of HCV on hepatocellular carcinoma provide evidence that alcohol consumption meaningfully modifies the relationship between hepatitis C virus exposure and newly developed hepatocellular carcinoma on the additive scale? The table of incidence rate ratios you created in a previous question is provided below.
+
+| Alcohol drinking | HCV      | No. of persons | Incidence rates/100,000 PY | Incidence Rate Ratio (IRR) | Incidence Rate Difference (IRD) |
+|------------------|----------|----------------|----------------------------|----------------------------|---------------------------------|
+| Absent           | Negative | 8968           | 78.7                       | Reference                  | Reference                       |
+|                  | Positive | 2352           | 127.1                      | 1.61                       | 48.40                           |
+| Present          | Negative | 461            | 309.7                      | Reference                  | Reference                       |
+|                  | Positive | 90             | 384.9                      | 1.24                       | 75.20                           |
+
+```{r}
+# Calculate the difference between the stratum-specific effects
+75.2 - 48.4
+```
+
+* Yes
+
+## Notes for students
+
+1. There is evidence of meaningful effect-measure modification on the additive scale because the difference between the stratum-specific effects was 26.8 cases per 100,000 person-years (75.2 - 48.4 = 26.8). Based on your expert knowledge of alcohol consumption, HCV, and hepatocellular carcinoma, you know that a difference of 20 cases or more per 100,000 person-years constitutes a meaningful difference in risk.
+
+## Question 12
+
+In a prospective study of the relationship between hepatitis C virus (HCV) and newly developed hepatocellular carcinoma, the investigators were interested in a potential modifying effect of alcohol consumption. In previous steps, you assessed effect-measure modification by comparing observed and expected joint effects, and by exploring the homogeneity of effects. Please summarize your findings by filling in the table below.
+
+| Method                              | Scale          | Meaningful EMM Present | Direction of EMM        |
+|-------------------------------------|----------------|------------------------|-------------------------|
+| Observed and expected joint effects | Multiplicative | Yes                    | Negative (antagonistic) |
+| Observed and expected joint effects | Additive       | Yes                    | Positive (synergistic)  |
+| Homogeneity of effects              | Multiplicative | [a]                    | [b]                     |
+| Homogeneity of effects              | Additive       | [c]                    | [d]                     |
+
+* Correct answer:
+
+| Method                              | Scale          | Meaningful EMM Present | Direction of EMM        |
+|-------------------------------------|----------------|------------------------|-------------------------|
+| Observed and expected joint effects | Multiplicative | Yes                    | Negative (antagonistic) |
+| Observed and expected joint effects | Additive       | Yes                    | Positive (synergistic)  |
+| Homogeneity of effects              | Multiplicative | No                     | Not applicable          |
+| Homogeneity of effects              | Additive       | Yes                    | Quantitative            |
+
+## Notes for students
+
+1. When assessing effect-measure modification by exploring the homogeneity of effects, qualitative effect-measure modification exists when the exposure effect can be seen in one stratum of the potential effect modifier, but not in another, or when the exposure is helpful in one stratum, but harmful in another. Alternatively, quantitative effect-measure modification exists when the exposure is harmful (or helpful) in both strata, but the magnitude is different.
+
+2. The ratio of the incidence rate in the exposed (to HCV) to the unexposed is 127.1 / 78.7 = 1.61 among participants who did not drink alcohol, and 384.9 / 309.7 = 1.24 among participants who did drink alcohol. Therefore, exposure to HCV is harmful in both strata of alcohol drinking, but the magnitude is different. This is consistent with quantitative effect-measure modification. However, you determined above that this difference of 0.37 units on the incidence rate ratio scale is not sufficient to conclude that there is meaningful EMM. Further, it makes little sense to determine the direction of EMM if we claim that it doesn't exist (meaningfully).
+
+3. Alternatively, the difference between the incidence rate in the exposed (to HCV) and the unexposed is 127.1 - 78.7 = 48.40 cases per 100,000 person-years among participants who did not drink alcohol, and 384.9 - 309.7 = 75.20 cases per 100,000 person-years among participants who did drink alcohol. In this case, you determined that meaningful EMM was present on the additive scale. Additionally, exposure to HCV is harmful in both strata of alcohol drinking, but the magnitude is different. This is consistent with quantitative effect-measure modification.
