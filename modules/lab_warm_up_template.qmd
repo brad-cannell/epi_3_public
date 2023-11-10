@@ -1,6 +1,8 @@
 ---
 title: "Lab Warm-up: Module Name"
-format: html
+format:
+  html:
+    embed-resources: true
 ---
 
 # 🛑 Formatting (delete this section before posting to Canvas) 🛑
