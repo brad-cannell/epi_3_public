@@ -1,0 +1,60 @@
+---
+title: "Incidence Proportion Ratios vs Incidence Rate Ratios"
+format:
+  html:
+    embed-resources: true
+---
+
+Curious about the relationship between incidence proportion ratios and incidence rate ratios. 
+
+See Relationship Between Density (Based on Individual Data) and Rate (Based on Grouped Data)
+
+Szklo, Moyses; Nieto, F. Javier. Epidemiology: Beyond the Basics (p. 69). Jones & Bartlett Learning. Kindle Edition. 
+
+Start with the sample from the lab warm-up
+
+![](../augers_and_injuries_plot.png)
+
+Four out of 12 people were injured. So, the IP is:
+
+```{r}
+4 / 12
+```
+
+In the example above the IR is:
+
+```{r}
+time_at_risk <- (12 * 8) + 7 + 2 + 5 + 10
+4 / time_at_risk
+```
+
+These are the same.
+
+What if everyone who has an injury has it during the first month of follow-up?
+(Subtract 1 because it is zero-based)
+
+```{r}
+time_at_risk <- (12 * 8)
+4 / time_at_risk
+```
+
+What if everyone who has an injury has it during the sixth month of follow-up?
+(Subtract 1 because it is zero-based)
+
+```{r}
+time_at_risk <- (12 * 8) + 5 + 5 + 5 + 5
+4 / time_at_risk
+```
+
+What if everyone who has an injury has it during the twelfth month of follow-up?
+(Subtract 1 because it is zero-based)
+
+```{r}
+time_at_risk <- (12 * 8) + 11 + 11 + 11 + 11
+4 / time_at_risk
+```
+
+First of all, rate are not proportions. So, even thought the rates "look" kind of like proportions, they aren't. There is something about this in Modern Epidemiology (pg. 61).
+
+
+

@@ -1,0 +1,422 @@
+---
+title: "Lab Warm-up: Cohort Studies"
+format:
+  html:
+    embed-resources: true
+---
+
+# 🛑 Formatting (delete this section before posting to Canvas) 🛑
+
+* Please name this file `lab_warm_up_module_name.qmd`.
+* The Overview section, each task number, and each question number should be written as a level-one headers (e.g., `# Task 1`).
+* All R code being run, should be put into R code chunks.
+* All R code being discussed in the text should be placed inside backticks (e.g., `install.packages("dplyr")`).
+* R package names being discussed in the text should be formatted as code (e.g., "...the `dplyr` package...). 
+* When functions are discussed in the text, they should be formatted as code and empty parentheses added to the end of the function name (e.g., "The `tibble()` function can be used to create data frames…").
+* Data set/frame names, variable names, and other key words should be written with **bold** text (e.g., "Please download **chocolate study 1.xls**".
+* There should be 2 line breaks (returns) immediately above level-one headers. There should be 1 line break (return) immediately above all other headers.
+* There should be one line break (return) immediately above each code chunk. There should be at least 1 line break immediately below each code chunk. If the the code chunk is immediately followed by a level-one header, then there will be two line breaks.
+
+# Load packages
+
+Remember, it's considered a best practice to load all the packages that your file will use up at the top of the file. If you have not yet installed a package, you will need to do so by running `install.packages("package name")` in the R console. For example, to install the `dplyr` package, you would run `install.packages("dplyr")`. However, you typically **do not** want to type the code to install the package here in your Quarto file because you only need to install the package once on a given computer. Not every time you run your R code.
+
+```{r}
+#| label: load-packages
+library(dplyr, warn.conflicts = FALSE) # The "warn.conflicts" part is optional
+library(ggplot2, warn.conflicts = FALSE)
+```
+
+
+# Load helper function
+
+```{r}
+# Convert from data frame of counts to data frame of cases.
+# `count_col` is the name of the column containing the counts
+# From: https://cran.r-project.org/web/packages/DescTools/vignettes/TablesInR.pdf
+countsToCases <- function(x, count_col = "Freq") {
+    # Get the row indices to pull from x
+    idx <- rep.int(seq_len(nrow(x)), x[[countcol]])
+
+    # Drop count column
+    x[[countcol]] <- NULL
+
+    # Get the rows from x
+    x[idx, ]
+}
+```
+
+
+# Grain auger use and unintentional injuries
+
+## Simulate data to accompany the example.
+
+```{r}
+augers_and_injuries <- tribble(
+  ~id, ~auger, ~injury,
+  1,   1,      0,
+  2,   1,      1,
+  3,   1,      0,
+  4,   1,      1,
+  5,   0,      0,
+  6,   0,      0,
+  7,   0,      1,
+  8,   0,      0,
+  9,   0,      0,
+  10,  0,      1,
+  11,  0,      0, 
+  12,  0,      0
+)
+```
+
+## Create a person-time plot to accompany the example
+
+```{r}
+# Simulate data for 10 hypothetical people
+# From Lash TL, VanderWeel TJ, Haneuse S, Rothman KJ. Modern Epidemiology. fourth. Wolters Kluwer; 2021.
+people <- 1:12
+months <- 0:12
+augers_and_injuries_pt <- tidyr::expand_grid(person = people, month = months)
+rows_per_person <- length(months)
+
+# Count from the beginning of each month.
+# So, person 2 is pre-follow-up at the beginning of time 1 (month -01), at risk 
+# at the beginning of time 2 (month 00), at risk at the beginning of time 3 
+# (month 01), diseased at the beginning of time 4 (month 02), etc.
+p01 <- rep("At Risk", rows_per_person)
+p02 <- c(rep("At Risk", 7), rep("Injured", rows_per_person - 7))
+p03 <- rep("At Risk", rows_per_person)
+p04 <- c(rep("At Risk", 2), rep("Injured", rows_per_person - 2))
+p05 <- rep("At Risk", rows_per_person)
+p06 <- rep("At Risk", rows_per_person)
+p07 <- c(rep("At Risk", 5), rep("Injured", rows_per_person - 5))
+p08 <- rep("At Risk", rows_per_person)
+p09 <- rep("At Risk", rows_per_person)
+p10 <- c(rep("At Risk", 10), rep("Injured", rows_per_person - 10))
+p11 <- rep("At Risk", rows_per_person)
+p12 <- rep("At Risk", rows_per_person)
+status <- c(p01, p02, p03, p04, p05, p06, p07, p08, p09, p10, p11, p12)
+
+# Add status to augers_and_injuries_pt
+augers_and_injuries_pt$status <- status
+
+# Create factor versions of person and status
+augers_and_injuries_pt <- augers_and_injuries_pt |> 
+  mutate(
+    person_f = factor(person, labels = c(paste0(0, 1:9), "10", "11", "12")),
+    status_f = factor(status, levels = c("At Risk", "Injured"))
+  )
+
+# Add exposure status
+augers_and_injuries_pt <- augers_and_injuries_pt |> 
+  mutate(
+    # Persons 1 through 4 were exposed
+    exposed   = if_else(person %in% 1:4, 1, 0),
+    exposed_f = factor(exposed, 0:1, c("No", "Yes"))
+  )
+
+# Add coordinates for line segments in the plot
+augers_and_injuries_pt_wide <- augers_and_injuries_pt |> 
+  group_by(person_f, status_f) |> 
+  mutate(
+    x    = min(month),
+    xend = max(month)
+  ) |> 
+  ungroup() |> 
+  # Keep distinct values only
+  distinct(person, status, .keep_all = TRUE) |> 
+  # Make the line ends touch
+  group_by(person) |> 
+  mutate(
+    xend_adjusted = lead(x),
+    xend_adjusted = if_else(is.na(xend_adjusted), xend, xend_adjusted)
+  ) |> 
+  relocate(xend_adjusted, .after = xend) |> 
+  ungroup()
+
+# Print augers_and_injuries_pt_wide to the screen
+# augers_and_injuries_pt_wide
+```
+
+```{r}
+# To color the facet strip panels
+stip_colors <- augers_and_injuries_pt_wide |> 
+  # Keep one row for each person
+  distinct(person, .keep_all = TRUE) |> 
+  # Add color to use by exposed status
+  mutate(color = if_else(exposed == 1, "#817190", "#D9D9D9")) |> 
+  pull(color)
+strips <- ggh4x::strip_themed(background_y = ggh4x::elem_list_rect(fill = stip_colors))
+
+# Create the person-time figure
+augers_and_injuries_plot <- ggplot(augers_and_injuries_pt_wide) +
+  geom_segment(aes(x = x, xend = xend_adjusted, y = 1, yend = 1, color = status_f), size = 5) +
+  # Show all months
+  scale_x_continuous("Month Follow-up", breaks = 0:12) +
+  ggh4x::facet_wrap2(vars(person_f), nrow = 12, strip.position = "left", strip = strips) +
+  # Add a line marking the start of follow up
+  geom_vline(xintercept = 0, color = "blue") +
+  # Add vertical lines to mark the start of each month
+  geom_vline(xintercept = 1:12, color = "#f9f9f9") +
+  # Change fill colors
+  scale_color_manual("Status", values = c("gray", "red")) +
+  # Change y-axis label
+  ylab("Person") +
+  # Add a caption containing information about exposure status
+  labs(caption = "Persons 1-4 were exposed to auger use.") +
+  theme(
+    # Remove gray background
+    panel.background = element_blank(),
+    # Remove the "p" from the x axis
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank(),
+    # Orient Y axis title horizontally
+    axis.title.y = element_text(angle = 0),
+    # Move legend
+    legend.position = "bottom",
+    # Change the color and style of the "months" axis 
+    axis.line.x = element_line(
+      color = "blue", arrow = grid::arrow(length = unit(0.1, "inches"), type = "closed")
+    ),
+    # Rotate the facet label to the right
+    strip.text.y.left = element_text(angle = 0),
+    # Left justify the caption
+    plot.caption = element_text(hjust = 0)
+  )
+```
+
+```{r}
+# View the person-time figure
+augers_and_injuries_plot
+```
+
+```{r}
+# Save the person-time figure as an image
+ggsave("augers_and_injuries_plot.png", augers_and_injuries_plot, width = 6, height = 3.38)
+```
+
+## Create a contingency table
+
+```{r}
+# Create a contingency table called augers_and_injuries_ct
+augers_and_injuries_ct <- matrix(
+  c(a = 2, b = 2, c = 2, d = 6),
+  ncol = 2,
+  byrow = TRUE
+)
+
+# Add marginal totals the augers_and_injuries_ct
+augers_and_injuries_ct <- addmargins(augers_and_injuries_ct)
+
+# Assign row and column labels to augers_and_injuries_ct
+dimnames(augers_and_injuries_ct) <- list(
+  Auger = c("Yes", "No", "col_sum"), # Row names
+  Injury  = c("Yes", "No", "row_sum")  # Then column names
+)
+
+# Print the value stored in augers_and_injuries_ct to the screen
+augers_and_injuries_ct
+```
+
+## Incidence proportion
+
+```{r}
+# Calculate the incidence proportion by dividing each of the values in the "Yes"
+# column of the contingency table by each of the values in the "row_sum" column
+# of the contingency table. 
+# This is equivalent to calculating:
+# a / (a + b)
+# c / (c + d)
+# (a + c) / (a + b + c + d)
+incidence_prop <- augers_and_injuries_ct[, "Yes"] / augers_and_injuries_ct[, "row_sum"]
+# Print the value stored in incidence_prop to the screen
+incidence_prop
+```
+
+```{r}
+# Calculate incidence using R as a calculator
+2 / 4
+2 / 8
+4 / 12
+```
+
+
+```{r}
+# Add the incidence proportions we calculated above to the right side of our 
+# contingency table
+augers_and_injuries_ct <- cbind(augers_and_injuries_ct, incidence_prop)
+# Print the value stored in augers_and_injuries_ct to the screen
+augers_and_injuries_ct
+```
+
+## Incidence proportion ratio
+
+```{r}
+# Calculate the incidence proportion ratio and store it as a numeric vector 
+# called ipr
+ipr <- augers_and_injuries_ct["Yes", "incidence_prop"] / augers_and_injuries_ct["No", "incidence_prop"]
+# Print the value stored in ipr to the screen
+ipr
+```
+
+```{r}
+# Calculate IPR using R as a calculator
+0.5 / 0.25
+```
+
+Among the agricultural workers in or our study sample, those who used grain augers had 2 times the incidence of unintentional injury compared to those who did not use a grain auger, over the 1-year of follow-up.
+
+## Incidence proportion difference
+
+```{r}
+# Calculate the incidence proportion difference and store it as a numeric vector 
+# called ipd
+ipd <- augers_and_injuries_ct["Yes", "incidence_prop"] - augers_and_injuries_ct["No", "incidence_prop"]
+# Print the value stored in ipd to the screen
+ipd
+```
+
+```{r}
+# Calculate IPD using R as a calculator
+0.5 - 0.25
+```
+
+Among the agricultural workers in or our study sample, there were an additional 0.25 incident cases of unintentional injury per person among workers who ever used a grain auger compared to those who never used a grain auger, over the 1-year of follow-up.
+
+## Incidence odds
+
+```{r}
+# Add the incidence odds to augers_and_injuries_ct
+incidence_odds <- augers_and_injuries_ct[, "incidence_prop"] / (1 - augers_and_injuries_ct[, "incidence_prop"])
+augers_and_injuries_ct <- cbind(augers_and_injuries_ct, incidence_odds)
+# Print the value stored in augers_and_injuries_ct to the screen
+augers_and_injuries_ct
+```
+
+```{r}
+# Calculate odds using R as a calculator
+0.5 / (1 - 0.5)
+0.25 / (1 - 0.25)
+0.33 / (1 - 0.33)
+```
+
+```{r}
+# Alternative odds calculation using R as a calculator
+2 / 2
+2 / 6
+4 / 8
+```
+
+## Incidence odds ratio
+
+```{r}
+# Calculate the incidence odds ratio and store it as a numeric vector 
+# called ior
+ior <- augers_and_injuries_ct["Yes", "incidence_odds"] / augers_and_injuries_ct["No", "incidence_odds"]
+# Print the value stored in ior to the screen
+ior
+```
+
+```{r}
+# Calculate OR using R as a calculator
+1 / 0.3333333
+```
+
+Among the agricultural workers in or our study sample, those who used grain augers had 2 times the odds of unintentional injury compared to those who did not use a grain auger, over the 1-year of follow-up.
+
+## Time at risk
+
+```{r}
+# Have R calculate the total person-months at risk
+person_months <- augers_and_injuries_pt_wide |> 
+  # Keep only the rows with a status of At Risk
+  filter(status == "At Risk") |> 
+  # Calculate the time between follow-up months for each person
+  mutate(time_at_risk = xend_adjusted - x) |> 
+  # Total all of the individual person-months at risk by exposure status
+  group_by(exposed_f) |> 
+  summarise(time_at_risk = sum(time_at_risk)) |> 
+  # Make "Yes" appear first in the results
+  arrange(desc(exposed_f)) %>% 
+  # Add a total row
+  # Make sure to use the magrittr pipe above
+  add_row(exposed_f = "Total", time_at_risk = sum(.$time_at_risk))
+
+# Print the value stored in augers_and_injuries_ct to the screen
+person_months
+```
+
+```{r}
+# Calculate time at risk using R as a calculator
+(12 * 2) + 7 + 2
+(12 * 6) + 5 + 10
+```
+
+```{r}
+33 + 87
+```
+
+## Incidence rates
+
+```{r}
+# Add person months to the contingency table
+augers_and_injuries_ct <- cbind(augers_and_injuries_ct, person_months = person_months$time_at_risk)
+# Print the value stored in augers_and_injuries_ct to the screen
+augers_and_injuries_ct
+```
+
+```{r}
+# Add the incidence rates to augers_and_injuries_ct
+incidence_rate <- augers_and_injuries_ct[, "Yes"] / augers_and_injuries_ct[, "person_months"]
+augers_and_injuries_ct <- cbind(augers_and_injuries_ct, incidence_rate)
+# Print the value stored in augers_and_injuries_ct to the screen
+augers_and_injuries_ct
+```
+
+```{r}
+# Calculate incidence rate using R as a calculator
+2 / 33
+2 / 87
+4 / 120
+```
+
+## Incidence rate ratio
+
+```{r}
+# Calculate the incidence rate ratio and store it as a numeric vector 
+# called irr
+irr <- augers_and_injuries_ct["Yes", "incidence_rate"] / augers_and_injuries_ct["No", "incidence_rate"]
+# Print the value stored in irr to the screen
+irr
+```
+
+```{r}
+# Calculate IRR (rounded) using R as a calculator
+0.06 / 0.02
+```
+
+Among the agricultural workers in or our study sample, those who used grain augers had 2.6 times the rate of unintentional injury compared to those who did not use a grain auger, over the 1-year of follow-up.
+
+## Incidence rate difference
+
+```{r}
+# Calculate the incidence rate difference and store it as a numeric vector 
+# called ird
+ird <- augers_and_injuries_ct["Yes", "incidence_rate"] - augers_and_injuries_ct["No", "incidence_rate"]
+# Print the value stored in ird to the screen
+ird
+```
+
+```{r}
+# Calculate IRD (rounded) using R as a calculator
+0.06 - 0.02
+```
+
+Among the agricultural workers in or our study sample, there were an additional 0.04 incident cases of unintentional injury per person-month among workers who ever used a grain auger compared to those who never used a grain auger, over the 1-year of follow-up.
+
+
+
+
+
+
+

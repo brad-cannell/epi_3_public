@@ -358,7 +358,7 @@ I think I want to do this as a [stacked bar chart](https://r-graph-gallery.com/4
 ```{r}
 people <- 1:10
 months <- -1:12
-pt_df <- expand_grid(person = people, month = months)
+pt_df <- tidyr::expand_grid(person = people, month = months)
 rows_per_person <- length(months)
 
 # Count from the beginning of each month.
@@ -462,7 +462,7 @@ list_to_reps <- function(.list,
                            "Pre-follow-up", "At Risk", "Diseased", "Deceased", 
                            "Censored"
                          )) {
-  v <- purrr::map_int(
+  v <- purrr::map_dbl(
     .statuses,
     function(x) {
       # If Pre-follow-up isn't specifically enumerated, then set it to 1
