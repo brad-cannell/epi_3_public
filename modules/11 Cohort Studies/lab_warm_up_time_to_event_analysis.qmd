@@ -1,0 +1,526 @@
+---
+title: "Lab Warm-up: Time to Event Analysis"
+format:
+  html:
+    embed-resources: true
+---
+
+# 🛑 Formatting (delete this section before posting to Canvas) 🛑
+
+* Please name this file `lab_warm_up_module_name.qmd`.
+* The Overview section, each task number, and each question number should be written as a level-one headers (e.g., `# Task 1`).
+* All R code being run, should be put into R code chunks.
+* All R code being discussed in the text should be placed inside backticks (e.g., `install.packages("dplyr")`).
+* R package names being discussed in the text should be formatted as code (e.g., "...the `dplyr` package...). 
+* When functions are discussed in the text, they should be formatted as code and empty parentheses added to the end of the function name (e.g., "The `tibble()` function can be used to create data frames…").
+* Data set/frame names, variable names, and other key words should be written with **bold** text (e.g., "Please download **chocolate study 1.xls**".
+* There should be 2 line breaks (returns) immediately above level-one headers. There should be 1 line break (return) immediately above all other headers.
+* There should be one line break (return) immediately above each code chunk. There should be at least 1 line break immediately below each code chunk. If the the code chunk is immediately followed by a level-one header, then there will be two line breaks.
+
+# Load packages
+
+Remember, it's considered a best practice to load all the packages that your file will use up at the top of the file. If you have not yet installed a package, you will need to do so by running `install.packages("package name")` in the R console. For example, to install the `dplyr` package, you would run `install.packages("dplyr")`. However, you typically **do not** want to type the code to install the package here in your Quarto file because you only need to install the package once on a given computer. Not every time you run your R code.
+
+```{r}
+#| label: load-packages
+library(dplyr, warn.conflicts = FALSE) # The "warn.conflicts" part is optional
+library(ggplot2, warn.conflicts = FALSE)
+library(survival)
+library(ggsurvfit)
+```
+
+# Example from Szklo and Nieto page 58 and 59
+
+This example is provided in our S & N textbook. Data are from a hypothetical cohort of 10 people who are followed over time (up to 24 months or two years), from January 2015 through January 2017.
+
+## Simulate data
+
+We will start by recreating this data as an R data frame.
+
+```{r}
+cohort <- tibble(
+  person_no   = 1:10,
+  months      = c(1, 17, 20, 9, 24, 16, 2, 13, 10, 3),
+  outcome     = c(1, 1, 1, 1, 2, 2, 2, 1, 2, 1),
+  event       = c(1, 1, 1, 1, 0, 0, 0, 1, 0, 1),
+  censor      = c(0, 0, 0, 0, 1, 1, 1, 0, 1, 0),
+  person_no_f = factor(person_no),
+  outcome_f   = factor(outcome, 1:2, c("Death", "Censored")),
+  event_f     = factor(event, 0:1, c("No", "Yes")),
+  censor_f    = factor(censor, 0:1, c("No", "Yes"))
+)
+
+# Print the data to the screen
+cohort
+```
+
+## Figure 2-2
+
+The code below uses the `ggplot2` package to recreate Figure 2-2 (page 55).
+
+```{r}
+ggplot(cohort, aes(forcats::fct_rev(person_no_f), months)) + 
+  geom_bar(stat = "identity", width = 0.5) + 
+  geom_point(
+    aes(person_no_f, months, color = outcome_f, shape = outcome_f), 
+    size = 6
+  ) +
+  coord_flip() +
+  labs(
+    x = "Person Number",
+    y = "Time (Months)"
+  ) +
+  theme_minimal() + 
+  theme(
+    legend.title = element_blank(),
+    legend.position = "bottom"
+  )
+```
+
+```{r}
+# Save the plot as an image file
+ggsave("sn_fig_2_2.png", width = 6, height = 3.38)
+```
+
+## Actuarial life table approach
+
+As seen in Figure 2-2, six deaths occurred among the 10 individuals who were alive at the beginning of the follow-up. If no individual had been lost to observation, 2q0 (with time specified in years) would simply be the number of deaths over this 2-year interval (2d0) divided by the number of individuals at the beginning of the interval (l0); that is, 6 ÷ 10 = 0.60, or 60%.
+
+Szklo, Moyses; Nieto, F. Javier. Epidemiology: Beyond the Basics (p. 55). Jones & Bartlett Learning. Kindle Edition. 
+
+```{r}
+# Calculate cumulative incidence ignoring censoring
+6 / 10
+```
+
+Because the three individuals lost to observation (censored, 2c0) were not at risk during the entire duration of the follow-up, however, their limited participation must be accounted for in the denominator of the cumulative probability. By convention, half of these individuals are subtracted from the denominator, and the probability estimate is then calculated as follows:
+
+Szklo, Moyses; Nieto, F. Javier. Epidemiology: Beyond the Basics (pp. 55-56). Jones & Bartlett Learning. Kindle Edition. 
+
+$$Cumulative\, probability\, of\, event = \frac{Number\, of\, events}{Number\, at\, risk\, at\, start - (0.5 * Number\, censored)}$$
+
+```{r}
+6 / (10 - (0.5 * 3))
+```
+
+The conventional approach of subtracting one-half of the total number of censored observations from the denominator is based on the assumption that censoring occurred uniformly throughout that period and thus, on average, these individuals were at risk for only one-half of the follow-up period.
+
+Szklo, Moyses; Nieto, F. Javier. Epidemiology: Beyond the Basics (p. 56). Jones & Bartlett Learning. Kindle Edition. 
+
+The complement of this cumulative probability of the event (q) is the cumulative probability of survival (p); that is,
+
+Szklo, Moyses; Nieto, F. Javier. Epidemiology: Beyond the Basics (p. 56). Jones & Bartlett Learning. Kindle Edition. 
+
+$$Cumulative\, probability\, of\, survival} = 1 - Cumulative\, probability\, of\, event$$
+
+```{r}
+1 - 0.7058824
+```
+
+## Kaplan–Meier Approach
+
+The Kaplan–Meier approach involves the calculation of the probability of each event at the time it occurs. The denominator for this calculation is the population at risk at the time of each event’s occurrence.4 As for the actuarial life table, the probability of each event is a “conditional probability”; in other words, it is conditioned on being at risk (alive and not censored) at the event time. If each event (first, second, etc.) is designated by its time of occurrence i, then the formula for the conditional probability is simply as follows: 
+
+$$q_i = \frac{d_i}{n_i} $$ 
+
+where di is the number of deaths (or other type of event) occurring at time i, and ni is the number of individuals still under observation (i.e., at risk of the event) at time i. (Usually, di = 1 unless more than one event is occurring simultaneously—something that will occur only when nonexact discrete measures of time are used.)
+
+Szklo, Moyses; Nieto, F. Javier. Epidemiology: Beyond the Basics (p. 57). Jones & Bartlett Learning. Kindle Edition. 
+
+## Figure 2-3
+
+The code below uses the `ggplot2` package to recreate Figure 2-2 (page 55).
+
+```{r}
+ggplot(cohort, aes(forcats::fct_reorder(person_no_f, months, .desc = TRUE), months)) + 
+  geom_bar(stat = "identity", width = 0.5) + 
+  geom_point(
+    aes(person_no_f, months, color = outcome_f, shape = outcome_f), 
+    size = 6
+  ) +
+  coord_flip() +
+  labs(
+    x = "Person Number",
+    y = "Time (Months)"
+  ) +
+  theme_minimal() + 
+  theme(
+    legend.title = element_blank(),
+    legend.position = "bottom"
+  )
+```
+
+```{r}
+# Save the plot as an image file
+ggsave("sn_fig_2_3.png", width = 6, height = 3.38)
+```
+
+## Table 2-3
+
+The code below recreates the Kaplan–Meier estimates presented in S&N, Table 2-3, pg. 59.
+
+```{r}
+# Use R like a calculator to estimate the conditional probability of event,
+# conditional probability of survival, and cumulative probability of survival
+# for the first row of the table.
+1 / 10 # Conditional probability of event
+9 / 10 # Conditional probability of survival
+```
+
+```{r}
+# Use R like a calculator to estimate the conditional probability of event,
+# conditional probability of survival, and cumulative probability of survival
+# for the second row of the table.
+1 / 8 # Conditional probability of event
+7 / 8 # Conditional probability of survival
+(9 / 10) * (7 / 8) # Cumulative probability of survival
+```
+
+Alternatively, we can create the entire table in R with the code below.
+
+```{r}
+# View the data again
+cohort
+```
+
+```{r}
+# Count the number of outcome and censoring events at each month
+km_table <- cohort |> 
+  group_by(months) |> 
+  summarise(
+    n        = n(),
+    events   = sum(event),
+    censored = sum(censor),
+    .groups  = "drop"
+  ) |> 
+  ungroup()
+
+# Print the table to the screen
+km_table
+```
+
+```{r}
+# Create a row for each month
+# Not just the months where an event occurred
+km_table <- km_table |> 
+  tidyr::complete(
+    months = seq(1, max(cohort$months)),
+    fill = list(n = 0, events = 0, censored = 0)
+  )
+
+# Print the table to the screen
+km_table
+```
+
+```{r}
+# Calculate the number at risk 
+km_table <- km_table |> 
+  mutate(
+    n_at_risk_start = max(cumsum(n)),
+    cum_events = cumsum(events),
+    cum_censored = cumsum(censored),
+    n_at_risk = n_at_risk_start - lag(cum_events) - lag(cum_censored),
+    n_at_risk = if_else(is.na(n_at_risk), n_at_risk_start, n_at_risk)
+  )
+
+# Print the table to the screen
+km_table
+```
+
+```{r}
+# Calculate the conditional probability of event and the conditional 
+# probability of survival
+km_table <- km_table |> 
+  mutate(
+    cond_prob_event = round(events / n_at_risk, 3),
+    cond_prob_survival = 1 - cond_prob_event
+  )
+
+# Print the table to the screen
+km_table
+```
+
+```{r}
+# Calculate the cumulative probability of survival
+km_table <- km_table |> 
+  mutate(
+    cum_prob_survival = purrr::accumulate(cond_prob_survival, `*`) |> round(3)
+  )
+
+# Print the table to the screen
+km_table
+```
+
+```{r}
+# Make the table easier to read
+km_table <- km_table |>
+  # Drop unneeded columns
+  select(-n, -n_at_risk_start, -cum_events, -cum_censored) |> 
+  # Relocate columns to match the textbook
+  select(months, n_at_risk, n_events = events, cond_prob_event, cond_prob_survival, cum_prob_survival)
+
+# Print the table to the screen
+km_table
+```
+
+```{r}
+# Keep on the rows with an event occurrence to match the textbook
+km_table |> 
+  filter(n_events == 1)
+```
+
+The cumulative probability of event is calculated as 1 - cumulative probability of survival.
+
+```{r}
+1 - 0.180
+```
+
+## Figure 2-4
+
+The code below uses the `ggplot2` package to recreate Figure 2-4 (page 60).
+
+```{r warning=FALSE}
+# Convert cum_prob_survival to percentages to match the book
+km_table |> 
+  # Add month zero row
+  add_row(months = 0, cum_prob_survival = 1.000) |> 
+  # Create formatted versions for cum_prob_survival the plot
+  mutate(
+    cum_percent_survival = cum_prob_survival * 100,
+    # Create formatted value for annotation only when there is an event.
+    # It will look better on the plot.
+    cum_percent_survival_formatted = if_else(
+      n_events == 1, round(cum_percent_survival, 0) |> paste0("%"), 
+      NA_character_
+    )
+  ) |> 
+
+ggplot(aes(x = months, y = cum_percent_survival)) +
+  geom_step() +
+  # Increase the number of axis ticks
+  scale_x_continuous(breaks = seq(0, 24, 1)) +
+  scale_y_continuous(limits = c(0, 100), breaks = seq(20, 100, 20)) +
+  # Add percentage annotations
+  ggrepel::geom_text_repel(
+    aes(label = cum_percent_survival_formatted),
+    hjust = 0, nudge_x = 2.0,
+    vjust = 0, nudge_y = 4.0,
+    arrow = arrow(length = unit(0.015, "npc"), type = "closed")
+  ) +
+  labs(
+    x = "Follow-up time (months)",
+    y = "Cumulative survival (%)"
+  ) +
+  theme_classic() +
+  theme(
+    legend.title = element_blank(),
+    legend.position = "bottom"
+  )
+```
+
+```{r}
+# Save the plot as an image file
+ggsave("sn_fig_2_4.png", width = 6, height = 3.38)
+```
+
+## Using R packages
+
+Here, we will use functions from the `survival` package and the `ggsurvfit` package.
+
+### Create a survival object
+
+This object will be the regressand in our survival models.
+
+```{r}
+# time = follow-up time (for right censored data)
+# event = 0 for no event and 1 for event
+surv_object <- Surv(time = cohort$months, event = cohort$event)
+
+# Print the survival object to the screen
+# The plus signs in the output indicate censoring
+surv_object
+```
+
+### Fit the Kaplan-Meier model
+
+```{r}
+km_mod <- survfit(surv_object ~ 1, data = cohort)
+km_mod
+```
+
+```{r}
+# View the Kaplan-Meier survival table
+summary(km_mod)
+```
+
+```{r}
+# View the Kaplan-Meier survival table with the broom package
+broom::tidy(km_mod)
+```
+
+```{r}
+# Plot the Kaplan-Meier curves
+ggsurvfit(km_mod) +
+  labs(
+    x = "Follow-up time (months)",
+    y = "Cumulative survival (%)"
+  )
+```
+
+```{r}
+# Plot the Kaplan-Meier curves with confidence intervals
+# And print risk table below the plot
+ggsurvfit(km_mod) +
+  labs(
+    x = "Follow-up time (months)",
+    y = "Cumulative survival (%)"
+  ) +
+  add_confidence_interval() +
+  add_risktable()
+```
+
+## Comparing survival times between groups
+
+Create an exposure variable.
+
+```{r}
+cohort <- cohort |> 
+  # Set exposure to 1 in rows with an even person number
+  mutate(
+    exposure   = if_else(person_no %% 2 == 0, 1, 0),
+    exposure_f = factor(exposure, 0:1, c("No", "Yes"))
+  )
+```
+
+```{r}
+# Fit the Kaplan-Meier model
+km_mod <- survfit(surv_object ~ exposure, data = cohort)
+km_mod
+```
+
+```{r}
+# Plot the Kaplan-Meier curves
+ggsurvfit(km_mod) +
+  labs(
+    x = "Follow-up time (months)",
+    y = "Cumulative survival (%)"
+  )
+```
+
+We can conduct between-group significance tests using a log-rank test. The log-rank test equally weights observations over the entire follow-up time and is the most common way to compare survival times between groups. There are versions that more heavily weight the early or late follow-up that could be more appropriate depending on the research question (see ?survdiff for different test options).
+
+We get the log-rank p-value using the `survdiff` function. For example, we can test whether there was a difference in survival time according to sex in the lung data:
+
+```{r}
+survdiff(surv_object ~ exposure_f, data = cohort)
+```
+
+## Cox proportional hazards regression
+
+```{r}
+cox_mod <- coxph(surv_object ~ exposure_f, data = cohort)
+cox_mod
+```
+
+```{r}
+# Exponentiate the coefficient to get the hazard ratio
+broom::tidy(cox_mod)
+```
+
+# Acute lymphoblastic leukemia (ALL) data
+
+```{r}
+leuk <- haven::read_dta("/Users/bradcannell/Dropbox/Datasets/Regression Methods in Biostatistics Textbook/data/leuk.dta")
+```
+
+## Data management
+
+Cens is really event. Look at placebo group, they are all 1's.
+
+Time is in weeks.
+
+```{r}
+leuk <- leuk %>% 
+  mutate(
+    # Cens is really event. Look at placebo group, they are all 1's
+    event     = cens,
+    censored  = if_else(event == 1, 0, 1),
+    group_f   = if_else(group == 1, "6-MP", "Placebo")
+  ) %>% 
+  select(-cens, - group)
+```
+
+## View data
+
+Time is in weeks.
+
+```{r}
+leuk
+```
+
+## Naive comparison of mean survival times
+
+```{r}
+leuk %>% 
+  group_by(group_f) %>% 
+  meantables::mean_table(time)
+```
+
+### Create a survival object
+
+This object will be the regressand in our survival models.
+
+```{r}
+# time = follow-up time (for right censored data)
+# event = 0 for no event and 1 for event
+surv_object <- Surv(time = leuk$time, event = leuk$event)
+
+# Print the survival object to the screen
+# The plus signs in the output indicate censoring
+surv_object
+```
+
+### Fit the Kaplan-Meier model
+
+```{r}
+km_mod <- survfit(surv_object ~ group_f, data = leuk)
+km_mod
+```
+
+```{r}
+# View the Kaplan-Meier survival table
+summary(km_mod)
+```
+
+```{r}
+# Plot the Kaplan-Meier curves with confidence intervals
+# And print risk table below the plot
+ggsurvfit(km_mod) +
+  labs(
+    x = "Follow-up time (months)",
+    y = "Cumulative survival (%)"
+  ) +
+  add_confidence_interval() 
+```
+
+```{r}
+# Save the plot as an image file
+ggsave("all_by_group.png", width = 6, height = 3.38)
+```
+
+### Log-rank test
+
+```{r}
+survdiff(surv_object ~ group_f, data = leuk)
+```
+
+### Cox regression
+
+```{r}
+cox_mod <- coxph(surv_object ~ group_f, data = leuk)
+cox_mod
+```
+
+```{r}
+broom::tidy(cox_mod)
+```
