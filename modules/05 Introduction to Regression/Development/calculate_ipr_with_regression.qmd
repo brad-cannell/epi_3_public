@@ -1,0 +1,110 @@
+---
+title: "Calculate IPR with Regression"
+format:
+  html:
+    embed-resources: true
+---
+
+
+# Overview
+
+Trying to figure out how to calculate the incidence proportion ratio (relative risk) using regression.
+
+
+# Load packages
+
+```{r}
+library(dplyr, warn.conflicts = FALSE)
+library(freqtables)
+```
+
+## Elder mistreatment by dementia
+
+Same data I used in `lab_warm_up_introduction_to_regression.qmd`.
+
+```{r}
+set.seed(123)
+n <- 100
+em_dementia <- tibble(
+  age = sample(65:100, n, TRUE),
+  dementia = case_when(
+    age < 70 ~ sample(0:1, n, TRUE, c(.99, .01)),
+    age < 75 ~ sample(0:1, n, TRUE, c(.97, .03)),
+    age < 80 ~ sample(0:1, n, TRUE, c(.91, .09)),
+    age < 85 ~ sample(0:1, n, TRUE, c(.84, .16)),
+    age < 90 ~ sample(0:1, n, TRUE, c(.78, .22)),
+    TRUE ~ sample(0:1, n, TRUE, c(.67, .33))
+  ),
+  dementia_f = factor(dementia, 0:1, c("No", "Yes")),
+  em = case_when(
+    dementia_f == "No"  ~ sample(0:1, n, TRUE, c(.9, .1)),
+    dementia_f == "Yes" ~ sample(0:1, n, TRUE, c(.5, .5))
+  ),
+  em_f = factor(em, 0:1, c("No", "Yes"))
+)
+em_dementia
+```
+
+### Create a ct
+
+First get the values for the cells
+
+```{r}
+em_dementia |> 
+  freq_table(dementia_f, em_f)
+```
+
+Create the ct
+
+```{r}
+ct <- matrix(
+  c(7, 11, 5, 77),
+  byrow = TRUE,
+  ncol = 2
+)
+
+# Add marginal totals
+ct <- addmargins(ct)
+
+# Assign row and column labels to diet_heart_disease
+dimnames(ct) <- list(
+  Dementia = c("Yes", "No", "col_sum"), # Row names
+  EM  = c("Yes", "No", "row_sum")  # Then column names
+)
+
+ct
+```
+Add IP
+
+```{r}
+incidence_prop <- ct[, "Yes"] / ct[, "row_sum"]
+ct <- cbind(ct, incidence_prop)
+ct
+```
+
+Calculate IPR
+
+```{r}
+ipr <- ct["Yes", "incidence_prop"] / ct["No", "incidence_prop"]
+ipr
+```
+
+Calculate 95% CI for IPR
+
+https://sphweb.bumc.bu.edu/otlt/mph-modules/bs/bs704_confidence_intervals/bs704_confidence_intervals8.html
+
+```{r}
+se <- ((11 / 7) / 18) + ((77 / 5) / 82)
+se <- sqrt(se)
+lnrr <- log(6.377778)
+lnlower <- lnrr - (1.96 * se)
+lnupper <- lnrr + (1.96 * se)
+lower <- exp(lnlower)
+upper <- exp(lnupper)
+paste(lower, upper)
+```
+
+Calculate using regression
+
+
+
